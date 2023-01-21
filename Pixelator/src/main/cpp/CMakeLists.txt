@@ -11,6 +11,7 @@ project("pixelator")
 
 set(PIXELATOR_DIR ${CMAKE_SOURCE_DIR})
 include_directories(${PIXELATOR_DIR})
+include_directories(${PIXELATOR_DIR}/thread)
 
 add_library( # Sets the name of the library.
         pixelator
@@ -18,8 +19,13 @@ add_library( # Sets the name of the library.
         # Sets the library as a shared library.
         SHARED
 
-        Pixelator.cpp
-        JNIEnvironment.cpp)
+        thread/Handler.cpp
+        thread/Looper.cpp
+        thread/Message.cpp
+        thread/MessageQueue.cpp
+        utils/TimeUtils.cpp
+        JNIEnvironment.cpp
+        Pixelator.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

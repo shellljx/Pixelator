@@ -6,6 +6,5 @@
 #include "Log.h"
 
 jlong Android_Jni_Pixelator_create(JNIEnv *env, jobject object) {
-    LOGE("lijinxiang dddd");
     return 0;
 }
