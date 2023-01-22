@@ -4,7 +4,7 @@
 
 #include "JNIEnvironment.h"
 #include <pthread.h>
-#include "Pixelator.h"
+#include "NativeLib.h"
 
 static JavaVM *globalJavaVM = nullptr;
 static pthread_key_t threadKey = 0;

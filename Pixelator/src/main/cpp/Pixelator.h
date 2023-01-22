@@ -1,19 +1,24 @@
 //
-// Created by 李金祥 on 2023/1/20.
+// Created by 李金祥 on 2023/1/21.
 //
 
-#ifndef PIXELATE_PIXELATOR_JNI_H
-#define PIXELATE_PIXELATOR_JNI_H
-#define PIXELATOR "com/gmail/shellljx/pixelator/Pixelator"
+#ifndef PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_
+#define PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_
 
-#include <jni.h>
+#include "Handler.h"
+#include "HandlerThread.h"
+#include <pthread.h>
 
-jlong Android_Jni_Pixelator_create(JNIEnv *env, jobject jobject);
+class Pixelator :public thread::HandlerCallback {
+ public:
+  explicit Pixelator();
+  virtual ~Pixelator();
 
+  void handleMessage(thread::Message *msg) override;
 
-static JNINativeMethod pixelatorNativeMethods[] = {
-        {"create", "()J", (void **) Android_Jni_Pixelator_create}
+ private:
+  thread::HandlerThread *handlerThread_ = nullptr;
+  thread::Handler *handler_ = nullptr;
 };
 
-
-#endif //PIXELATE_PIXELATOR_JNI_H
+#endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_

@@ -20,11 +20,13 @@ add_library( # Sets the name of the library.
         SHARED
 
         thread/Handler.cpp
+        thread/HandlerThread.cpp
         thread/Looper.cpp
         thread/Message.cpp
         thread/MessageQueue.cpp
         utils/TimeUtils.cpp
         JNIEnvironment.cpp
+        NativeLib.cpp
         Pixelator.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
