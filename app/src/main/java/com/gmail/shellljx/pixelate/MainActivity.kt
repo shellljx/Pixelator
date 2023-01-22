@@ -2,15 +2,17 @@ package com.gmail.shellljx.pixelate
 
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
-import android.os.HandlerThread
-import android.os.Message
+import android.view.SurfaceHolder
+import android.view.SurfaceView
 import com.gmail.shellljx.pixelator.Pixelator
 
 class MainActivity : AppCompatActivity() {
-    val pixelator = Pixelator()
+    val pixelator = Pixelator.create()
+    lateinit var surfaceView: SurfaceView
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        val msg = Message.obtain()
+        surfaceView = findViewById(R.id.surface_view)
+        surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
     }
 }
