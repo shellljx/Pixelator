@@ -13,4 +13,8 @@ enum EGLMessage {
   kDestroyEGLSurface,
   kDestroyEGL
 };
+
+enum PixelateMessage {
+  kInsertImage = 100
+};
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_MESSAGES_H_

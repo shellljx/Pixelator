@@ -6,6 +6,7 @@ import android.view.SurfaceHolder
 class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
 
     private var mId = 0L
+    private var mRenderListener: IRenderListener? = null
 
     init {
         mId = create()
@@ -17,22 +18,37 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun surfaceChanged(p0: SurfaceHolder, p1: Int, p2: Int, p3: Int) {
+    override fun addImagePath(path: String) {
+        if (mId != 0L) {
+            addImagePath(mId, path)
+        }
+    }
+
+    override fun surfaceChanged(p0: SurfaceHolder, format: Int, width: Int, height: Int) {
+        if (mId != 0L) {
+            onSurfaceChanged(mId, width, height)
+        }
     }
 
     override fun surfaceDestroyed(p0: SurfaceHolder) {
     }
 
     private fun onEGLContextCreate() {
-        System.out.println("lijinxiang onEGLContextCreate")
+        mRenderListener?.onEGLContextCreate()
     }
 
     private fun onEGLWindowCreate() {
-        System.out.println("lijinxiang onEGLWindowCreate")
+        mRenderListener?.onEGLWindowCreate()
+    }
+
+    override fun setRenderListener(listener: IRenderListener) {
+        mRenderListener = listener
     }
 
     private external fun create(): Long
     private external fun onSurfaceCreate(id: Long, surface: Surface)
+    private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
+    private external fun addImagePath(id: Long, path: String)
 
     companion object {
         // Used to load the 'pixelator' library on application startup.

@@ -10,16 +10,22 @@ cmake_minimum_required(VERSION 3.18.1)
 project("pixelator")
 
 set(PIXELATOR_DIR ${CMAKE_SOURCE_DIR})
+set(STB_HEADER ${CMAKE_SOURCE_DIR}/stb)
+set(OPENGL_DIR ${CMAKE_SOURCE_DIR}/gl)
+
 include_directories(${PIXELATOR_DIR})
 include_directories(${PIXELATOR_DIR}/thread)
 include_directories(${PIXELATOR_DIR}/utils)
+include_directories(${STB_HEADER})
+include_directories(${OPENGL_DIR})
 
 add_library( # Sets the name of the library.
         pixelator
 
         # Sets the library as a shared library.
         SHARED
-
+        gl/FrameBuffer.cpp
+        gl/Program.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp
         thread/Looper.cpp
