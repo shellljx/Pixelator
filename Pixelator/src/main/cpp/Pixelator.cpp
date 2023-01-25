@@ -181,7 +181,7 @@ int Pixelator::insertImageInternal(const char *path) {
   auto ret = decodeImage(path, &imageWidth_, &imageHeight_);
   auto frameTexture = rendImage(imageTexture_, imageWidth_, imageHeight_);
   auto pixelaTexture = renderPixelator(frameTexture, imageWidth_, imageHeight_);
-  renderScreen(pixelaTexture);
+  renderScreen(frameTexture);
   return 0;
 }
 bool rest = true;
@@ -280,31 +280,6 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   if (program3_ == 0) {
     program3_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, PIXELATE_RECT_FRAGMENT_SHADER);
   }
-  if (m_VboIds[0] == GL_NONE) {
-    glGenBuffers(2, m_VboIds);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_pVtxCoords), m_pVtxCoords, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
-    glBufferData(GL_ARRAY_BUFFER, sizeof(m_pTexCoords), m_pTexCoords, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
-  }
-  if (m_VaoId == GL_NONE) {
-    glGenVertexArrays(1, &m_VaoId);
-    glBindVertexArray(m_VaoId);
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
-    glEnableVertexAttribArray(0);
-    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (const void *) 0);
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
-
-    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
-    glEnableVertexAttribArray(1);
-    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (const void *) 0);
-    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
-
-    glBindVertexArray(GL_NONE);
-  }
 
   int outputWidth = width;
   int outputHeight = height;
@@ -318,21 +293,12 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
   GL_CHECK(glUseProgram(program3_));
   GL_CHECK(glEnable(GL_STENCIL_TEST))
-  GL_CHECK(glStencilFunc(GL_NOTEQUAL ,1, 0xFF))
+  GL_CHECK(glStencilFunc(GL_NOTEQUAL, 1, 0xFF))
   GL_CHECK(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE))
   GL_CHECK(glStencilMask(0xFF))
 
-  auto positionLoction = glGetAttribLocation(program3_, "position");
-  GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_VERTEX_COORDINATE))
-  auto textureLocation = glGetAttribLocation(program3_, "inputTextureCoordinate");
-  GL_CHECK(glEnableVertexAttribArray(textureLocation));
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
 
-
-  GL_CHECK(glActiveTexture(0));
+  GL_CHECK(glActiveTexture(0))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
   auto inputTextureLocation = glGetUniformLocation(program3_, "inputImageTexture");
   GL_CHECK(glUniform1i(inputTextureLocation, 0))
@@ -342,17 +308,22 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   auto rectSizeLocation = glGetUniformLocation(program3_, "rectSize");
   float rectSize[] = {20, 20};
   GL_CHECK(glUniform2fv(rectSizeLocation, 1, rectSize))
-  GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4))
 
-//  for(int i = 0; i<m_PointVector_.size();i++) {
-//    vec4 point = m_PointVector_[i];
-//    calculateMesh(vec2(point.x, point.y), vec2(point.z, point.w));
-//    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
-//    glBufferSubData(GL_ARRAY_BUFFER, 0 , sizeof(m_pVtxCoords), m_pVtxCoords);
-//    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
-//    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_pTexCoords), m_pTexCoords);
-//    glDrawArrays(GL_TRIANGLES, 0, TRIANGLE_NUM *3);
-//  }
+  auto positionLoction = glGetAttribLocation(program3_, "position");
+  GL_CHECK(glEnableVertexAttribArray(positionLoction))
+  auto textureLocation = glGetAttribLocation(program3_, "inputTextureCoordinate");
+  GL_CHECK(glEnableVertexAttribArray(textureLocation));
+
+  for (int i = 0; i < m_PointVector_.size(); i++) {
+    vec4 point = m_PointVector_[i];
+    calculateMesh(vec2(point.x, point.y), vec2(point.z, point.w));
+    GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                   m_pVtxCoords))
+    GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                   m_pTexCoords))
+    GL_CHECK(glDrawArrays(GL_TRIANGLES, 0, TRIANGLE_NUM * 3))
+  }
+
   GL_CHECK(glDisableVertexAttribArray(positionLoction))
   GL_CHECK(glDisableVertexAttribArray(textureLocation))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
@@ -363,8 +334,8 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
 
 }
 
-static glm::vec3 texCoordToVertexCoord(glm::vec2 &texCoord) {
-  return glm::vec3(2 * texCoord.x - 1, 1 - 2 * texCoord.y, 0);
+static glm::vec2 texCoordToVertexCoord(glm::vec2 &texCoord) {
+  return glm::vec2(2 * texCoord.x - 1, 1 - 2 * texCoord.y);
 }
 
 void Pixelator::calculateMesh(vec2 pre, vec2 cur) {
@@ -389,8 +360,8 @@ void Pixelator::calculateMesh(vec2 pre, vec2 cur) {
 
   } else { //3. 其他 case
 
-    bool xdirection = (x1-x0) > 0;
-    bool ydirection = (y1-y0) > 0;
+    bool xdirection = (x1 - x0) > 0;
+    bool ydirection = (y1 - y0) > 0;
     if (xdirection != ydirection) {
       float xdt = abs(x0 - x1);
       float ydt = abs(y0 - y1);

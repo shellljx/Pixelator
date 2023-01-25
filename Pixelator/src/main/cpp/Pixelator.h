@@ -66,14 +66,12 @@ class Pixelator : public thread::HandlerCallback {
   GLuint program2_ = 0;
   FrameBuffer *pixelateFrameBuffer_ = nullptr;
   GLuint program3_ = 0;
-  GLuint m_VaoId;
-  GLuint m_VboIds[2];
   int surfaceWidth_ = 0;
   int surfaceHeight_ = 0;
   int imageWidth_ = 0;
   int imageHeight_ = 0;
   std::vector<vec4> m_PointVector_;
-  vec3 m_pVtxCoords[TRIANGLE_NUM * 3];
+  vec2 m_pVtxCoords[TRIANGLE_NUM * 3];
   vec2 m_pTexCoords[TRIANGLE_NUM * 3];
   vec2 currentPoint_;
   vec2 prePoint_;

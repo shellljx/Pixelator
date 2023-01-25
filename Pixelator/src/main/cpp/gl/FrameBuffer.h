@@ -22,8 +22,8 @@ public:
     void deleteFrameBuffer();
 
 private:
-    GLuint frameBufferId_;
-    GLuint frameTextureId_;
+    GLuint frameBufferId_ = 0;
+    GLuint frameTextureId_ = 0;
     int width_;
     int height_;
 };
