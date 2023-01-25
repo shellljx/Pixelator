@@ -27,3 +27,13 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
   pixelator->addImagePath(path);
   env->ReleaseStringUTFChars(jpath, path);
 }
+
+void Android_Jni_touch_event(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y) {
+  auto pixelator = reinterpret_cast<Pixelator *>(id);
+  pixelator->onTouchEvent(x, y);
+}
+
+void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
+  auto pixelator = reinterpret_cast<Pixelator *>(id);
+  pixelator->refreshFrame();
+}

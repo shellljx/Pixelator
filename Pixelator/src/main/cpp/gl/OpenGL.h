@@ -32,7 +32,7 @@ static float TEXTURE_COORDINATE_FLIP_UP_DOWN[] = {
 };
 
 /// 默认顶点shader
-static const char* DEFAULT_VERTEX_SHADER =
+static const char *DEFAULT_VERTEX_SHADER =
     "#ifdef GL_ES                                                                           \n"
     "precision highp float;                                                                 \n"
     "#endif                                                                                 \n"
@@ -45,7 +45,7 @@ static const char* DEFAULT_VERTEX_SHADER =
     "}                                                                                      \n";
 
 /// 默认fragment shader
-static const char* DEFAULT_FRAGMENT_SHADER =
+static const char *DEFAULT_FRAGMENT_SHADER =
     "#ifdef GL_ES                                                                           \n"
     "precision highp float;                                                                 \n"
     "#endif                                                                                 \n"
@@ -54,5 +54,21 @@ static const char* DEFAULT_FRAGMENT_SHADER =
     "void main() {                                                                          \n"
     "    gl_FragColor = texture2D(inputImageTexture, textureCoordinate);                    \n"
     "}                                                                                      \n";
+
+static const char *PIXELATE_RECT_FRAGMENT_SHADER =
+    "#ifdef GL_ES \n"
+    "precision highp float; \n"
+    "#endif \n"
+    "varying vec2 textureCoordinate; \n"
+    "uniform sampler2D inputImageTexture; \n"
+    "uniform vec2 textureSize; \n"
+    "uniform vec2 rectSize; \n"
+    "void main () { \n"
+    "vec2 textureXY = vec2(textureCoordinate.x *textureSize.x, textureCoordinate.y * textureSize.y); \n"
+    "vec2 rectXY = vec2(floor(textureXY.x/rectSize.x)*rectSize.x, floor(textureXY.y/rectSize.y)*rectSize.y); \n"
+    "vec2 rectUV = vec2(rectXY.x/textureSize.x, rectXY.y/textureSize.y); \n"
+    "vec4 color = texture2D(inputImageTexture, rectUV); \n"
+    "gl_FragColor = color; \n"
+    "} \n";
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_

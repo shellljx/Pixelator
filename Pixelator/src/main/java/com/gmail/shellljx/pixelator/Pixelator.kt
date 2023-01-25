@@ -24,6 +24,18 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
+    override fun touchEvent(x: Float, y: Float) {
+        if (mId != 0L) {
+            touchEvent(mId, x, y)
+        }
+    }
+
+    override fun refreshFrame() {
+        if (mId != 0L) {
+            refreshFrame(mId);
+        }
+    }
+
     override fun surfaceChanged(p0: SurfaceHolder, format: Int, width: Int, height: Int) {
         if (mId != 0L) {
             onSurfaceChanged(mId, width, height)
@@ -49,6 +61,8 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun addImagePath(id: Long, path: String)
+    private external fun touchEvent(id: Long, x: Float, y: Float)
+    private external fun refreshFrame(id: Long)
 
     companion object {
         // Used to load the 'pixelator' library on application startup.

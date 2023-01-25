@@ -1,0 +1,12 @@
+//
+// Created by 李金祥 on 2023/1/24.
+//
+
+#ifndef PIXELATE_PIXELATOR_SRC_MAIN_CPP_EFFECT_H_
+#define PIXELATE_PIXELATOR_SRC_MAIN_CPP_EFFECT_H_
+
+class Effect {
+
+};
+
+#endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_EFFECT_H_

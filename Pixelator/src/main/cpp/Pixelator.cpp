@@ -8,7 +8,9 @@
 #include "Log.h"
 #include "Global.h"
 #include "Local.h"
+
 #define STB_IMAGE_IMPLEMENTATION
+
 #include "stb_image.h"
 #include "OpenGL.h"
 
@@ -31,13 +33,18 @@ Pixelator::~Pixelator() {
     glDeleteProgram(program2_);
     program2_ = 0;
   }
+  if (program3_ > 0) {
+    glDeleteProgram(program3_);
+    program3_ = 0;
+  }
   if (imageTexture_ > 0) {
     glDeleteTextures(1, &imageTexture_);
     imageTexture_ = 0;
   }
   delete frameBuffer_;
   frameBuffer_ = nullptr;
-
+  delete pixelateFrameBuffer_;
+  pixelateFrameBuffer_ = nullptr;
 }
 
 void Pixelator::onSurfaceCreate(jobject surface) {
@@ -77,6 +84,20 @@ void Pixelator::addImagePath(const char *path) {
   handler_->sendMessage(msg);
 }
 
+void Pixelator::onTouchEvent(float x, float y) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kTouchEvent;
+  msg->arg3 = x;
+  msg->arg4 = y;
+  handler_->sendMessage(msg);
+}
+
+void Pixelator::refreshFrame() {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kRefreshFrame;
+  handler_->sendMessage(msg);
+}
+
 void Pixelator::handleMessage(thread::Message *msg) {
   int what = msg->what;
   switch (what) {
@@ -101,6 +122,17 @@ void Pixelator::handleMessage(thread::Message *msg) {
       auto path = reinterpret_cast<char *>(msg->obj1);
       insertImageInternal(path);
       delete[] path;
+      break;
+    }
+    case PixelateMessage::kTouchEvent: {
+      float x = msg->arg3;
+      float y = msg->arg4;
+      processTouchEventInternal(x, y);
+      break;
+    }
+
+    case PixelateMessage::kRefreshFrame: {
+      refreshFrameInternal();
       break;
     }
   }
@@ -146,12 +178,31 @@ int Pixelator::surfaceChangedInternal(int width, int height) {
 }
 
 int Pixelator::insertImageInternal(const char *path) {
-  int width = 0;
-  int height = 0;
-  auto ret = decodeImage(path, &width, &height);
-  auto frameTexture = rendImage(imageTexture_, width, height);
-  //surface width, surface height
-  renderScreen(frameTexture);
+  auto ret = decodeImage(path, &imageWidth_, &imageHeight_);
+  auto frameTexture = rendImage(imageTexture_, imageWidth_, imageHeight_);
+  auto pixelaTexture = renderPixelator(frameTexture, imageWidth_, imageHeight_);
+  renderScreen(pixelaTexture);
+  return 0;
+}
+bool rest = true;
+int Pixelator::processTouchEventInternal(float x, float y) {
+  prePoint_ = currentPoint_;
+  if (rest) {
+    currentPoint_ = vec2(x / surfaceWidth_, y / surfaceHeight_);
+    rest = false;
+    return 0;
+  }
+  currentPoint_ = vec2(x * 1.0f / surfaceWidth_, y * 1.0f / surfaceHeight_);
+  if (prePoint_ == currentPoint_) {
+    return 0;
+  }
+  m_PointVector_.emplace_back(prePoint_.x, prePoint_.y, currentPoint_.x, currentPoint_.y);
+  return 0;
+}
+
+int Pixelator::refreshFrameInternal() {
+  auto pixelaTexture = renderPixelator(imageTexture_, imageWidth_, imageHeight_);
+  renderScreen(pixelaTexture);
   return 0;
 }
 
@@ -202,10 +253,12 @@ GLuint Pixelator::rendImage(GLuint texture, int width, int height) {
   GL_CHECK(glUseProgram(program1_));
   auto positionLoction = glGetAttribLocation(program1_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), DEFAULT_VERTEX_COORDINATE))
+  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 DEFAULT_VERTEX_COORDINATE))
   auto textureLocation = glGetAttribLocation(program1_, "inputTextureCoordinate");
   GL_CHECK(glEnableVertexAttribArray(textureLocation));
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), TEXTURE_COORDINATE_FLIP_UP_DOWN))
+  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
   GL_CHECK(glActiveTexture(0));
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, imageTexture_));
   auto inputTextureLocation = glGetUniformLocation(program1_, "inputImageTexture");
@@ -217,6 +270,201 @@ GLuint Pixelator::rendImage(GLuint texture, int width, int height) {
 
   GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
   return frameBuffer_->getTexture();
+}
+
+GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
+  if (pixelateFrameBuffer_ == nullptr) {
+    pixelateFrameBuffer_ = new FrameBuffer();
+    pixelateFrameBuffer_->createFrameBuffer(width, height);
+  }
+  if (program3_ == 0) {
+    program3_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, PIXELATE_RECT_FRAGMENT_SHADER);
+  }
+  if (m_VboIds[0] == GL_NONE) {
+    glGenBuffers(2, m_VboIds);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_pVtxCoords), m_pVtxCoords, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
+    glBufferData(GL_ARRAY_BUFFER, sizeof(m_pTexCoords), m_pTexCoords, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+  }
+  if (m_VaoId == GL_NONE) {
+    glGenVertexArrays(1, &m_VaoId);
+    glBindVertexArray(m_VaoId);
+    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
+    glEnableVertexAttribArray(0);
+    glVertexAttribPointer(0, 3, GL_FLOAT, GL_FALSE, 3 * sizeof(GLfloat), (const void *) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+
+    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
+    glEnableVertexAttribArray(1);
+    glVertexAttribPointer(1, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), (const void *) 0);
+    glBindBuffer(GL_ARRAY_BUFFER, GL_NONE);
+
+    glBindVertexArray(GL_NONE);
+  }
+
+  int outputWidth = width;
+  int outputHeight = height;
+
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, pixelateFrameBuffer_->getFrameBuffer()));
+  if (width % 2 != 0 || height % 2 != 0) {
+    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
+  }
+
+  GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
+  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+  GL_CHECK(glUseProgram(program3_));
+  GL_CHECK(glEnable(GL_STENCIL_TEST))
+  GL_CHECK(glStencilFunc(GL_NOTEQUAL ,1, 0xFF))
+  GL_CHECK(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE))
+  GL_CHECK(glStencilMask(0xFF))
+
+  auto positionLoction = glGetAttribLocation(program3_, "position");
+  GL_CHECK(glEnableVertexAttribArray(positionLoction))
+  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 DEFAULT_VERTEX_COORDINATE))
+  auto textureLocation = glGetAttribLocation(program3_, "inputTextureCoordinate");
+  GL_CHECK(glEnableVertexAttribArray(textureLocation));
+  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
+
+
+  GL_CHECK(glActiveTexture(0));
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
+  auto inputTextureLocation = glGetUniformLocation(program3_, "inputImageTexture");
+  GL_CHECK(glUniform1i(inputTextureLocation, 0))
+  auto textureSizeLocation = glGetUniformLocation(program3_, "textureSize");
+  float textureSize[] = {(float) width, (float) height};
+  GL_CHECK(glUniform2fv(textureSizeLocation, 1, textureSize))
+  auto rectSizeLocation = glGetUniformLocation(program3_, "rectSize");
+  float rectSize[] = {20, 20};
+  GL_CHECK(glUniform2fv(rectSizeLocation, 1, rectSize))
+  GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4))
+
+//  for(int i = 0; i<m_PointVector_.size();i++) {
+//    vec4 point = m_PointVector_[i];
+//    calculateMesh(vec2(point.x, point.y), vec2(point.z, point.w));
+//    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[0]);
+//    glBufferSubData(GL_ARRAY_BUFFER, 0 , sizeof(m_pVtxCoords), m_pVtxCoords);
+//    glBindBuffer(GL_ARRAY_BUFFER, m_VboIds[1]);
+//    glBufferSubData(GL_ARRAY_BUFFER, 0, sizeof(m_pTexCoords), m_pTexCoords);
+//    glDrawArrays(GL_TRIANGLES, 0, TRIANGLE_NUM *3);
+//  }
+  GL_CHECK(glDisableVertexAttribArray(positionLoction))
+  GL_CHECK(glDisableVertexAttribArray(textureLocation))
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
+
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+  GL_CHECK(glDisable(GL_STENCIL_TEST))
+  return pixelateFrameBuffer_->getTexture();
+
+}
+
+static glm::vec3 texCoordToVertexCoord(glm::vec2 &texCoord) {
+  return glm::vec3(2 * texCoord.x - 1, 1 - 2 * texCoord.y, 0);
+}
+
+void Pixelator::calculateMesh(vec2 pre, vec2 cur) {
+  vec2 imgSize(imageWidth_, imageHeight_);
+  vec2 p0 = pre * imgSize, p1 = cur * imgSize;
+  vec2 v0, v1, v2, v3;
+  float r = static_cast<float>(0.08 * imgSize.x);
+  float x0 = p0.x, y0 = p0.y;
+  float x1 = p1.x, y1 = p1.y;
+  if (p0.y == p1.y) //1. 平行于 x 轴的
+  {
+    v0 = vec2(p0.x, p0.y - r) / imgSize;
+    v1 = vec2(p0.x, p0.y + r) / imgSize;
+    v2 = vec2(p1.x, p1.y - r) / imgSize;
+    v3 = vec2(p1.x, p1.y + r) / imgSize;
+
+  } else if (p0.x == p1.x) { //2. 平行于 y 轴的
+    v0 = vec2(p0.x - r, p0.y) / imgSize;
+    v1 = vec2(p0.x + r, p0.y) / imgSize;
+    v2 = vec2(p1.x - r, p1.y) / imgSize;
+    v3 = vec2(p1.x + r, p1.y) / imgSize;
+
+  } else { //3. 其他 case
+
+    bool xdirection = (x1-x0) > 0;
+    bool ydirection = (y1-y0) > 0;
+    if (xdirection != ydirection) {
+      float xdt = abs(x0 - x1);
+      float ydt = abs(y0 - y1);
+      float line = sqrt(pow(xdt, 2) + pow(ydt, 2));
+      float scale = r * 1.0f / line;
+      float xdts = scale * ydt;
+      float ydts = scale * xdt;
+      v0 = vec2(x0 - xdts, y0 - ydts) / imgSize;
+      v1 = vec2(x0 + xdts, y0 + ydts) / imgSize;
+      v2 = vec2(x1 - xdts, y1 - ydts) / imgSize;
+      v3 = vec2(x1 + xdts, y1 + ydts) / imgSize;
+    } else {
+      float xdt = abs(x0 - x1);
+      float ydt = abs(y0 - y1);
+      float line = sqrt(pow(xdt, 2) + pow(ydt, 2));
+      float scale = r * 1.0f / line;
+      float xdts = scale * ydt;
+      float ydts = scale * xdt;
+      v0 = vec2(x0 - xdts, y0 + ydts) / imgSize;
+      v1 = vec2(x0 + xdts, y0 - ydts) / imgSize;
+      v2 = vec2(x1 - xdts, y1 + ydts) / imgSize;
+      v3 = vec2(x1 + xdts, y1 - ydts) / imgSize;
+    }
+  }
+
+  // 矩形 3 个三角形
+  m_pTexCoords[0] = v0;
+  m_pTexCoords[1] = v1;
+  m_pTexCoords[2] = v2;
+  m_pTexCoords[3] = v0;
+  m_pTexCoords[4] = v2;
+  m_pTexCoords[5] = v3;
+  m_pTexCoords[6] = v1;
+  m_pTexCoords[7] = v2;
+  m_pTexCoords[8] = v3;
+
+  int index = 9;
+  float step = 3.141592653589 / 10;
+  // 2 个圆，一共 40 个三角形
+  for (int i = 0; i < 20; ++i) {
+    float x = r * cos(i * step);
+    float y = r * sin(i * step);
+
+    float x_ = r * cos((i + 1) * step);
+    float y_ = r * sin((i + 1) * step);
+
+    x += x0;
+    y += y0;
+    x_ += x0;
+    y_ += y0;
+
+    m_pTexCoords[index + 6 * i + 0] = vec2(x, y) / imgSize;
+    m_pTexCoords[index + 6 * i + 1] = vec2(x_, y_) / imgSize;
+    m_pTexCoords[index + 6 * i + 2] = vec2(x0, y0) / imgSize;
+
+    x = r * cos(i * step);
+    y = r * sin(i * step);
+
+    x_ = r * cos((i + 1) * step);
+    y_ = r * sin((i + 1) * step);
+
+    x += x1;
+    y += y1;
+    x_ += x1;
+    y_ += y1;
+
+    m_pTexCoords[index + 6 * i + 3] = vec2(x, y) / imgSize;
+    m_pTexCoords[index + 6 * i + 4] = vec2(x_, y_) / imgSize;
+    m_pTexCoords[index + 6 * i + 5] = vec2(x1, y1) / imgSize;
+  }
+
+  for (int i = 0; i < TRIANGLE_NUM * 3; ++i) {
+    m_pVtxCoords[i] = texCoordToVertexCoord(m_pTexCoords[i]);
+  }
 }
 
 void Pixelator::renderScreen(GLuint texture) {
@@ -237,10 +485,12 @@ void Pixelator::renderScreen(GLuint texture) {
   GL_CHECK(glUseProgram(program2_));
   auto positionLoction = glGetAttribLocation(program2_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), DEFAULT_VERTEX_COORDINATE))
+  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 DEFAULT_VERTEX_COORDINATE))
   auto textureLocation = glGetAttribLocation(program2_, "inputTextureCoordinate");
   GL_CHECK(glEnableVertexAttribArray(textureLocation));
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat), TEXTURE_COORDINATE_FLIP_UP_DOWN))
+  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
+                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
   GL_CHECK(glActiveTexture(0));
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
   auto inputTextureLocation = glGetUniformLocation(program2_, "inputImageTexture");
@@ -260,7 +510,8 @@ void Pixelator::callJavaEGLContextCreate() {
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
-    jmethodID eglContextCreateMethodId = env->GetMethodID(jclass.get(), "onEGLContextCreate", "()V");
+    jmethodID eglContextCreateMethodId = env->GetMethodID(jclass.get(), "onEGLContextCreate",
+                                                          "()V");
     if (eglContextCreateMethodId != nullptr) {
       env->CallVoidMethod(pixelator_.get(), eglContextCreateMethodId);
     }
@@ -274,7 +525,8 @@ void Pixelator::callJavaEGLWindowCreate() {
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
-    jmethodID eglWindowCreateMethodId = env->GetMethodID(jclass.get(), "onEGLWindowCreate", "()V");
+    jmethodID eglWindowCreateMethodId = env->GetMethodID(jclass.get(), "onEGLWindowCreate",
+                                                         "()V");
     if (eglWindowCreateMethodId != nullptr) {
       env->CallVoidMethod(pixelator_.get(), eglWindowCreateMethodId);
     }

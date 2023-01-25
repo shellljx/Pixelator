@@ -15,6 +15,8 @@ enum EGLMessage {
 };
 
 enum PixelateMessage {
-  kInsertImage = 100
+  kInsertImage = 100,
+  kTouchEvent,
+  kRefreshFrame
 };
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_MESSAGES_H_

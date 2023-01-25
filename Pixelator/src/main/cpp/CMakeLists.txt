@@ -12,12 +12,14 @@ project("pixelator")
 set(PIXELATOR_DIR ${CMAKE_SOURCE_DIR})
 set(STB_HEADER ${CMAKE_SOURCE_DIR}/stb)
 set(OPENGL_DIR ${CMAKE_SOURCE_DIR}/gl)
+set(GLM_DIR ${CMAKE_SOURCE_DIR}/glm)
 
 include_directories(${PIXELATOR_DIR})
 include_directories(${PIXELATOR_DIR}/thread)
 include_directories(${PIXELATOR_DIR}/utils)
 include_directories(${STB_HEADER})
 include_directories(${OPENGL_DIR})
+include_directories(${GLM_DIR})
 
 add_library( # Sets the name of the library.
         pixelator
@@ -32,6 +34,7 @@ add_library( # Sets the name of the library.
         thread/Message.cpp
         thread/MessageQueue.cpp
         utils/TimeUtils.cpp
+        Effect.cpp
         EGLCore.cpp
         JNIEnvironment.cpp
         NativeLib.cpp

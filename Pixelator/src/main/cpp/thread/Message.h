@@ -21,6 +21,8 @@ class Message {
   int what = -1;
   int arg1 = -1;
   int arg2 = -1;
+  float arg3 = -1;
+  float arg4 = -1;
   bool flag1 = false;
   bool flag2 = false;
   void *obj1 = nullptr;

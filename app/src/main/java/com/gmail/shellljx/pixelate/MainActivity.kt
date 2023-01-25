@@ -22,6 +22,13 @@ class MainActivity : AppCompatActivity() {
 
             override fun onEGLWindowCreate() {
                 pixelator.addImagePath("/sdcard/aftereffects/ae2/冬日最佳拍档/resource/assets/asset10.png")
+                surfaceView.post {
+                    pixelator.touchEvent(200f, 200f)
+                    pixelator.touchEvent(300f, 300f)
+                    pixelator.refreshFrame()
+                    pixelator.touchEvent(400f, 400f)
+                    pixelator.refreshFrame()
+                }
             }
         })
     }
