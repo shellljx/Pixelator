@@ -180,7 +180,7 @@ int Pixelator::surfaceChangedInternal(int width, int height) {
 int Pixelator::insertImageInternal(const char *path) {
   auto ret = decodeImage(path, &imageWidth_, &imageHeight_);
   auto frameTexture = rendImage(imageTexture_, imageWidth_, imageHeight_);
-  auto pixelaTexture = renderPixelator(frameTexture, imageWidth_, imageHeight_);
+  //auto pixelaTexture = renderPixelator(frameTexture, imageWidth_, imageHeight_);
   renderScreen(frameTexture);
   return 0;
 }
@@ -335,14 +335,14 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
 }
 
 static glm::vec2 texCoordToVertexCoord(glm::vec2 &texCoord) {
-  return glm::vec2(2 * texCoord.x - 1, 1 - 2 * texCoord.y);
+  return glm::vec2(2 * texCoord.x - 1, 2 * texCoord.y - 1);
 }
 
 void Pixelator::calculateMesh(vec2 pre, vec2 cur) {
   vec2 imgSize(imageWidth_, imageHeight_);
   vec2 p0 = pre * imgSize, p1 = cur * imgSize;
   vec2 v0, v1, v2, v3;
-  float r = static_cast<float>(0.08 * imgSize.x);
+  float r = static_cast<float>(0.05 * imgSize.x);
   float x0 = p0.x, y0 = p0.y;
   float x1 = p1.x, y1 = p1.y;
   if (p0.y == p1.y) //1. 平行于 x 轴的
@@ -444,15 +444,28 @@ void Pixelator::renderScreen(GLuint texture) {
     program2_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
   }
 
+  GL_CHECK(glEnable(GL_BLEND))
+  GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA))
+  GL_CHECK(glBlendEquation(GL_FUNC_ADD))
   int outputWidth = surfaceWidth_;
   int outputHeight = surfaceHeight_;
 
   if (outputHeight % 2 != 0 || outputWidth % 2 != 0) {
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
   }
-
   GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
+
+  renderScreenTexture(imageTexture_);
+  renderScreenTexture(texture);
+
+  GL_CHECK(glDisable(GL_BLEND))
+
+  eglCore_->swapBuffers(renderSurface_);
+}
+
+void Pixelator::renderScreenTexture(GLuint texture) {
+
   GL_CHECK(glUseProgram(program2_));
   auto positionLoction = glGetAttribLocation(program2_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -470,8 +483,6 @@ void Pixelator::renderScreen(GLuint texture) {
   GL_CHECK(glDisableVertexAttribArray(positionLoction))
   GL_CHECK(glDisableVertexAttribArray(textureLocation))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
-
-  eglCore_->swapBuffers(renderSurface_);
 }
 
 void Pixelator::callJavaEGLContextCreate() {

@@ -10,11 +10,23 @@ import com.gmail.shellljx.pixelator.Pixelator
 class MainActivity : AppCompatActivity() {
     val pixelator = Pixelator.create()
     lateinit var surfaceView: SurfaceView
+    lateinit var gestureView: GestureView
+    private var isWindowCreated = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         surfaceView = findViewById(R.id.surface_view)
+        gestureView = findViewById(R.id.gesture_view)
         surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
+        gestureView.setGestureListener(object : GestureView.GestureListener {
+            override fun onMove(x: Float, y: Float) {
+                if (!isWindowCreated) return
+                System.out.println("lijinxiang move $x $y")
+                pixelator.touchEvent(x, y)
+                pixelator.refreshFrame()
+            }
+
+        })
         pixelator.setRenderListener(object : IRenderListener {
             override fun onEGLContextCreate() {
 
@@ -22,13 +34,7 @@ class MainActivity : AppCompatActivity() {
 
             override fun onEGLWindowCreate() {
                 pixelator.addImagePath("/sdcard/aftereffects/ae2/冬日最佳拍档/resource/assets/asset10.png")
-                surfaceView.post {
-                    pixelator.touchEvent(200f, 200f)
-                    pixelator.touchEvent(300f, 300f)
-                    pixelator.refreshFrame()
-                    pixelator.touchEvent(400f, 400f)
-                    pixelator.refreshFrame()
-                }
+                isWindowCreated = true
             }
         })
     }

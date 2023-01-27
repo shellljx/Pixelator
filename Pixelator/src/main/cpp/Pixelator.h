@@ -49,6 +49,7 @@ class Pixelator : public thread::HandlerCallback {
   void calculateMesh(vec2 pre, vec2 cur);
   GLuint rendImage(GLuint texture, int width, int height);
   void renderScreen(GLuint texture);
+  void renderScreenTexture(GLuint texture);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
 
