@@ -56,4 +56,5 @@ target_link_libraries( # Specifies the target library.
         OpenSLES
         EGL
         GLESv3
-        android)
+        android
+        jnigraphics)

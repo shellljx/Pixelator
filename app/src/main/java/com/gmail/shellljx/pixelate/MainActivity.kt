@@ -1,5 +1,6 @@
 package com.gmail.shellljx.pixelate
 
+import android.graphics.BitmapFactory
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
@@ -33,7 +34,14 @@ class MainActivity : AppCompatActivity() {
             }
 
             override fun onEGLWindowCreate() {
+                val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur_128)
+                pixelator.setBrush(bitmap)
+                bitmap.recycle()
                 pixelator.addImagePath("/sdcard/aftereffects/ae2/冬日最佳拍档/resource/assets/asset10.png")
+                for (index in 0 until 9) {
+                    pixelator.touchEvent(100f * index, 800f)
+                }
+                pixelator.refreshFrame()
                 isWindowCreated = true
             }
         })

@@ -13,6 +13,7 @@
 
 #include "stb_image.h"
 #include "OpenGL.h"
+#include "BitmapUtils.h"
 
 Pixelator::Pixelator(jobject object) {
   std::string name("pixelator thread");
@@ -82,6 +83,20 @@ void Pixelator::addImagePath(const char *path) {
   msg->what = PixelateMessage::kInsertImage;
   msg->obj1 = tempPath;
   handler_->sendMessage(msg);
+}
+
+bool Pixelator::setBrush(jobject bitmap) {
+  ImageInfo *image = nullptr;
+  auto ret = createBitmapInfo(bitmap, &image);
+  if (ret != 0 || image == nullptr) {
+    LOGE("create bitmap info error %d", ret);
+    return false;
+  }
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetBrush;
+  msg->obj1 = image;
+  handler_->sendMessage(msg);
+  return true;
 }
 
 void Pixelator::onTouchEvent(float x, float y) {
@@ -178,10 +193,13 @@ int Pixelator::surfaceChangedInternal(int width, int height) {
 }
 
 int Pixelator::insertImageInternal(const char *path) {
-  auto ret = decodeImage(path, &imageWidth_, &imageHeight_);
+  auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
+  int imageWith;
+  int imageHeight;
+  decodeImage(imageTextureOverlay_, "/sdcard/aftereffects/ae/下雨天DJ版/resource/assets/asset7.jpg", &imageWith, &imageHeight);
   auto frameTexture = rendImage(imageTexture_, imageWidth_, imageHeight_);
   //auto pixelaTexture = renderPixelator(frameTexture, imageWidth_, imageHeight_);
-  renderScreen(frameTexture);
+  //renderScreen(frameTexture);
   return 0;
 }
 bool rest = true;
@@ -201,12 +219,12 @@ int Pixelator::processTouchEventInternal(float x, float y) {
 }
 
 int Pixelator::refreshFrameInternal() {
-  auto pixelaTexture = renderPixelator(imageTexture_, imageWidth_, imageHeight_);
+  auto pixelaTexture = renderPixelator(imageTextureOverlay_, imageWidth_, imageHeight_);
   renderScreen(pixelaTexture);
   return 0;
 }
 
-int Pixelator::decodeImage(const char *path, int *width, int *height) {
+int Pixelator::decodeImage(GLuint &texture, const char *path, int *width, int *height) {
 
   int channel = 0;
   auto data = stbi_load(path, width, height, &channel, STBI_rgb_alpha);
@@ -214,14 +232,14 @@ int Pixelator::decodeImage(const char *path, int *width, int *height) {
     LOGE("decode image error");
     return -1;
   }
-  if (imageTexture_ == 0) {
-    glGenTextures(1, &imageTexture_);
+  if (texture == 0) {
+    glGenTextures(1, &texture);
   }
   if (*width % 2 != 0 || *height % 2 != 0) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   }
   glActiveTexture(0);
-  glBindTexture(GL_TEXTURE_2D, imageTexture_);
+  glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
@@ -297,7 +315,6 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   GL_CHECK(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE))
   GL_CHECK(glStencilMask(0xFF))
 
-
   GL_CHECK(glActiveTexture(0))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
   auto inputTextureLocation = glGetUniformLocation(program3_, "inputImageTexture");
@@ -308,6 +325,8 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   auto rectSizeLocation = glGetUniformLocation(program3_, "rectSize");
   float rectSize[] = {20, 20};
   GL_CHECK(glUniform2fv(rectSizeLocation, 1, rectSize))
+  auto trackRLocation = glGetUniformLocation(program3_, "trackR");
+  GL_CHECK(glUniform1f(trackRLocation, 0.05 * imageWidth_))
 
   auto positionLoction = glGetAttribLocation(program3_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -316,6 +335,15 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
 
   for (int i = 0; i < m_PointVector_.size(); i++) {
     vec4 point = m_PointVector_[i];
+    auto startLocation = glGetUniformLocation(program3_, "start");
+    auto endLocation = glGetUniformLocation(program3_, "end");
+    auto speedLocation = glGetUniformLocation(program3_, "speed");
+    float start[] = {point.x * 1.0f * imageWidth_, point.y * 1.0f * imageHeight_};
+    float end[] = {point.z * 1.0f * imageWidth_, point.w * 1.0f * imageHeight_};
+    glUniform1f(speedLocation, 4.0);
+    glUniform2fv(startLocation, 1, start);
+    glUniform2fv(endLocation, 1, end);
+
     calculateMesh(vec2(point.x, point.y), vec2(point.z, point.w));
     GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
                                    m_pVtxCoords))
@@ -328,7 +356,7 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   GL_CHECK(glDisableVertexAttribArray(textureLocation))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
 
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0))
   GL_CHECK(glDisable(GL_STENCIL_TEST))
   return pixelateFrameBuffer_->getTexture();
 

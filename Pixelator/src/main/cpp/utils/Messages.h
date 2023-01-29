@@ -16,6 +16,7 @@ enum EGLMessage {
 
 enum PixelateMessage {
   kInsertImage = 100,
+  kSetBrush,
   kTouchEvent,
   kRefreshFrame
 };

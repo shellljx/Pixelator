@@ -28,6 +28,11 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
   env->ReleaseStringUTFChars(jpath, path);
 }
 
+jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap) {
+  auto pixelator = reinterpret_cast<Pixelator *>(id);
+  return pixelator->setBrush(bitmap);
+}
+
 void Android_Jni_touch_event(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y) {
   auto pixelator = reinterpret_cast<Pixelator *>(id);
   pixelator->onTouchEvent(x, y);

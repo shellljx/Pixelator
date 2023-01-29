@@ -1,5 +1,6 @@
 package com.gmail.shellljx.pixelator
 
+import android.graphics.Bitmap
 import android.view.Surface
 import android.view.SurfaceHolder
 
@@ -21,6 +22,12 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     override fun addImagePath(path: String) {
         if (mId != 0L) {
             addImagePath(mId, path)
+        }
+    }
+
+    override fun setBrush(bitmap: Bitmap) {
+        if (mId != 0L) {
+            setBrush(mId, bitmap)
         }
     }
 
@@ -61,6 +68,7 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun addImagePath(id: Long, path: String)
+    private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun touchEvent(id: Long, x: Float, y: Float)
     private external fun refreshFrame(id: Long)
 

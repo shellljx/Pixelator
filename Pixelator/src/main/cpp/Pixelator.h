@@ -33,6 +33,7 @@ class Pixelator : public thread::HandlerCallback {
   void onSurfaceCreate(jobject surface);
   void onSurfaceChanged(int width, int height);
   void addImagePath(const char *path);
+  bool setBrush(jobject bitmap);
   void onTouchEvent(float x, float y);
   void refreshFrame();
   void handleMessage(thread::Message *msg) override;
@@ -44,7 +45,7 @@ class Pixelator : public thread::HandlerCallback {
   int insertImageInternal(const char *path);
   int processTouchEventInternal(float x, float y);
   int refreshFrameInternal();
-  int decodeImage(const char *path, int *width, int *height);
+  int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   GLuint renderPixelator(GLuint texture, int width, int height);
   void calculateMesh(vec2 pre, vec2 cur);
   GLuint rendImage(GLuint texture, int width, int height);
@@ -62,6 +63,7 @@ class Pixelator : public thread::HandlerCallback {
   Global<jobject> pixelator_;
 
   GLuint imageTexture_ = 0;
+  GLuint imageTextureOverlay_ = 0;
   FrameBuffer *frameBuffer_ = nullptr;
   GLuint program1_ = 0;
   GLuint program2_ = 0;
