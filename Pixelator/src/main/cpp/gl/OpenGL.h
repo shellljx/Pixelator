@@ -55,32 +55,46 @@ static const char *DEFAULT_FRAGMENT_SHADER =
     "    gl_FragColor = texture2D(inputImageTexture, textureCoordinate);                    \n"
     "}                                                                                      \n";
 
+
+/// 默认顶点shader
+static const char *PIXELATE_VERTEX_SHADER =
+    "#ifdef GL_ES                                                                           \n"
+    "precision highp float;                                                                 \n"
+    "#endif                                                                                 \n"
+    "attribute vec4 position;                                                               \n"
+    "attribute vec4 inputTextureCoordinate;                                                 \n"
+    "varying vec2 textureCoordinate;                                                        \n"
+    "void main() {                                                                          \n"
+    "    gl_Position = position;                                                            \n"
+    "    gl_PointSize = 100.;                                     \n"
+    "}                                                                                      \n";
+
 static const char *PIXELATE_RECT_FRAGMENT_SHADER =
     "#ifdef GL_ES \n"
     "precision highp float; \n"
     "#endif \n"
     "varying vec2 textureCoordinate; \n"
     "uniform sampler2D inputImageTexture; \n"
+    "uniform sampler2D brushTexture; \n"
     "uniform vec2 textureSize; \n"
     "uniform vec2 rectSize; \n"
-    "uniform float trackR; \n"
-    "uniform vec2 start; \n"
-    "uniform vec2 end; \n"
-    "uniform float speed; \n"
+    "float outColorTransparent; \n"
+    "float aTransparent; \n"
     "void main () { \n"
-    "vec2 textureXY = vec2(textureCoordinate.x *textureSize.x, textureCoordinate.y * textureSize.y); \n"
+    "vec4 mask = texture2D(brushTexture, vec2(gl_PointCoord.x, gl_PointCoord.y)); \n"
+    "vec2 textureXY = gl_FragCoord.xy; \n"
     "vec2 rectXY = vec2(floor(textureXY.x/rectSize.x)*rectSize.x, floor(textureXY.y/rectSize.y)*rectSize.y); \n"
-    "vec2 rectUV = vec2(rectXY.x/textureSize.x, rectXY.y/textureSize.y); \n"
-    "vec4 color = texture2D(inputImageTexture, textureCoordinate); \n"
-    "vec2 line1 = vec2(gl_FragCoord.x,gl_FragCoord.y)-start; \n"
-    "vec2 line2 = end - start; \n"
-    "float len1 = sqrt(dot(line1, line1)); \n"
-    "float len2 = sqrt(dot(line2, line2)); \n"
-    "float cosv = abs(dot(line1, line2)) / len1 / len2; \n"
-    "float len3 = len1 * cosv; \n"
-    "float len4 = sqrt(pow(len1, 2.0)-pow(len3,2.0)); \n"
-    "float distance = len4/trackR; \n"
-    "gl_FragColor = vec4(color.r, color.g, color.b,1.0-pow(distance,3.0)); \n"
+    "vec2 rectUV = vec2(textureXY.x/textureSize.x, textureXY.y/textureSize.y); \n"
+    "vec4 color = texture2D(inputImageTexture, rectUV); \n"
+    "outColorTransparent = color.a; \n"
+    "vec3 aTransparentColor=vec3(0.);\n"
+    "if(mask.a<1.0){\n"
+    "aTransparent = mask.a * outColorTransparent; \n"
+    "aTransparentColor = mask.rgb; \n"
+    "gl_FragColor = aTransparent *(vec4(1.0) - ((vec4(1.0)-color))*(vec4(1.0)-vec4(aTransparentColor,1.0)));\n"
+    "} else {\n"
+    "gl_FragColor = outColorTransparent * (vec4(1.0) - ((vec4(1.0)-vec4(color.rgb,1.0)))*(vec4(1.0)-mask)); \n"
+    "} \n"
     "} \n";
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_

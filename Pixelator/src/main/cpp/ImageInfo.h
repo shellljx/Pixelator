@@ -7,6 +7,10 @@
 
 class ImageInfo {
  public:
+  int width_ = 0;
+  int height_ = 0;
+  unsigned char *pixels_ = nullptr;
+ public:
   ImageInfo(int width, int height, unsigned char *pixels) : width_(width), height_(height), pixels_(pixels) {}
   ~ImageInfo() {
     if (pixels_ != nullptr) {
@@ -14,11 +18,6 @@ class ImageInfo {
       pixels_ = nullptr;
     }
   };
-
- private:
-  int width_ = 0;
-  int height_ = 0;
-  unsigned char *pixels_ = nullptr;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_IMAGEINFO_H_

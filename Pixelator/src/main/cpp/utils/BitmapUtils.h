@@ -7,8 +7,9 @@
 
 #include <android/bitmap.h>
 #include "ImageInfo.h"
+#include "Log.h"
 
-int createBitmapInfo(jobject &bitmap, ImageInfo **image) {
+static int createBitmapInfo(jobject &bitmap, ImageInfo **image) {
   auto env = JNIEnvironment::Current();
   if (env == nullptr) {
     LOGE("%s jni env is null", __func__);

@@ -19,7 +19,7 @@
 #include <detail/type_vec3.hpp>
 #include <vector>
 #include <GLES3/gl3.h>
-
+#include "BitmapUtils.h"
 #include "FrameBuffer.h"
 #define TRIANGLE_NUM  43
 
@@ -43,11 +43,11 @@ class Pixelator : public thread::HandlerCallback {
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path);
+  void setBrushInternal(ImageInfo *image);
   int processTouchEventInternal(float x, float y);
   int refreshFrameInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   GLuint renderPixelator(GLuint texture, int width, int height);
-  void calculateMesh(vec2 pre, vec2 cur);
   GLuint rendImage(GLuint texture, int width, int height);
   void renderScreen(GLuint texture);
   void renderScreenTexture(GLuint texture);
@@ -73,11 +73,14 @@ class Pixelator : public thread::HandlerCallback {
   int surfaceHeight_ = 0;
   int imageWidth_ = 0;
   int imageHeight_ = 0;
-  std::vector<vec4> m_PointVector_;
+  std::vector<float> m_PointVector_;
   vec2 m_pVtxCoords[TRIANGLE_NUM * 3];
   vec2 m_pTexCoords[TRIANGLE_NUM * 3];
   vec2 currentPoint_;
   vec2 prePoint_;
+  //笔刷
+  ImageInfo *brushImage_ = nullptr;
+  GLuint brushTexture_ = 0;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_
