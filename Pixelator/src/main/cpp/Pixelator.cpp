@@ -45,6 +45,14 @@ Pixelator::~Pixelator() {
     glDeleteTextures(1, &brushTexture_);
     brushTexture_ = 0;
   }
+  if (pointsVbo_ > 0) {
+    glDeleteBuffers(1, &pointsVbo_);
+    pointsVbo_ = 0;
+  }
+  if (vao_ > 0) {
+    glDeleteVertexArrays(1, &vao_);
+    vao_ = 0;
+  }
   delete brushImage_;
   delete frameBuffer_;
   frameBuffer_ = nullptr;
@@ -103,11 +111,11 @@ bool Pixelator::setBrush(jobject bitmap) {
   return true;
 }
 
-void Pixelator::onTouchEvent(float x, float y) {
+void Pixelator::pushTouchBuffer(float *buffer, int length) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kTouchEvent;
-  msg->arg3 = x;
-  msg->arg4 = y;
+  msg->arg1 = length;
+  msg->obj1 = buffer;
   handler_->sendMessage(msg);
 }
 
@@ -149,9 +157,10 @@ void Pixelator::handleMessage(thread::Message *msg) {
       break;
     }
     case PixelateMessage::kTouchEvent: {
-      float x = msg->arg3;
-      float y = msg->arg4;
-      processTouchEventInternal(x, y);
+      auto *buffer = reinterpret_cast<float *>(msg->obj1);
+      int length = msg->arg1;
+      processPushBufferInternal(buffer, length);
+      delete[] buffer;
       break;
     }
 
@@ -242,19 +251,34 @@ void Pixelator::setBrushInternal(ImageInfo *image) {
 }
 
 bool rest = true;
-int Pixelator::processTouchEventInternal(float x, float y) {
-  prePoint_ = currentPoint_;
-  if (rest) {
-    currentPoint_ = vec2(x / surfaceWidth_, y / surfaceHeight_);
-    rest = false;
-    return 0;
+int Pixelator::processPushBufferInternal(float *buffer, int length) {
+  glBindVertexArray(vao_);
+  points = length / 2;
+  if (pointsVbo_ == 0) {
+    glGenBuffers(1, &pointsVbo_);
+    glBindBuffer(GL_ARRAY_BUFFER, pointsVbo_);
+    glBufferData(GL_ARRAY_BUFFER, length * sizeof(float), buffer, GL_DYNAMIC_DRAW);
+    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
+    glEnableVertexAttribArray(0);
+    glBindVertexArray(0);
+  } else {
+    glBindBuffer(GL_ARRAY_BUFFER, pointsVbo_);
+    glBufferData(GL_ARRAY_BUFFER, length * sizeof(float), buffer, GL_DYNAMIC_DRAW);
+    glBindBuffer(GL_ARRAY_BUFFER, 0);
   }
-  currentPoint_ = vec2(x * 1.0f / surfaceWidth_, y * 1.0f / surfaceHeight_);
-  if (prePoint_ == currentPoint_) {
-    return 0;
-  }
-  m_PointVector_.emplace_back(currentPoint_.x * 2.0 - 1.0);
-  m_PointVector_.emplace_back(currentPoint_.y * 2 - 1.0);
+
+//  prePoint_ = currentPoint_;
+//  if (rest) {
+//    currentPoint_ = vec2(x / surfaceWidth_, y / surfaceHeight_);
+//    rest = false;
+//    return 0;
+//  }
+//  currentPoint_ = vec2(x * 1.0f / surfaceWidth_, y * 1.0f / surfaceHeight_);
+//  if (prePoint_ == currentPoint_) {
+//    return 0;
+//  }
+//  m_PointVector_.emplace_back(currentPoint_.x * 2.0 - 1.0);
+//  m_PointVector_.emplace_back(currentPoint_.y * 2 - 1.0);
   return 0;
 }
 
@@ -339,6 +363,10 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
     program3_ = Program::CreateProgram(PIXELATE_VERTEX_SHADER, PIXELATE_RECT_FRAGMENT_SHADER);
   }
 
+  if (vao_ == 0) {
+    glGenVertexArrays(1, &vao_);
+  }
+
   int outputWidth = width;
   int outputHeight = height;
 
@@ -348,7 +376,7 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   }
 
   GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
-  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
+  //GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
@@ -374,15 +402,10 @@ GLuint Pixelator::renderPixelator(GLuint texture, int width, int height) {
   float rectSize[] = {20, 20};
   GL_CHECK(glUniform2fv(rectSizeLocation, 1, rectSize))
 
-  auto positionLoction = glGetAttribLocation(program3_, "position");
-  GL_CHECK(glEnableVertexAttribArray(positionLoction))
+  GL_CHECK(glBindVertexArray(vao_))
+  GL_CHECK(glDrawArrays(GL_POINTS, 0, points))
+  GL_CHECK(glBindVertexArray(0))
 
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 m_PointVector_.data()))
-
-  GL_CHECK(glDrawArrays(GL_POINTS, 0, m_PointVector_.size() / 2))
-
-  GL_CHECK(glDisableVertexAttribArray(positionLoction))
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
 
   GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0))
@@ -429,7 +452,7 @@ void Pixelator::renderScreenTexture(GLuint texture) {
   GL_CHECK(glEnableVertexAttribArray(textureLocation));
   GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
                                  TEXTURE_COORDINATE_FLIP_UP_DOWN))
-  GL_CHECK(glActiveTexture(0));
+  GL_CHECK(glActiveTexture(GL_TEXTURE0));
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
   auto inputTextureLocation = glGetUniformLocation(program2_, "inputImageTexture");
   GL_CHECK(glUniform1i(inputTextureLocation, 0))

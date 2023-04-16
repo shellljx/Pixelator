@@ -18,7 +18,7 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
 
 jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap);
 
-void Android_Jni_touch_event(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y);
+void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatArray buffer, jint count);
 
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id);
 
@@ -28,7 +28,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onSurfaceChanged", "(JII)V", (void **) Android_Jni_surface_changed},
     {"addImagePath", "(JLjava/lang/String;)V", (void **) Android_Jni_add_image_path},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
-    {"touchEvent", "(JFF)V", (void **) Android_Jni_touch_event},
+    {"pushTouchBuffer", "(J[FI)V", (void **) Android_Jni_pushTouchBuffer},
     {"refreshFrame", "(J)V", (void **) Andriod_Jni_refresh_frame}
 };
 

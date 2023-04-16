@@ -8,6 +8,8 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
 
     private var mId = 0L
     private var mRenderListener: IRenderListener? = null
+    var width = 0
+    var height = 0
 
     init {
         mId = create()
@@ -31,9 +33,10 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun touchEvent(x: Float, y: Float) {
+    override fun pushTouchBuffer(buffer: FloatArray) {
+        if (buffer.isEmpty()) return
         if (mId != 0L) {
-            touchEvent(mId, x, y)
+            pushTouchBuffer(mId, buffer, buffer.size)
         }
     }
 
@@ -45,6 +48,8 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
 
     override fun surfaceChanged(p0: SurfaceHolder, format: Int, width: Int, height: Int) {
         if (mId != 0L) {
+            this.width = width
+            this.height = height
             onSurfaceChanged(mId, width, height)
         }
     }
@@ -69,7 +74,7 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun addImagePath(id: Long, path: String)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
-    private external fun touchEvent(id: Long, x: Float, y: Float)
+    private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
     private external fun refreshFrame(id: Long)
 
     companion object {

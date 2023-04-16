@@ -34,7 +34,7 @@ class Pixelator : public thread::HandlerCallback {
   void onSurfaceChanged(int width, int height);
   void addImagePath(const char *path);
   bool setBrush(jobject bitmap);
-  void onTouchEvent(float x, float y);
+  void pushTouchBuffer(float *buffer, int length);
   void refreshFrame();
   void handleMessage(thread::Message *msg) override;
 
@@ -44,7 +44,7 @@ class Pixelator : public thread::HandlerCallback {
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path);
   void setBrushInternal(ImageInfo *image);
-  int processTouchEventInternal(float x, float y);
+  int processPushBufferInternal(float* buffer, int length);
   int refreshFrameInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   GLuint renderPixelator(GLuint texture, int width, int height);
@@ -73,11 +73,9 @@ class Pixelator : public thread::HandlerCallback {
   int surfaceHeight_ = 0;
   int imageWidth_ = 0;
   int imageHeight_ = 0;
-  std::vector<float> m_PointVector_;
-  vec2 m_pVtxCoords[TRIANGLE_NUM * 3];
-  vec2 m_pTexCoords[TRIANGLE_NUM * 3];
-  vec2 currentPoint_;
-  vec2 prePoint_;
+  GLuint vao_ = 0;
+  GLuint pointsVbo_ = 0;
+  int points = 0;
   //笔刷
   ImageInfo *brushImage_ = nullptr;
   GLuint brushTexture_ = 0;

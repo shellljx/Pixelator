@@ -6,6 +6,7 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import androidx.core.math.MathUtils
 import com.gmail.shellljx.pixelator.IRenderListener
 import com.gmail.shellljx.pixelator.Pixelator
 
@@ -24,10 +25,14 @@ class MainActivity : AppCompatActivity() {
         gestureView.setGestureListener(object : GestureView.GestureListener {
             override fun onMove(points: List<PointF>) {
                 if (!isWindowCreated) return
-                System.out.println("lijinxiang size ${points.size}")
+                val buffer = arrayListOf<Float>()
                 points.forEach {
-                    pixelator.touchEvent(it.x, it.y)
+                    val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f,1f)
+                    val openglY = MathUtils.clamp(it.y / pixelator.height.toFloat() * 2f - 1,-1f,1f)
+                    buffer.add(openglX)
+                    buffer.add(openglY)
                 }
+                pixelator.pushTouchBuffer(buffer.toFloatArray())
                 pixelator.refreshFrame()
             }
         })

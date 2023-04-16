@@ -8,7 +8,7 @@ interface IPixelator {
 
     fun setBrush(bitmap: Bitmap)
 
-    fun touchEvent(x: Float, y: Float)
+    fun pushTouchBuffer(buffer: FloatArray)
 
     fun refreshFrame()
 

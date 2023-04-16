@@ -33,9 +33,15 @@ jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bit
   return pixelator->setBrush(bitmap);
 }
 
-void Android_Jni_touch_event(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y) {
+void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatArray buffer, jint count) {
   auto pixelator = reinterpret_cast<Pixelator *>(id);
-  pixelator->onTouchEvent(x, y);
+  jfloat *touchBuffer = env->GetFloatArrayElements(buffer, nullptr);
+  jsize length = env->GetArrayLength(buffer);
+
+  auto *copyBuffer = new float[length];
+  memcpy(copyBuffer, touchBuffer, length * sizeof(float));
+  pixelator->pushTouchBuffer(copyBuffer, length);
+  env->ReleaseFloatArrayElements(buffer, touchBuffer, 0);
 }
 
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
