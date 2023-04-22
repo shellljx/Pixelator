@@ -422,7 +422,7 @@ void Pixelator::renderScreen(GLuint texture) {
   }
 
   GL_CHECK(glEnable(GL_BLEND))
-  GL_CHECK(glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA))
+  GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA))
   GL_CHECK(glBlendEquation(GL_FUNC_ADD))
   int outputWidth = surfaceWidth_;
   int outputHeight = surfaceHeight_;
