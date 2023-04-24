@@ -8,25 +8,29 @@
 #include "Program.h"
 
 class FrameBuffer {
-public:
-    FrameBuffer();
+ public:
+  FrameBuffer();
 
-    ~FrameBuffer();
+  ~FrameBuffer();
 
-    void createFrameBuffer(int width, int height);
+  /**
+   * 创建 framebuffer 或者更新 framebuffer的尺寸
+   * @param width
+   * @param height
+   */
+  void createFrameBuffer(int width, int height);
 
-    GLuint getTexture();
+  GLuint getTexture();
 
-    GLuint getFrameBuffer();
+  GLuint getFrameBuffer();
 
-    void deleteFrameBuffer();
+  void deleteFrameBuffer();
 
-private:
-    GLuint frameBufferId_ = 0;
-    GLuint frameTextureId_ = 0;
-    int width_;
-    int height_;
+ private:
+  GLuint frameBufferId_ = 0;
+  GLuint frameTextureId_ = 0;
+  int width_;
+  int height_;
 };
-
 
 #endif //CAMERARECORD_FRAMEBUFFER_H

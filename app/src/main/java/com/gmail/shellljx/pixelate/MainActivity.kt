@@ -15,7 +15,6 @@ class MainActivity : AppCompatActivity() {
     lateinit var surfaceView: SurfaceView
     lateinit var gestureView: GestureView
     private var isWindowCreated = false
-    private var prePoint = PointF()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)

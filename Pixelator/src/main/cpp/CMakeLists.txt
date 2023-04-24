@@ -28,6 +28,9 @@ add_library( # Sets the name of the library.
         SHARED
         gl/FrameBuffer.cpp
         gl/Program.cpp
+        render/ImageFrameBuffer.cpp
+        render/PixelationRender.cpp
+        render/ScreenRender.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp
         thread/Looper.cpp
@@ -36,9 +39,9 @@ add_library( # Sets the name of the library.
         utils/TimeUtils.cpp
         Effect.cpp
         EGLCore.cpp
+        ImageEngine.cpp
         JNIEnvironment.cpp
-        NativeLib.cpp
-        Pixelator.cpp)
+        NativeLib.cpp)
 
 # Searches for a specified prebuilt library and stores the path as a
 # variable. Because CMake includes system libraries in the search path by

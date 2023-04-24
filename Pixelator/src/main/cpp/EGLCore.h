@@ -31,7 +31,7 @@ class EGLCore {
 
   EGLSurface createOffscreenSurface(int width, int height);
 
-  int makeCurrent(EGLSurface pVoid);
+  EGLBoolean makeCurrent(EGLSurface pVoid);
 
   bool swapBuffers(EGLSurface pVoid);
 

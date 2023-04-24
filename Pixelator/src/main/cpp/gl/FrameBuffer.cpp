@@ -13,20 +13,34 @@ FrameBuffer::~FrameBuffer() {
 }
 
 void FrameBuffer::createFrameBuffer(int width, int height) {
-  if (frameBufferId_ != 0) {
+  if (width == width_ && height == height_) {
     return;
   }
+  if (frameBufferId_ == 0) {
+    GL_CHECK(glGenTextures(1, &frameTextureId_))
+    GL_CHECK(glGenFramebuffers(1, &frameBufferId_))
+  }
 
-  GL_CHECK(glGenTextures(1, &frameTextureId_));
-  GL_CHECK(glGenFramebuffers(1, &frameBufferId_));
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId_));
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, frameTextureId_));
-  GL_CHECK(glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, width, height, 0, GL_RGBA, GL_UNSIGNED_BYTE, nullptr));
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId_))
+  GL_CHECK(glBindTexture(GL_TEXTURE_2D, frameTextureId_))
+  GL_CHECK(glTexImage2D(GL_TEXTURE_2D,
+                        0,
+                        GL_RGBA,
+                        width,
+                        height,
+                        0,
+                        GL_RGBA,
+                        GL_UNSIGNED_BYTE,
+                        nullptr))
   GL_CHECK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE))
   GL_CHECK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE))
   GL_CHECK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR))
   GL_CHECK(glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR))
-  GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER, GL_COLOR_ATTACHMENT0, GL_TEXTURE_2D, frameTextureId_, 0))
+  GL_CHECK(glFramebufferTexture2D(GL_FRAMEBUFFER,
+                                  GL_COLOR_ATTACHMENT0,
+                                  GL_TEXTURE_2D,
+                                  frameTextureId_,
+                                  0))
   auto status = glCheckFramebufferStatus(GL_FRAMEBUFFER);
   if (status != GL_FRAMEBUFFER_COMPLETE) {
     LOGE("frame buffer create error %d, %d", width, height);

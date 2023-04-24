@@ -31,6 +31,13 @@ static float TEXTURE_COORDINATE_FLIP_UP_DOWN[] = {
     1.0f, 0.0f
 };
 
+static float DEFAULT_TEXTURE_COORDINATE[] = {
+    0.0f, 0.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    1.0f, 1.0f
+};
+
 /// 默认顶点shader
 static const char *DEFAULT_VERTEX_SHADER =
     "#ifdef GL_ES                                                                           \n"
@@ -55,7 +62,6 @@ static const char *DEFAULT_FRAGMENT_SHADER =
     "    gl_FragColor = texture2D(inputImageTexture, textureCoordinate);                    \n"
     "}                                                                                      \n";
 
-
 /// 默认顶点shader
 static const char *PIXELATE_VERTEX_SHADER =
     "#ifdef GL_ES                                                                           \n"
@@ -70,6 +76,22 @@ static const char *PIXELATE_VERTEX_SHADER =
     "}                                                                                      \n";
 
 static const char *PIXELATE_RECT_FRAGMENT_SHADER =
+    "#ifdef GL_ES                                                                           \n"
+    "precision highp float;                                                                 \n"
+    "#endif                                                                                 \n"
+    "varying vec2 textureCoordinate;                                                        \n"
+    "uniform sampler2D inputImageTexture;                                                   \n"
+    "uniform vec2 textureSize; \n"
+    "uniform vec2 rectSize; \n"
+    "void main() {                                                                          \n"
+    "   vec2 textureXY = gl_FragCoord.xy; \n"
+    "   vec2 rectXY = vec2(floor(textureXY.x/rectSize.x)*rectSize.x, floor(textureXY.y/rectSize.y)*rectSize.y); \n"
+    "   vec2 rectUV = vec2(rectXY.x/textureSize.x, rectXY.y/textureSize.y); \n"
+    "   vec4 color = texture2D(inputImageTexture, rectUV); \n"
+    "   gl_FragColor = color;                    \n"
+    "}                                                                                      \n";
+
+static const char *BRUSH_FRAGMENT_SHADER =
     "#ifdef GL_ES \n"
     "precision highp float; \n"
     "#endif \n"

@@ -88,7 +88,7 @@ EGLSurface EGLCore::createOffscreenSurface(int width, int height) {
   return surface;
 }
 
-int EGLCore::makeCurrent(EGLSurface pVoid) {
+EGLBoolean EGLCore::makeCurrent(EGLSurface pVoid) {
   return eglMakeCurrent(display_, pVoid, pVoid, context_);
 }
 
