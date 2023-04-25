@@ -18,6 +18,10 @@ PaintRender::~PaintRender() {
     glDeleteProgram(program_);
     program_ = 0;
   }
+  if (brushTexture_ > 0) {
+    glDeleteTextures(1, &brushTexture_);
+    brushTexture_ = 0;
+  }
 }
 
 void PaintRender::setBrush(const ImageInfo *image) {

@@ -115,13 +115,13 @@ static const char *BRUSH_FRAGMENT_SHADER =
     "} \n"
     "} \n";
 
-void PrintGLError() {
-  GLenum err;
-  for (;;) {
-    err = glGetError();
-    if (err == GL_NO_ERROR) break;
-    LOGE("lijinxiang egl error %d", err);
-  }
-}
+//void PrintGLError() {
+//  GLenum err;
+//  for (;;) {
+//    err = glGetError();
+//    if (err == GL_NO_ERROR) break;
+//    LOGE("lijinxiang egl error %d", err);
+//  }
+//}
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_

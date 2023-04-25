@@ -25,39 +25,18 @@ ImageEngine::ImageEngine(jobject object) : pixelationRender_(nullptr), paintRend
 }
 
 ImageEngine::~ImageEngine() {
-  if (program1_ > 0) {
-    glDeleteProgram(program1_);
-    program1_ = 0;
-  }
   if (program2_ > 0) {
     glDeleteProgram(program2_);
     program2_ = 0;
-  }
-  if (program3_ > 0) {
-    glDeleteProgram(program3_);
-    program3_ = 0;
   }
   if (imageTexture_ > 0) {
     glDeleteTextures(1, &imageTexture_);
     imageTexture_ = 0;
   }
-  if (brushTexture_ > 0) {
-    glDeleteTextures(1, &brushTexture_);
-    brushTexture_ = 0;
-  }
-  if (pointsVbo_ > 0) {
-    glDeleteBuffers(1, &pointsVbo_);
-    pointsVbo_ = 0;
-  }
-  if (vao_ > 0) {
-    glDeleteVertexArrays(1, &vao_);
-    vao_ = 0;
-  }
+
   delete brushImage_;
   delete frameBuffer_;
   frameBuffer_ = nullptr;
-  delete pixelateFrameBuffer_;
-  pixelateFrameBuffer_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -220,62 +199,8 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 
 int ImageEngine::insertImageInternal(const char *path) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
-  int imageWith;
-  int imageHeight;
-  decodeImage(imageTextureOverlay_,
-              "/sdcard/aftereffect/ae/tt/resource/assets/a1.png",
-              &imageWith,
-              &imageHeight);
-
-  auto id = pixelationRender_->draw(imageTexture_, imageWith, imageHeight);
-  renderScreen(id);
-  return 0;
-}
-
-void ImageEngine::setBrushInternal(ImageInfo *image) {
-  if (brushImage_ != nullptr || image == nullptr) {
-    return;
-  }
-  if (image->pixels_ != nullptr) {
-    if (brushTexture_ == 0) {
-      glGenTextures(1, &brushTexture_);
-      glBindTexture(GL_TEXTURE_2D, brushTexture_);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width_, image->height_, 0,
-                   GL_RGBA, GL_UNSIGNED_BYTE,
-                   image->pixels_);
-    } else {
-      glBindTexture(GL_TEXTURE_2D, brushTexture_);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width_, image->height_,
-                      GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-    brushImage_ = image;
-  } else {
-    delete image;
-  }
-}
-
-int ImageEngine::processPushBufferInternal(float *buffer, int length) {
-  glBindVertexArray(vao_);
-  points = length / 2;
-  if (pointsVbo_ == 0) {
-    glGenBuffers(1, &pointsVbo_);
-    glBindBuffer(GL_ARRAY_BUFFER, pointsVbo_);
-    glBufferData(GL_ARRAY_BUFFER, length * sizeof(float), buffer, GL_DYNAMIC_DRAW);
-    glVertexAttribPointer(0, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(float), nullptr);
-    glEnableVertexAttribArray(0);
-    glBindVertexArray(0);
-  } else {
-    glBindBuffer(GL_ARRAY_BUFFER, pointsVbo_);
-    glBufferData(GL_ARRAY_BUFFER, length * sizeof(float), buffer, GL_DYNAMIC_DRAW);
-    glBindBuffer(GL_ARRAY_BUFFER, 0);
-  }
+  pixelationRender_->draw(imageTexture_, imageWidth_, imageHeight_);
+  renderScreen(0);
   return 0;
 }
 
@@ -299,7 +224,7 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
   if (*width % 2 != 0 || *height % 2 != 0) {
     glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
   }
-  glActiveTexture(0);
+  glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, texture);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
@@ -311,113 +236,10 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
   return 0;
 }
 
-GLuint ImageEngine::rendImage(GLuint texture, int width, int height) {
-  if (frameBuffer_ == nullptr) {
-    frameBuffer_ = new FrameBuffer();
-    frameBuffer_->createFrameBuffer(width, height);
-  }
-  if (program1_ == 0) {
-    program1_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
-  }
-  int outputWidth = width;
-  int outputHeight = height;
-
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer()));
-  if (width % 2 != 0 || height % 2 != 0) {
-    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-  }
-
-  GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
-  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-  GL_CHECK(glUseProgram(program1_));
-  auto positionLoction = glGetAttribLocation(program1_, "position");
-  GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_VERTEX_COORDINATE))
-  auto textureLocation = glGetAttribLocation(program1_, "inputTextureCoordinate");
-  GL_CHECK(glEnableVertexAttribArray(textureLocation));
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
-  GL_CHECK(glActiveTexture(0));
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, imageTexture_));
-  auto inputTextureLocation = glGetUniformLocation(program1_, "inputImageTexture");
-  GL_CHECK(glUniform1i(inputTextureLocation, 0))
-  GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4))
-  GL_CHECK(glDisableVertexAttribArray(positionLoction))
-  GL_CHECK(glDisableVertexAttribArray(textureLocation))
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
-
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0));
-  return frameBuffer_->getTexture();
-}
-
-GLuint ImageEngine::renderPixelator(GLuint texture, int width, int height) {
-  if (pixelateFrameBuffer_ == nullptr) {
-    pixelateFrameBuffer_ = new FrameBuffer();
-    pixelateFrameBuffer_->createFrameBuffer(width, height);
-  }
-  if (program3_ == 0) {
-    program3_ = Program::CreateProgram(PIXELATE_VERTEX_SHADER, BRUSH_FRAGMENT_SHADER);
-  }
-
-  if (vao_ == 0) {
-    glGenVertexArrays(1, &vao_);
-  }
-
-  int outputWidth = width;
-  int outputHeight = height;
-
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, pixelateFrameBuffer_->getFrameBuffer()));
-  if (width % 2 != 0 || height % 2 != 0) {
-    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-  }
-
-  GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
-  //GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_STENCIL_BUFFER_BIT));
-  glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
-  glBlendEquation(GL_FUNC_ADD);
-
-  GL_CHECK(glUseProgram(program3_));
-  GL_CHECK(glEnable(GL_STENCIL_TEST))
-  GL_CHECK(glStencilFunc(GL_NOTEQUAL, 1, 0xFF))
-  GL_CHECK(glStencilOp(GL_KEEP, GL_KEEP, GL_REPLACE))
-  GL_CHECK(glStencilMask(0xFF))
-
-  GL_CHECK(glActiveTexture((GL_TEXTURE1)))
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, brushTexture_))
-  auto brushTextureLocation = glGetUniformLocation(program3_, "brushTexture");
-  GL_CHECK(glUniform1i(brushTextureLocation, 1))
-  GL_CHECK(glActiveTexture(GL_TEXTURE0))
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
-  auto inputTextureLocation = glGetUniformLocation(program3_, "inputImageTexture");
-  GL_CHECK(glUniform1i(inputTextureLocation, 0))
-  auto textureSizeLocation = glGetUniformLocation(program3_, "textureSize");
-  float textureSize[] = {(float) width, (float) height};
-  GL_CHECK(glUniform2fv(textureSizeLocation, 1, textureSize))
-  auto rectSizeLocation = glGetUniformLocation(program3_, "rectSize");
-  float rectSize[] = {20, 20};
-  GL_CHECK(glUniform2fv(rectSizeLocation, 1, rectSize))
-
-  GL_CHECK(glBindVertexArray(vao_))
-  GL_CHECK(glDrawArrays(GL_POINTS, 0, points))
-  GL_CHECK(glBindVertexArray(0))
-
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
-
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0))
-  glDisable(GL_BLEND);
-  GL_CHECK(glDisable(GL_STENCIL_TEST))
-  return pixelateFrameBuffer_->getTexture();
-
-}
-
 void ImageEngine::renderScreen(GLuint texture) {
-  eglCore_->makeCurrent(renderSurface_);
   if (program2_ == 0) {
     program2_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
   }
-
   GL_CHECK(glEnable(GL_BLEND))
   GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA))
   GL_CHECK(glBlendEquation(GL_FUNC_ADD))
@@ -431,7 +253,9 @@ void ImageEngine::renderScreen(GLuint texture) {
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
   renderScreenTexture(imageTexture_);
-  renderScreenTexture(texture);
+  if (texture > 0) {
+    renderScreenTexture(texture);
+  }
 
   GL_CHECK(glDisable(GL_BLEND))
 

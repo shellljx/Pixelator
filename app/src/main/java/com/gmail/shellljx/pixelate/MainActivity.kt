@@ -44,7 +44,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
-                pixelator.addImagePath("/sdcard/aftereffect/ae/asset11.png")
+                pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
                 isWindowCreated = true
             }
         })

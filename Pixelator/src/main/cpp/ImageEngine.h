@@ -23,7 +23,6 @@
 #include "FrameBuffer.h"
 #include "render/PixelationRender.h"
 #include "render/PaintRender.h"
-#define TRIANGLE_NUM  43
 
 using namespace glm;
 
@@ -45,12 +44,8 @@ class ImageEngine : public thread::HandlerCallback {
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path);
-  void setBrushInternal(ImageInfo *image);
-  int processPushBufferInternal(float *buffer, int length);
   int refreshFrameInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
-  GLuint renderPixelator(GLuint texture, int width, int height);
-  GLuint rendImage(GLuint texture, int width, int height);
   void renderScreen(GLuint texture);
   void renderScreenTexture(GLuint texture);
   void callJavaEGLContextCreate();
@@ -65,22 +60,14 @@ class ImageEngine : public thread::HandlerCallback {
   Global<jobject> pixelator_;
 
   GLuint imageTexture_ = 0;
-  GLuint imageTextureOverlay_ = 0;
   FrameBuffer *frameBuffer_ = nullptr;
-  GLuint program1_ = 0;
   GLuint program2_ = 0;
-  FrameBuffer *pixelateFrameBuffer_ = nullptr;
-  GLuint program3_ = 0;
   int surfaceWidth_ = 0;
   int surfaceHeight_ = 0;
   int imageWidth_ = 0;
   int imageHeight_ = 0;
-  GLuint vao_ = 0;
-  GLuint pointsVbo_ = 0;
-  int points = 0;
   //笔刷
   ImageInfo *brushImage_ = nullptr;
-  GLuint brushTexture_ = 0;
   PixelationRender *pixelationRender_;
   PaintRender *paintRender_;
 };
