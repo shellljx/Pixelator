@@ -4,6 +4,7 @@
 
 #ifndef PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_
 #define PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_
+#include "Log.h"
 
 #ifndef GL_CHECK
 #define GL_CHECK(x) { \
@@ -77,7 +78,6 @@ static const char *PIXELATE_RECT_FRAGMENT_SHADER =
     "#ifdef GL_ES                                                                           \n"
     "precision highp float;                                                                 \n"
     "#endif                                                                                 \n"
-    "varying vec2 textureCoordinate;                                                        \n"
     "uniform sampler2D inputImageTexture;                                                   \n"
     "uniform vec2 textureSize; \n"
     "uniform vec2 rectSize; \n"
@@ -114,5 +114,14 @@ static const char *BRUSH_FRAGMENT_SHADER =
     "gl_FragColor = outColorTransparent * (vec4(1.0) - ((vec4(1.0)-vec4(color.rgb,1.0)))*(vec4(1.0)-mask)); \n"
     "} \n"
     "} \n";
+
+void PrintGLError() {
+  GLenum err;
+  for (;;) {
+    err = glGetError();
+    if (err == GL_NO_ERROR) break;
+    LOGE("lijinxiang egl error %d", err);
+  }
+}
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_GL_OPENGL_H_

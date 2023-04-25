@@ -38,14 +38,6 @@ GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
                         GL_FALSE,
                         2 * sizeof(GLfloat),
                         DEFAULT_VERTEX_COORDINATE);
-  auto textureLoc = glGetAttribLocation(program_, "inputTextureCoordinate");
-  glEnableVertexAttribArray(textureLoc);
-  glVertexAttribPointer(textureLoc,
-                        2,
-                        GL_FLOAT,
-                        GL_FALSE,
-                        2 * sizeof(GLfloat),
-                        DEFAULT_TEXTURE_COORDINATE);
   //更新纹理长宽
   auto textureSizeLoc = glGetUniformLocation(program_, "textureSize");
   float textureSize[] = {(float) width, (float) height};
@@ -61,7 +53,6 @@ GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
   glUniform1i(inputTextureLoc, 0);
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glDisableVertexAttribArray(positionLoc);
-  glDisableVertexAttribArray(textureLoc);
   glBindTexture(GL_TEXTURE_2D, 0);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
   return frameBuffer_->getTexture();
