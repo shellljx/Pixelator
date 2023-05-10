@@ -32,6 +32,7 @@ add_library( # Sets the name of the library.
         render/PaintRender.cpp
         render/PixelationRender.cpp
         render/ScreenRender.cpp
+        render/SourceRender.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp
         thread/Looper.cpp
