@@ -34,6 +34,10 @@ class MainActivity : AppCompatActivity() {
                 pixelator.pushTouchBuffer(buffer.toFloatArray())
                 pixelator.refreshFrame()
             }
+
+            override fun onTranslate(scale: Float, angle: Float) {
+                pixelator.translate(scale, 0f)
+            }
         })
         pixelator.setRenderListener(object : IRenderListener {
             override fun onEGLContextCreate() {
@@ -44,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
-                pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
+                pixelator.addImagePath("/sdcard/DCIM/Camera/下载.jpeg")
                 isWindowCreated = true
             }
         })

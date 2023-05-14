@@ -44,6 +44,11 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatAr
   env->ReleaseFloatArrayElements(buffer, touchBuffer, 0);
 }
 
+void Android_Jni_translate(JNIEnv *env, jobject object, jlong id, jfloat scale, jfloat angle) {
+  auto pixelator = reinterpret_cast<ImageEngine *>(id);
+  pixelator->translate(scale, angle);
+}
+
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   pixelator->refreshFrame();

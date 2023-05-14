@@ -14,7 +14,8 @@
 #include "stb_image.h"
 #include "OpenGL.h"
 
-ImageEngine::ImageEngine(jobject object) : pixelationRender_(nullptr), paintRender_(nullptr) {
+ImageEngine::ImageEngine(jobject object)
+    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr) {
   std::string name("pixelator thread");
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
@@ -37,6 +38,13 @@ ImageEngine::~ImageEngine() {
   delete brushImage_;
   delete frameBuffer_;
   frameBuffer_ = nullptr;
+
+  delete paintRender_;
+  paintRender_ = nullptr;
+  delete pixelationRender_;
+  pixelationRender_ = nullptr;
+  delete sourceRender_;
+  sourceRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -98,6 +106,14 @@ void ImageEngine::pushTouchBuffer(float *buffer, int length) {
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::translate(float scale, float angle) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kTranslate;
+  msg->arg3 = scale;
+  msg->arg4 = angle;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::refreshFrame() {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kRefreshFrame;
@@ -144,6 +160,16 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       break;
     }
 
+    case PixelateMessage::kTranslate: {
+      auto scale = msg->arg3;
+      auto angle = msg->arg4;
+      sourceRender_->translate(scale, angle);
+      sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, surfaceWidth_, surfaceHeight_);
+      pixelationRender_->draw(sourceRender_->getTexture(), surfaceWidth_, surfaceHeight_);
+      refreshFrameInternal();
+      break;
+    }
+
     case PixelateMessage::kRefreshFrame: {
       refreshFrameInternal();
       break;
@@ -180,6 +206,9 @@ int ImageEngine::createEGLSurfaceInternal() {
   }
   eglCore_->makeCurrent(renderSurface_);
 
+  if (sourceRender_ == nullptr) {
+    sourceRender_ = new SourceRender();
+  }
   if (pixelationRender_ == nullptr) {
     pixelationRender_ = new PixelationRender();
   }
@@ -199,13 +228,14 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 
 int ImageEngine::insertImageInternal(const char *path) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
-  pixelationRender_->draw(imageTexture_, imageWidth_, imageHeight_);
+  sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, surfaceWidth_, surfaceHeight_);
+  pixelationRender_->draw(sourceRender_->getTexture(), surfaceWidth_, surfaceHeight_);
   renderScreen(0);
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  paintRender_->draw(pixelationRender_->getTexture(), imageWidth_, imageHeight_);
+  paintRender_->draw(pixelationRender_->getTexture(), surfaceWidth_, surfaceHeight_);
   renderScreen(paintRender_->getTexture());
   return 0;
 }
@@ -252,7 +282,7 @@ void ImageEngine::renderScreen(GLuint texture) {
   GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-  renderScreenTexture(imageTexture_);
+  renderScreenTexture(sourceRender_->getTexture());
   if (texture > 0) {
     renderScreenTexture(texture);
   }

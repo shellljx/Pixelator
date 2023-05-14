@@ -52,6 +52,20 @@ static const char *DEFAULT_VERTEX_SHADER =
     "    textureCoordinate = inputTextureCoordinate.xy;                                     \n"
     "}                                                                                      \n";
 
+/// 带矩阵的顶点shader
+static const char *DEFAULT_MATRIX_VERTEX_SHADER =
+    "#ifdef GL_ES                                                                           \n"
+    "precision highp float;                                                                 \n"
+    "#endif                                                                                 \n"
+    "attribute vec4 position;                                                               \n"
+    "attribute vec4 inputTextureCoordinate;                                                 \n"
+    "uniform mat4 mvp;                                                                      \n"
+    "varying vec2 textureCoordinate;                                                        \n"
+    "void main() {                                                                          \n"
+    "    gl_Position = mvp * position;                                                      \n"
+    "    textureCoordinate = inputTextureCoordinate.xy;                                     \n"
+    "}                                                                                      \n";
+
 /// 默认fragment shader
 static const char *DEFAULT_FRAGMENT_SHADER =
     "#ifdef GL_ES                                                                           \n"

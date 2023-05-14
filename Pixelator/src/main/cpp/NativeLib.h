@@ -20,6 +20,8 @@ jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bit
 
 void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatArray buffer, jint count);
 
+void Android_Jni_translate(JNIEnv *env, jobject object, jlong id, jfloat scale, jfloat angle);
+
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id);
 
 static JNINativeMethod pixelatorNativeMethods[] = {
@@ -29,7 +31,8 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"addImagePath", "(JLjava/lang/String;)V", (void **) Android_Jni_add_image_path},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
     {"pushTouchBuffer", "(J[FI)V", (void **) Android_Jni_pushTouchBuffer},
-    {"refreshFrame", "(J)V", (void **) Andriod_Jni_refresh_frame}
+    {"refreshFrame", "(J)V",   (void **) Andriod_Jni_refresh_frame},
+    {"translate",    "(JFF)V", (void **) Android_Jni_translate}
 };
 
 #endif //PIXELATE_PIXELATOR_JNI_H

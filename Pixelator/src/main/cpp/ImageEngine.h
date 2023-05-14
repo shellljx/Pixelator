@@ -21,6 +21,7 @@
 #include <GLES3/gl3.h>
 #include "BitmapUtils.h"
 #include "FrameBuffer.h"
+#include "render/SourceRender.h"
 #include "render/PixelationRender.h"
 #include "render/PaintRender.h"
 
@@ -36,6 +37,7 @@ class ImageEngine : public thread::HandlerCallback {
   void addImagePath(const char *path);
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
+  void translate(float scale, float angle);
   void refreshFrame();
   void handleMessage(thread::Message *msg) override;
 
@@ -68,6 +70,7 @@ class ImageEngine : public thread::HandlerCallback {
   int imageHeight_ = 0;
   //笔刷
   ImageInfo *brushImage_ = nullptr;
+  SourceRender *sourceRender_;
   PixelationRender *pixelationRender_;
   PaintRender *paintRender_;
 };

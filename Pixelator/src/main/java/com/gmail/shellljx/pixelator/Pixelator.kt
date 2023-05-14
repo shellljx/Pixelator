@@ -40,6 +40,12 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
+    override fun translate(scale: Float, angle: Float) {
+        if (mId != 0L) {
+            translate(mId, scale, angle)
+        }
+    }
+
     override fun refreshFrame() {
         if (mId != 0L) {
             refreshFrame(mId);
@@ -75,6 +81,7 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun addImagePath(id: Long, path: String)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
+    private external fun translate(id: Long, scale: Float, angle: Float)
     private external fun refreshFrame(id: Long)
 
     companion object {
