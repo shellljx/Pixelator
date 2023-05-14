@@ -3,6 +3,9 @@
 //
 
 #include "PaintRender.h"
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 
 PaintRender::PaintRender() {
   frame_buffer_ = new FrameBuffer();
@@ -72,15 +75,36 @@ int PaintRender::processPushBufferInternal(float *buffer, int length) {
   return 0;
 }
 
-GLuint PaintRender::draw(GLuint textureId, int width, int height) {
+GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight) {
   frame_buffer_->createFrameBuffer(width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
 
+  glm::mat4 projection = glm::ortho(0.f, width * 1.f,
+                                    0.f, height * 1.f, 1.f, 100.f);
+  glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
+  glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
+  glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
+  glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
+  auto matrix = glm::mat4(1);
+  float x = (screenWidth - width) / 2.f;
+  float y = (screenHeight - height) / 2.f;
+  matrix = glm::translate(matrix, glm::vec3(-100.f*(1/2.5), -100.f*(1/2.5), 0.f));
+  matrix = glm::translate(matrix, glm::vec3(-x*(1/2.5), -y*(1/2.5), 0.f));
+  matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
+  matrix = glm::scale(matrix, glm::vec3(1.f/2.5f, 1.f/2.5f, 1.f));
+  matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   glViewport(0, 0, width, height);
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
   glUseProgram(program_);
+  matrix = projection * viewMatrix * matrix;
+  auto mvpLoc = glGetUniformLocation(program_, "mvp");
+  glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
+
+  auto pointSizeLocation = glGetUniformLocation(program_, "pointSize");
+  glUniform1f(pointSizeLocation, 100.f/2.5f);
+
   auto textureSizeLocation = glGetUniformLocation(program_, "textureSize");
   float textureSize[] = {(float) width, (float) height};
   glUniform2fv(textureSizeLocation, 1, textureSize);

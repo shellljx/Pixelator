@@ -15,7 +15,7 @@
 #include "OpenGL.h"
 
 ImageEngine::ImageEngine(jobject object)
-    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr) {
+    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr), screenRender_(nullptr) {
   std::string name("pixelator thread");
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
@@ -45,6 +45,8 @@ ImageEngine::~ImageEngine() {
   pixelationRender_ = nullptr;
   delete sourceRender_;
   sourceRender_ = nullptr;
+  delete screenRender_;
+  screenRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -215,6 +217,9 @@ int ImageEngine::createEGLSurfaceInternal() {
   if (paintRender_ == nullptr) {
     paintRender_ = new PaintRender();
   }
+  if (screenRender_ == nullptr) {
+    screenRender_ = new ScreenRender();
+  }
   callJavaEGLWindowCreate();
   LOGI("leave %s", __func__);
   return 0;
@@ -229,14 +234,14 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 int ImageEngine::insertImageInternal(const char *path) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
   sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, surfaceWidth_, surfaceHeight_);
-  pixelationRender_->draw(sourceRender_->getTexture(), surfaceWidth_, surfaceHeight_);
-  renderScreen(0);
+  pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+  renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  paintRender_->draw(pixelationRender_->getTexture(), surfaceWidth_, surfaceHeight_);
-  renderScreen(paintRender_->getTexture());
+  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight(), surfaceWidth_, surfaceHeight_);
+  renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
   return 0;
 }
 
@@ -266,29 +271,8 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
   return 0;
 }
 
-void ImageEngine::renderScreen(GLuint texture) {
-  if (program2_ == 0) {
-    program2_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
-  }
-  GL_CHECK(glEnable(GL_BLEND))
-  GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA))
-  GL_CHECK(glBlendEquation(GL_FUNC_ADD))
-  int outputWidth = surfaceWidth_;
-  int outputHeight = surfaceHeight_;
-
-  if (outputHeight % 2 != 0 || outputWidth % 2 != 0) {
-    GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
-  }
-  GL_CHECK(glViewport(0, 0, outputWidth, outputHeight));
-  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-  renderScreenTexture(sourceRender_->getTexture());
-  if (texture > 0) {
-    renderScreenTexture(texture);
-  }
-
-  GL_CHECK(glDisable(GL_BLEND))
-
+void ImageEngine::renderScreen(GLuint texture, int width, int height) {
+  screenRender_->draw(texture, paintRender_->getTexture(), width, height, surfaceWidth_, surfaceHeight_);
   eglCore_->swapBuffers(renderSurface_);
 }
 

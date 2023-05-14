@@ -83,9 +83,11 @@ static const char *PIXELATE_VERTEX_SHADER =
     "precision highp float;                                                                 \n"
     "#endif                                                                                 \n"
     "attribute vec4 position;                                                               \n"
+    "uniform mat4 mvp;                                                                      \n"
+    "uniform float pointSize;                                                               \n"
     "void main() {                                                                          \n"
-    "    gl_Position = position;                                                            \n"
-    "    gl_PointSize = 100.;                                     \n"
+    "    gl_Position = mvp * position;                                                            \n"
+    "    gl_PointSize = pointSize;                                     \n"
     "}                                                                                      \n";
 
 static const char *PIXELATE_RECT_FRAGMENT_SHADER =

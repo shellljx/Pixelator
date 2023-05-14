@@ -24,6 +24,7 @@
 #include "render/SourceRender.h"
 #include "render/PixelationRender.h"
 #include "render/PaintRender.h"
+#include "render/ScreenRender.h"
 
 using namespace glm;
 
@@ -48,7 +49,7 @@ class ImageEngine : public thread::HandlerCallback {
   int insertImageInternal(const char *path);
   int refreshFrameInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
-  void renderScreen(GLuint texture);
+  void renderScreen(GLuint texture, int width, int height);
   void renderScreenTexture(GLuint texture);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
@@ -73,6 +74,7 @@ class ImageEngine : public thread::HandlerCallback {
   SourceRender *sourceRender_;
   PixelationRender *pixelationRender_;
   PaintRender *paintRender_;
+  ScreenRender *screenRender_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_

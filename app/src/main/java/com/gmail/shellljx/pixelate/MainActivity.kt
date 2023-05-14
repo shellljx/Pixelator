@@ -27,9 +27,9 @@ class MainActivity : AppCompatActivity() {
                 val buffer = arrayListOf<Float>()
                 points.forEach {
                     val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f,1f)
-                    val openglY = MathUtils.clamp(it.y / pixelator.height.toFloat() * 2f - 1,-1f,1f)
-                    buffer.add(openglX)
-                    buffer.add(openglY)
+                    val openglY = MathUtils.clamp(1 - it.y / pixelator.height.toFloat() * 2f,-1f,1f)
+                    buffer.add(it.x)
+                    buffer.add(pixelator.height.toFloat() - it.y)
                 }
                 pixelator.pushTouchBuffer(buffer.toFloatArray())
                 pixelator.refreshFrame()
@@ -48,7 +48,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
-                pixelator.addImagePath("/sdcard/DCIM/Camera/下载.jpeg")
+                pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
                 isWindowCreated = true
             }
         })

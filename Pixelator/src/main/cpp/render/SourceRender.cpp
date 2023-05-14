@@ -55,7 +55,7 @@ GLuint SourceRender::draw(GLuint textureId,
     frameBuffer_->createFrameBuffer(static_cast<int>(fitWidth_), static_cast<int>(fitHeight_));
   }
   glm::mat4 projection = glm::ortho(0.f, fitWidth_,
-                                    fitHeight_, 0.f, 1.f, 100.f);
+                                    0.f, fitHeight_, 1.f, 100.f);
   glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);

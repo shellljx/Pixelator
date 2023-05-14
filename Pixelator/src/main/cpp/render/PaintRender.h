@@ -25,7 +25,7 @@ class PaintRender {
  * @param height 纹理高
  * @return 绘制之后的纹理
  */
-  GLuint draw(GLuint textureId, int width, int height);
+  GLuint draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight);
 
   GLuint getTexture();
 
