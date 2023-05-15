@@ -69,10 +69,10 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   auto matrix = glm::mat4(1);
   float x = (screenWidth - width) / 2.f;
   float y = (screenHeight - height) / 2.f;
-  matrix = glm::translate(matrix, glm::vec3(100.f, 100.f, 0.f));
+  matrix = glm::translate(matrix, glm::vec3(translateX_, translateY_, 0.f));
   matrix = glm::translate(matrix, glm::vec3(x, y, 0.f));
   matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
-  matrix = glm::scale(matrix, glm::vec3(2.5f, 2.5f, 1.f));
+  matrix = glm::scale(matrix, glm::vec3(scale_, scale_, 1.f));
   matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
@@ -99,4 +99,11 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
 
 GLuint ScreenRender::getTexture() {
   return frameBuffer_->getTexture();
+}
+
+void ScreenRender::translate(float scale, float angle, float translateX, float translateY) {
+  scale_ = scale;
+  angle_ = angle;
+  translateX_ = translateX;
+  translateY_ = translateY;
 }

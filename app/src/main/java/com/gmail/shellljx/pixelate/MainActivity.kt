@@ -6,6 +6,9 @@ import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
 import android.view.SurfaceView
+import android.widget.CompoundButton
+import android.widget.CompoundButton.OnCheckedChangeListener
+import android.widget.Switch
 import androidx.core.math.MathUtils
 import com.gmail.shellljx.pixelator.IRenderListener
 import com.gmail.shellljx.pixelator.Pixelator
@@ -26,8 +29,8 @@ class MainActivity : AppCompatActivity() {
                 if (!isWindowCreated) return
                 val buffer = arrayListOf<Float>()
                 points.forEach {
-                    val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f,1f)
-                    val openglY = MathUtils.clamp(1 - it.y / pixelator.height.toFloat() * 2f,-1f,1f)
+                    val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f, 1f)
+                    val openglY = MathUtils.clamp(1 - it.y / pixelator.height.toFloat() * 2f, -1f, 1f)
                     buffer.add(it.x)
                     buffer.add(pixelator.height.toFloat() - it.y)
                 }
@@ -35,8 +38,8 @@ class MainActivity : AppCompatActivity() {
                 pixelator.refreshFrame()
             }
 
-            override fun onTranslate(scale: Float, angle: Float) {
-                pixelator.translate(scale, 0f)
+            override fun onTranslate(scale: Float, angle: Float, translateX: Float, translateY: Float) {
+                pixelator.translate(scale, 0f, translateX, translateY)
             }
         })
         pixelator.setRenderListener(object : IRenderListener {
@@ -50,6 +53,11 @@ class MainActivity : AppCompatActivity() {
                 bitmap.recycle()
                 pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
                 isWindowCreated = true
+            }
+        })
+        findViewById<Switch>(R.id.editswitch).setOnCheckedChangeListener(object : OnCheckedChangeListener {
+            override fun onCheckedChanged(p0: CompoundButton?, p1: Boolean) {
+                gestureView.editEnable = p1
             }
         })
     }

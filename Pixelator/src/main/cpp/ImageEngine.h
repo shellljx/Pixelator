@@ -38,7 +38,7 @@ class ImageEngine : public thread::HandlerCallback {
   void addImagePath(const char *path);
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
-  void translate(float scale, float angle);
+  void translate(float scale, float angle, float translateX, float translateY);
   void refreshFrame();
   void handleMessage(thread::Message *msg) override;
 

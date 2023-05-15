@@ -15,6 +15,7 @@ class GestureView : View {
         private const val INVALID_POINTER_ID = -1
     }
 
+    var editEnable: Boolean = true
     private var mActivePointerId1 = INVALID_POINTER_ID
     private var mActivePointerId2 = INVALID_POINTER_ID
 
@@ -29,6 +30,8 @@ class GestureView : View {
     private var mLastAngle = 0f
     private var mRotation = 0f
     private var mLastScale = 1f
+    private var mTranslateX = 0f
+    private var mTranslateY = 0f
     private var mInMove = false
 
     constructor(context: Context) : this(context, null)
@@ -63,20 +66,31 @@ class GestureView : View {
                 if (mActivePointerId1 != INVALID_POINTER_ID && mActivePointerId2 != INVALID_POINTER_ID) {
                     scaleAndRotateByFlingers(event)
                 } else if (mActivePointerId1 != INVALID_POINTER_ID) {
-                    mCurrentPoint.set(event.x, event.y)
-                    if (PointUtils.distanceTo(mFromPoint, mCurrentPoint) < mTouchSlop && !mInMove) {
-                        return true
+                    if (editEnable) {
+                        mCurrentPoint.set(event.x, event.y)
+                        if (PointUtils.distanceTo(mFromPoint, mCurrentPoint) < mTouchSlop && !mInMove) {
+                            return true
+                        }
+                        mInMove = true
+                        if (mFromPoint.equals(mCurrentPoint.x, mCurrentPoint.y)) {
+                            return true
+                        }
+                        mToPoint.set((mLastPoint.x + mCurrentPoint.x) / 2f, (mLastPoint.y + mCurrentPoint.y) / 2f)
+                        mControlPoint.set(mLastPoint)
+                        val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 15f)
+                        listener?.onMove(list)
+                        mFromPoint.set(mToPoint)
+                        mLastPoint.set(mCurrentPoint)
+                    } else {
+                        val x = event.getX(event.findPointerIndex(mActivePointerId1))
+                        val y = event.getY(event.findPointerIndex(mActivePointerId1))
+                        val dx = x - mLastPoint.x
+                        val dy = mLastPoint.y - y
+                        mTranslateX += dx
+                        mTranslateY += dy
+                        listener?.onTranslate(mLastScale, mRotation, mTranslateX, mTranslateY)
+                        mLastPoint.set(x,y)
                     }
-                    mInMove = true
-                    if (mFromPoint.equals(mCurrentPoint.x, mCurrentPoint.y)) {
-                        return true
-                    }
-                    mToPoint.set((mLastPoint.x + mCurrentPoint.x) / 2f, (mLastPoint.y + mCurrentPoint.y) / 2f)
-                    mControlPoint.set(mLastPoint)
-                    val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 15f)
-                    listener?.onMove(list)
-                    mFromPoint.set(mToPoint)
-                    mLastPoint.set(mCurrentPoint)
                 }
             }
 
@@ -103,7 +117,7 @@ class GestureView : View {
         ).toFloat()
 
         mRotation += Math.toDegrees(mLastAngle - angle).toFloat()
-        listener?.onTranslate(mLastScale * scale, mRotation)
+        listener?.onTranslate(mLastScale * scale, mRotation, mTranslateX, mTranslateY)
 
         mLastAngle = angle.toFloat()
         mLastScale *= scale
@@ -117,6 +131,6 @@ class GestureView : View {
 
     interface GestureListener {
         fun onMove(points: List<PointF>)
-        fun onTranslate(scale: Float, angle: Float)
+        fun onTranslate(scale: Float, angle: Float, translateX: Float, translateY: Float)
     }
 }

@@ -25,8 +25,14 @@ class ScreenRender {
 
   GLuint getTexture();
 
+  void translate(float scale, float angle, float translateX, float translateY);
+
  private:
   GLuint program_ = 0;
+  float scale_ = 1.f;
+  float angle_ = 0.f;
+  float translateX_ = 0.f;
+  float translateY_ = 0.f;
   FrameBuffer *frameBuffer_;
   float *vertexCoordinate_;
 };

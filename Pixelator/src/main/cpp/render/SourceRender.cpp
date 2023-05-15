@@ -101,11 +101,6 @@ GLuint SourceRender::getTexture() {
   return -1;
 }
 
-void SourceRender::translate(float scale, float angle) {
-  scale_ = scale;
-  angle_ = angle;
-}
-
 void SourceRender::cropVertexCoordinate() {
   float screenRatio = static_cast<float>(screenWidth_) / static_cast<float>(screenHeight_);
   float frameRatio = static_cast<float>(frameWidth_) / static_cast<float>(frameHeight_);

@@ -88,10 +88,10 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   auto matrix = glm::mat4(1);
   float x = (screenWidth - width) / 2.f;
   float y = (screenHeight - height) / 2.f;
-  matrix = glm::translate(matrix, glm::vec3(-100.f*(1/2.5), -100.f*(1/2.5), 0.f));
-  matrix = glm::translate(matrix, glm::vec3(-x*(1/2.5), -y*(1/2.5), 0.f));
+  matrix = glm::translate(matrix, glm::vec3(-translateX_ * (1 / scale_), -translateY_ * (1 / scale_), 0.f));
+  matrix = glm::translate(matrix, glm::vec3(-x * (1 / scale_), -y * (1 / scale_), 0.f));
   matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
-  matrix = glm::scale(matrix, glm::vec3(1.f/2.5f, 1.f/2.5f, 1.f));
+  matrix = glm::scale(matrix, glm::vec3(1.f / scale_, 1.f / scale_, 1.f));
   matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   glViewport(0, 0, width, height);
   glEnable(GL_BLEND);
@@ -103,7 +103,7 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
   auto pointSizeLocation = glGetUniformLocation(program_, "pointSize");
-  glUniform1f(pointSizeLocation, 100.f/2.5f);
+  glUniform1f(pointSizeLocation, 100.f / scale_);
 
   auto textureSizeLocation = glGetUniformLocation(program_, "textureSize");
   float textureSize[] = {(float) width, (float) height};
@@ -129,4 +129,11 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
 
 GLuint PaintRender::getTexture() {
   return frame_buffer_->getTexture();
+}
+
+void PaintRender::translate(float scale, float angle, float translateX, float translateY) {
+  scale_ = scale;
+  angle_ = angle;
+  translateX_ = translateX;
+  translateY_ = translateY;
 }

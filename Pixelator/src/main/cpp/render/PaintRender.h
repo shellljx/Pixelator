@@ -29,6 +29,8 @@ class PaintRender {
 
   GLuint getTexture();
 
+  void translate(float scale, float angle, float translateX, float translateY);
+
  private:
   FrameBuffer *frame_buffer_;
   GLuint brushTexture_ = 0;
@@ -36,6 +38,10 @@ class PaintRender {
   GLuint vao_ = 0;
   GLuint pointsVbo_ = 0;
   int points = 0;
+  float scale_ = 1.f;
+  float angle_ = 0.f;
+  float translateX_ = 0.f;
+  float translateY_ = 0.f;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_
