@@ -38,8 +38,8 @@ class MainActivity : AppCompatActivity() {
                 pixelator.refreshFrame()
             }
 
-            override fun onTranslate(scale: Float, angle: Float, translateX: Float, translateY: Float) {
-                pixelator.translate(scale, 0f, translateX, translateY)
+            override fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float) {
+                pixelator.translate(scale, pivotX, pivotY, 0f, translateX, translateY)
             }
         })
         pixelator.setRenderListener(object : IRenderListener {

@@ -6,6 +6,9 @@
 #define PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_
 
 #include <GLES3/gl3.h>
+#include "glm/glm.hpp"
+#include "glm/gtc/type_ptr.hpp"
+#include "glm/gtc/matrix_transform.hpp"
 #include "FrameBuffer.h"
 #include "ImageInfo.h"
 
@@ -29,7 +32,10 @@ class PaintRender {
 
   GLuint getTexture();
 
-  void translate(float scale, float angle, float translateX, float translateY);
+  void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void setMatrix(glm::mat4 matrix) {
+    matrix_ = matrix;
+  }
 
  private:
   FrameBuffer *frame_buffer_;
@@ -39,9 +45,12 @@ class PaintRender {
   GLuint pointsVbo_ = 0;
   int points = 0;
   float scale_ = 1.f;
+  float pivotX_ = 0.f;
+  float pivotY_ = 0.f;
   float angle_ = 0.f;
   float translateX_ = 0.f;
   float translateY_ = 0.f;
+  glm::mat4 matrix_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_

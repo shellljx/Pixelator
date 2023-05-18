@@ -108,13 +108,15 @@ void ImageEngine::pushTouchBuffer(float *buffer, int length) {
   handler_->sendMessage(msg);
 }
 
-void ImageEngine::translate(float scale, float angle, float translateX, float translateY) {
+void ImageEngine::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kTranslate;
   msg->arg3 = scale;
   msg->arg4 = angle;
   msg->arg5 = translateX;
   msg->arg6 = translateY;
+  msg->arg7 = pivotX;
+  msg->arg8 = pivotY;
   handler_->sendMessage(msg);
 }
 
@@ -169,8 +171,11 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto angle = msg->arg4;
       auto translateX = msg->arg5;
       auto translateY = msg->arg6;
-      screenRender_->translate(scale, angle, translateX, translateY);
-      paintRender_->translate(scale, angle, translateX, translateY);
+      auto pivotX = msg->arg7;
+      auto pivotY = msg->arg8;
+      screenRender_->translate(scale, pivotX, pivotY, angle, translateX, translateY);
+      paintRender_->setMatrix(screenRender_->getMatrix());
+      paintRender_->translate(screenRender_->getMatrix()[0][0],0.f,0.f,0.f,0.f,0.f);
       renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
       break;
     }

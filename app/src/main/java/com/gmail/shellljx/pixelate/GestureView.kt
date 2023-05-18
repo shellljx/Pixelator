@@ -88,8 +88,8 @@ class GestureView : View {
                         val dy = mLastPoint.y - y
                         mTranslateX += dx
                         mTranslateY += dy
-                        listener?.onTranslate(mLastScale, mRotation, mTranslateX, mTranslateY)
-                        mLastPoint.set(x,y)
+                        listener?.onTranslate(mLastScale,0f,0f, mRotation, mTranslateX, mTranslateY)
+                        mLastPoint.set(x, y)
                     }
                 }
             }
@@ -117,7 +117,7 @@ class GestureView : View {
         ).toFloat()
 
         mRotation += Math.toDegrees(mLastAngle - angle).toFloat()
-        listener?.onTranslate(mLastScale * scale, mRotation, mTranslateX, mTranslateY)
+        listener?.onTranslate(mLastScale * scale, (x1 + x2) / 2f, height - (y1 + y2) / 2f, mRotation, mTranslateX, mTranslateY)
 
         mLastAngle = angle.toFloat()
         mLastScale *= scale
@@ -131,6 +131,6 @@ class GestureView : View {
 
     interface GestureListener {
         fun onMove(points: List<PointF>)
-        fun onTranslate(scale: Float, angle: Float, translateX: Float, translateY: Float)
+        fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
     }
 }

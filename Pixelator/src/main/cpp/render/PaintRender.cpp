@@ -3,9 +3,6 @@
 //
 
 #include "PaintRender.h"
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 PaintRender::PaintRender() {
   frame_buffer_ = new FrameBuffer();
@@ -85,20 +82,20 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-  auto matrix = glm::mat4(1);
-  float x = (screenWidth - width) / 2.f;
-  float y = (screenHeight - height) / 2.f;
-  matrix = glm::translate(matrix, glm::vec3(-translateX_ * (1 / scale_), -translateY_ * (1 / scale_), 0.f));
-  matrix = glm::translate(matrix, glm::vec3(-x * (1 / scale_), -y * (1 / scale_), 0.f));
-  matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
-  matrix = glm::scale(matrix, glm::vec3(1.f / scale_, 1.f / scale_, 1.f));
-  matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
+//  auto matrix = glm::mat4(1);
+//  float x = (screenWidth - width) / 2.f;
+//  float y = (screenHeight - height) / 2.f;
+//  matrix = glm::translate(matrix, glm::vec3(-translateX_ * (1 / scale_), -translateY_ * (1 / scale_), 0.f));
+//  matrix = glm::translate(matrix, glm::vec3(-x * (1 / scale_), -y * (1 / scale_), 0.f));
+//  matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
+//  matrix = glm::scale(matrix, glm::vec3(1.f / scale_, 1.f / scale_, 1.f));
+//  matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   glViewport(0, 0, width, height);
   glEnable(GL_BLEND);
   glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   glBlendEquation(GL_FUNC_ADD);
   glUseProgram(program_);
-  matrix = projection * viewMatrix * matrix;
+  auto matrix = projection * viewMatrix * glm::inverse(matrix_);
   auto mvpLoc = glGetUniformLocation(program_, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
@@ -131,8 +128,10 @@ GLuint PaintRender::getTexture() {
   return frame_buffer_->getTexture();
 }
 
-void PaintRender::translate(float scale, float angle, float translateX, float translateY) {
+void PaintRender::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
   scale_ = scale;
+  pivotX_ = pivotX;
+  pivotY_ = pivotY;
   angle_ = angle;
   translateX_ = translateX;
   translateY_ = translateY;

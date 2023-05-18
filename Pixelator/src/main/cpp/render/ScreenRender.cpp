@@ -4,9 +4,6 @@
 
 #include "ScreenRender.h"
 #include <memory>
-#include "glm/glm.hpp"
-#include "glm/gtc/type_ptr.hpp"
-#include "glm/gtc/matrix_transform.hpp"
 
 ScreenRender::ScreenRender() : frameBuffer_(nullptr), vertexCoordinate_(nullptr) {
   frameBuffer_ = new FrameBuffer();
@@ -66,14 +63,14 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-  auto matrix = glm::mat4(1);
   float x = (screenWidth - width) / 2.f;
   float y = (screenHeight - height) / 2.f;
-  matrix = glm::translate(matrix, glm::vec3(translateX_, translateY_, 0.f));
-  matrix = glm::translate(matrix, glm::vec3(x, y, 0.f));
-  matrix = glm::translate(matrix, glm::vec3(width / 2.f, height / 2.f, 0.f));
-  matrix = glm::scale(matrix, glm::vec3(scale_, scale_, 1.f));
-  matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
+  matrix_ = glm::mat4(1);
+  matrix_ = glm::translate(matrix_, glm::vec3(translateX_, translateY_, 0.f));
+  matrix_ = glm::translate(matrix_, glm::vec3(x, y, 0.f));
+  matrix_ = glm::translate(matrix_, glm::vec3(width / 2.f, height / 2.f, 0.f));
+  matrix_ = glm::scale(matrix_, glm::vec3(scale_, scale_, 1.f));
+  matrix_ = glm::translate(matrix_, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -83,7 +80,7 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   GL_CHECK(glEnableVertexAttribArray(textureLocation))
   GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
                                  TEXTURE_COORDINATE_FLIP_UP_DOWN))
-  matrix = projection * viewMatrix * matrix;
+  auto matrix = projection * viewMatrix * matrix_;
   auto mvpLoc = glGetUniformLocation(program_, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
@@ -101,8 +98,10 @@ GLuint ScreenRender::getTexture() {
   return frameBuffer_->getTexture();
 }
 
-void ScreenRender::translate(float scale, float angle, float translateX, float translateY) {
+void ScreenRender::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
   scale_ = scale;
+  pivotX_ = pivotX;
+  pivotY_ = pivotY;
   angle_ = angle;
   translateX_ = translateX;
   translateY_ = translateY;
