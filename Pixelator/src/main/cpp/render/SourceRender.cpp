@@ -45,17 +45,12 @@ GLuint SourceRender::draw(GLuint textureId,
   if (frameBuffer_ == nullptr) {
     return -1;
   }
-  if (width != frameWidth_ || height != frameHeight_ || screenWidth != screenWidth_ ||
-      screenHeight != screenHeight_) {
-    frameWidth_ = width;
-    frameHeight_ = height;
-    screenWidth_ = screenWidth;
-    screenHeight_ = screenHeight;
-    cropVertexCoordinate();
-    frameBuffer_->createFrameBuffer(static_cast<int>(fitWidth_), static_cast<int>(fitHeight_));
-  }
-  glm::mat4 projection = glm::ortho(0.f, fitWidth_,
-                                    0.f, fitHeight_, 1.f, 100.f);
+  int textureWidth;
+  int textureHeight;
+  cropVertexCoordinate(width, height, screenWidth, screenHeight, &textureWidth, &textureHeight);
+  frameBuffer_->createFrameBuffer(textureWidth, textureHeight);
+  glm::mat4 projection = glm::ortho(0.f, static_cast<float>(textureWidth),
+                                    0.f, static_cast<float>(textureHeight), 1.f, 100.f);
   glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
@@ -63,7 +58,7 @@ GLuint SourceRender::draw(GLuint textureId,
   auto matrix = glm::mat4(1);
 
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
-  glViewport(0, 0, fitWidth_, fitHeight_);
+  glViewport(0, 0, textureWidth, textureHeight);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glClearColor(1.f, 1.f, 1.f, 1.f);
   glUseProgram(program_);
@@ -101,9 +96,17 @@ GLuint SourceRender::getTexture() {
   return -1;
 }
 
-void SourceRender::cropVertexCoordinate() {
-  float screenRatio = static_cast<float>(screenWidth_) / static_cast<float>(screenHeight_);
-  float frameRatio = static_cast<float>(frameWidth_) / static_cast<float>(frameHeight_);
+int SourceRender::getTextureWidth() {
+  return frameBuffer_->getTextureWidth();
+}
+
+int SourceRender::getTextureHeight() {
+  return frameBuffer_->getTextureHeight();
+}
+
+void SourceRender::cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *textureWidth, int *textureHeight) {
+  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+  float frameRatio = static_cast<float>(frameWidth) / static_cast<float>(frameHeight);
   float widthScale = 1.f;
   float heightScale = 1.f;
   if (frameRatio > screenRatio) {
@@ -113,17 +116,17 @@ void SourceRender::cropVertexCoordinate() {
     //frame比屏幕窄
     widthScale = frameRatio / screenRatio;
   }
-  fitHeight_ = static_cast<float>(screenHeight_) * heightScale;
-  fitWidth_ = static_cast<float>(screenWidth_) * widthScale;
+  *textureHeight = static_cast<int>(screenHeight * heightScale);
+  *textureWidth = static_cast<int>(screenWidth * widthScale);
 
   if (vertexCoordinate_ != nullptr) {
     vertexCoordinate_[0] = 0.f;
-    vertexCoordinate_[1] = fitHeight_;
-    vertexCoordinate_[2] = fitWidth_;
-    vertexCoordinate_[3] = fitHeight_;
+    vertexCoordinate_[1] = *textureHeight;
+    vertexCoordinate_[2] = *textureWidth;
+    vertexCoordinate_[3] = *textureHeight;
     vertexCoordinate_[4] = 0.f;
     vertexCoordinate_[5] = 0.f;
-    vertexCoordinate_[6] = fitWidth_;
+    vertexCoordinate_[6] = *textureWidth;
     vertexCoordinate_[7] = 0.f;
   }
 }

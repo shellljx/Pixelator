@@ -55,6 +55,14 @@ GLuint FrameBuffer::getTexture() {
   return frameTextureId_;
 }
 
+int FrameBuffer::getTextureWidth() {
+  return width_;
+}
+
+int FrameBuffer::getTextureHeight() {
+  return height_;
+}
+
 GLuint FrameBuffer::getFrameBuffer() {
   return frameBufferId_;
 }

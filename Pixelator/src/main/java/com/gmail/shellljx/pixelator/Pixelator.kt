@@ -69,12 +69,25 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     override fun surfaceDestroyed(p0: SurfaceHolder) {
     }
 
+    /**
+     * jni callback method
+     */
     private fun onEGLContextCreate() {
         mRenderListener?.onEGLContextCreate()
     }
 
+    /**
+     * jni callback method
+     */
     private fun onEGLWindowCreate() {
         mRenderListener?.onEGLWindowCreate()
+    }
+
+    /**
+     * jni callback method
+     */
+    private fun onFrameAvaliable(x:Int, y:Int, width: Int, height: Int) {
+        mRenderListener?.onFrameAvaliable(x, y, width, height)
     }
 
     override fun setRenderListener(listener: IRenderListener) {

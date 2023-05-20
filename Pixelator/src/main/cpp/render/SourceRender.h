@@ -25,27 +25,17 @@ class SourceRender {
 
   GLuint getTexture();
 
-  float getFitWidth(){
-    return fitWidth_;
-  }
+  int getTextureWidth();
 
-  float getFitHeight(){
-    return fitHeight_;
-  }
+  int getTextureHeight();
 
  private:
-  void cropVertexCoordinate();
+  void cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *textureWidth, int *textureHeight);
 
  private:
   GLuint program_ = 0;
   FrameBuffer *frameBuffer_ = nullptr;
   float *vertexCoordinate_ = nullptr;
-  int frameWidth_ = 0;
-  int frameHeight_ = 0;
-  int screenWidth_ = 0;
-  int screenHeight_ = 0;
-  float fitWidth_ = 0;
-  float fitHeight_ = 0;
 };
 
 #endif //PIXELATE_SOURCERENDER_H

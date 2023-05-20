@@ -63,8 +63,6 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-  float x = (screenWidth - width) / 2.f;
-  float y = (screenHeight - height) / 2.f;
 //  matrix_ = glm::translate(matrix_, glm::vec3(translateX_, translateY_, 0.f));
   //matrix = glm::translate(matrix, glm::vec3(x, y, 0.f));
 //  matrix_ = glm::translate(matrix_, glm::vec3(width / 2.f, height / 2.f, 0.f));

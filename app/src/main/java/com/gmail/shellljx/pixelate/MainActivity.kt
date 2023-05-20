@@ -62,6 +62,12 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
+                pixelator.addImagePath("/sdcard/DCIM/Camera/下载.jpeg")
+                isWindowCreated = true
+            }
+
+            override fun onFrameAvaliable(x: Int, y: Int, width: Int, height: Int) {
+                gestureView.initFrame(x, y, width, height)
                 val v = FloatArray(9)
                 gestureView.transformMatrix.getValues(v)
                 val glmArray = floatArrayOf(
@@ -71,9 +77,7 @@ class MainActivity : AppCompatActivity() {
                     v[2], v[5], 0f, 1f
                 )
                 pixelator.setMatrix(glmArray)
-                pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
                 pixelator.refreshFrame()
-                isWindowCreated = true
             }
         })
         findViewById<Switch>(R.id.editswitch).setOnCheckedChangeListener(object : OnCheckedChangeListener {

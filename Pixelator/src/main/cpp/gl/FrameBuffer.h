@@ -22,6 +22,10 @@ class FrameBuffer {
 
   GLuint getTexture();
 
+  int getTextureWidth();
+
+  int getTextureHeight();
+
   GLuint getFrameBuffer();
 
   void deleteFrameBuffer();

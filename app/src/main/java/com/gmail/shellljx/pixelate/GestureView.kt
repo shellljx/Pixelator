@@ -37,6 +37,8 @@ class GestureView : View {
     private var mInMove = false
     private val bounds = RectF()
     private val paint = Paint()
+    private var textureWidth = 0
+    private var textureHeight = 0
 
     init {
         paint.setColor(Color.BLUE)
@@ -48,7 +50,6 @@ class GestureView : View {
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
     constructor(context: Context, attributeSet: AttributeSet?, def: Int) : super(context, attributeSet, def) {
         mTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
-        transformMatrix.setTranslate(24f, 0f)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -99,8 +100,6 @@ class GestureView : View {
                         val dy = mLastPoint.y - y
                         mTranslateX += dx
                         mTranslateY += dy
-                        transformMatrix.postTranslate(dx, dy)
-                        listener?.refresh(transformMatrix)
                         //listener?.onTranslate(mLastScale, 0f, 0f, mRotation, mTranslateX, mTranslateY)
                         mLastPoint.set(x, y)
                     }
@@ -129,16 +128,17 @@ class GestureView : View {
             ((mLastPoint2.x - mLastPoint.x) * (mLastPoint2.x - mLastPoint.x) + (mLastPoint2.y - mLastPoint.y) * (mLastPoint2.y - mLastPoint.y)).toDouble()
         ).toFloat()
 
+
         mRotation += Math.toDegrees(mLastAngle - angle).toFloat()
-        //listener?.onTranslate(mLastScale * scale, (x1 + x2) / 2f, height - (y1 + y2) / 2f, mRotation, mTranslateX, mTranslateY)
         transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
         val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
         transformMatrix.postTranslate(dx, dy)
-        bounds.set(0f, 0f, width.toFloat() - 48, height.toFloat())
+
+        bounds.set(0f, 0f, textureWidth.toFloat(), textureHeight.toFloat())
         transformMatrix.mapRect(bounds)
-        System.out.println("lijinxiang ${bounds}")
         listener?.refresh(transformMatrix)
+
         mLastAngle = angle.toFloat()
         mLastScale *= scale
         mLastPoint.set(x1, y1)
@@ -153,6 +153,13 @@ class GestureView : View {
 
     fun setGestureListener(listener: GestureListener) {
         this.listener = listener
+    }
+
+    fun initFrame(x: Int, y: Int, width: Int, height: Int) {
+        transformMatrix.setTranslate(x.toFloat(), y.toFloat())
+        textureWidth = width
+        textureHeight = height
+        bounds.set(x.toFloat(), y.toFloat(), x + width.toFloat(), y + height.toFloat())
     }
 
     interface GestureListener {

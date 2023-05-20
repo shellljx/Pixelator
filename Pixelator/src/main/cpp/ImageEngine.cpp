@@ -183,7 +183,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       screenRender_->translate(scale, pivotX, pivotY, angle, translateX, translateY);
       paintRender_->setMatrix(screenRender_->getMatrix());
       paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
-      renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+      renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
       break;
     }
 
@@ -193,7 +193,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       screenRender_->setMatrix(matrix);
       paintRender_->setMatrix(screenRender_->getMatrix());
       paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
-      renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+      renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
       delete[] buffer;
       break;
     }
@@ -259,14 +259,17 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 int ImageEngine::insertImageInternal(const char *path) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
   sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, surfaceWidth_, surfaceHeight_);
-  pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
-  renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+  pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  float x = (surfaceWidth_ - sourceRender_->getTextureWidth()) / 2.f;
+  float y = (surfaceHeight_ - sourceRender_->getTextureHeight()) / 2.f;
+  callJavaFrameAvaliable(x, y, sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  refreshFrameInternal();
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight(), surfaceWidth_, surfaceHeight_);
-  renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
+  renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
   return 0;
 }
 
@@ -348,6 +351,20 @@ void ImageEngine::callJavaEGLWindowCreate() {
                                                          "()V");
     if (eglWindowCreateMethodId != nullptr) {
       env->CallVoidMethod(pixelator_.get(), eglWindowCreateMethodId);
+    }
+  }
+}
+
+void ImageEngine::callJavaFrameAvaliable(int x, int y, int width, int height) {
+  if (pixelator_.empty()) {
+    return;
+  }
+  JNIEnv *env = JNIEnvironment::Current();
+  if (env != nullptr) {
+    Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
+    jmethodID frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameAvaliable", "(IIII)V");
+    if (frameAvaliableMethodId != nullptr) {
+      env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, x, y, width, height);
     }
   }
 }
