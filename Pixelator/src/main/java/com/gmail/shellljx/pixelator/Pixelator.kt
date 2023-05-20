@@ -21,9 +21,9 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun addImagePath(path: String) {
+    override fun addImagePath(path: String, listener: IImageListener?) {
         if (mId != 0L) {
-            addImagePath(mId, path)
+            nativeAddImagePath(mId, path, listener)
         }
     }
 
@@ -42,7 +42,13 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
 
     override fun translate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float) {
         if (mId != 0L) {
-            translate(mId, scale,pivotX, pivotY, angle, translateX, translateY)
+            translate(mId, scale, pivotX, pivotY, angle, translateX, translateY)
+        }
+    }
+
+    override fun setMatrix(matrix: FloatArray) {
+        if (mId != 0L) {
+            nativeSetMatrix(mId, matrix)
         }
     }
 
@@ -78,10 +84,11 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun create(): Long
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
-    private external fun addImagePath(id: Long, path: String)
+    private external fun nativeAddImagePath(id: Long, path: String, listener: IImageListener?)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
     private external fun translate(id: Long, scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
+    private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)
 
     companion object {

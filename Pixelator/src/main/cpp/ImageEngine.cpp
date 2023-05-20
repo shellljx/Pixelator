@@ -120,6 +120,13 @@ void ImageEngine::translate(float scale, float pivotX, float pivotY, float angle
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::setMatrix(float *matrix) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetMatrix;
+  msg->obj1 = matrix;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::refreshFrame() {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kRefreshFrame;
@@ -175,11 +182,21 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto pivotY = msg->arg8;
       screenRender_->translate(scale, pivotX, pivotY, angle, translateX, translateY);
       paintRender_->setMatrix(screenRender_->getMatrix());
-      paintRender_->translate(screenRender_->getMatrix()[0][0],0.f,0.f,0.f,0.f,0.f);
+      paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
       renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
       break;
     }
 
+    case PixelateMessage::kSetMatrix: {
+      auto *buffer = reinterpret_cast<float *>(msg->obj1);
+      glm::mat4 matrix = glm::make_mat4(buffer);
+      screenRender_->setMatrix(matrix);
+      paintRender_->setMatrix(screenRender_->getMatrix());
+      paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
+      renderScreen(sourceRender_->getTexture(), sourceRender_->getFitWidth(), sourceRender_->getFitHeight());
+      delete[] buffer;
+      break;
+    }
     case PixelateMessage::kRefreshFrame: {
       refreshFrameInternal();
       break;

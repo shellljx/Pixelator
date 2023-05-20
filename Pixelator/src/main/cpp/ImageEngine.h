@@ -39,6 +39,7 @@ class ImageEngine : public thread::HandlerCallback {
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
   void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void setMatrix(float *matrix);
   void refreshFrame();
   void handleMessage(thread::Message *msg) override;
 

@@ -1,7 +1,7 @@
 package com.gmail.shellljx.pixelate
 
 import android.content.Context
-import android.graphics.PointF
+import android.graphics.*
 import android.util.AttributeSet
 import android.view.MotionEvent
 import android.view.View
@@ -18,8 +18,10 @@ class GestureView : View {
     var editEnable: Boolean = true
     private var mActivePointerId1 = INVALID_POINTER_ID
     private var mActivePointerId2 = INVALID_POINTER_ID
+    var transformMatrix = Matrix()
 
     private var listener: GestureListener? = null
+    private var transformProcessor = TransformProcessor()
     private var mTouchSlop: Int
     private var mLastPoint = PointF()
     private var mLastPoint2 = PointF()
@@ -33,11 +35,20 @@ class GestureView : View {
     private var mTranslateX = 0f
     private var mTranslateY = 0f
     private var mInMove = false
+    private val bounds = RectF()
+    private val paint = Paint()
+
+    init {
+        paint.setColor(Color.BLUE)
+        paint.strokeWidth = 10f
+        paint.style = Paint.Style.STROKE
+    }
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attributeSet: AttributeSet?) : this(context, attributeSet, 0)
     constructor(context: Context, attributeSet: AttributeSet?, def: Int) : super(context, attributeSet, def) {
         mTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
+        transformMatrix.setTranslate(24f, 0f)
     }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
@@ -88,7 +99,9 @@ class GestureView : View {
                         val dy = mLastPoint.y - y
                         mTranslateX += dx
                         mTranslateY += dy
-                        listener?.onTranslate(mLastScale,0f,0f, mRotation, mTranslateX, mTranslateY)
+                        transformMatrix.postTranslate(dx, dy)
+                        listener?.refresh(transformMatrix)
+                        //listener?.onTranslate(mLastScale, 0f, 0f, mRotation, mTranslateX, mTranslateY)
                         mLastPoint.set(x, y)
                     }
                 }
@@ -103,7 +116,7 @@ class GestureView : View {
                 mActivePointerId2 = INVALID_POINTER_ID
             }
         }
-        return super.onTouchEvent(event)
+        return true
     }
 
     private fun scaleAndRotateByFlingers(event: MotionEvent) {
@@ -117,12 +130,25 @@ class GestureView : View {
         ).toFloat()
 
         mRotation += Math.toDegrees(mLastAngle - angle).toFloat()
-        listener?.onTranslate(mLastScale * scale, (x1 + x2) / 2f, height - (y1 + y2) / 2f, mRotation, mTranslateX, mTranslateY)
-
+        //listener?.onTranslate(mLastScale * scale, (x1 + x2) / 2f, height - (y1 + y2) / 2f, mRotation, mTranslateX, mTranslateY)
+        transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
+        val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
+        val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
+        transformMatrix.postTranslate(dx, dy)
+        bounds.set(0f, 0f, width.toFloat() - 48, height.toFloat())
+        transformMatrix.mapRect(bounds)
+        System.out.println("lijinxiang ${bounds}")
+        listener?.refresh(transformMatrix)
         mLastAngle = angle.toFloat()
         mLastScale *= scale
         mLastPoint.set(x1, y1)
         mLastPoint2.set(x2, y2)
+        invalidate()
+    }
+
+    override fun draw(canvas: Canvas) {
+        super.draw(canvas)
+        canvas.drawRect(bounds, paint)
     }
 
     fun setGestureListener(listener: GestureListener) {
@@ -132,5 +158,6 @@ class GestureView : View {
     interface GestureListener {
         fun onMove(points: List<PointF>)
         fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
+        fun refresh(matrix: Matrix)
     }
 }

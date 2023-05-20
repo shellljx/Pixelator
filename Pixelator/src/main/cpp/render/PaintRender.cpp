@@ -77,7 +77,7 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
 
   glm::mat4 projection = glm::ortho(0.f, width * 1.f,
-                                    0.f, height * 1.f, 1.f, 100.f);
+                                    height * 1.f, 0.f, 1.f, 100.f);
   glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);

@@ -21,9 +21,10 @@ void Android_Jni_surface_changed(JNIEnv *env, jobject object, jlong id, jint wid
   pixelator->onSurfaceChanged(width, height);
 }
 
-void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath) {
+void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath, jobject jlistener) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   auto path = env->GetStringUTFChars(jpath, JNI_FALSE);
+
   pixelator->addImagePath(path);
   env->ReleaseStringUTFChars(jpath, path);
 }
@@ -46,7 +47,18 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatAr
 
 void Android_Jni_translate(JNIEnv *env, jobject object, jlong id, jfloat scale, jfloat pivotX, jfloat pivotY, jfloat angle, jfloat translateX, jfloat translateY) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
-  pixelator->translate(scale,pivotX, pivotY, angle, translateX, translateY);
+  pixelator->translate(scale, pivotX, pivotY, angle, translateX, translateY);
+}
+
+void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  jfloat *matrix = env->GetFloatArrayElements(floatArray, nullptr);
+  jsize length = env->GetArrayLength(floatArray);
+
+  auto *copyMatrix = new float[length];
+  memcpy(copyMatrix, matrix, length * sizeof(float));
+  engine->setMatrix(copyMatrix);
+  env->ReleaseFloatArrayElements(floatArray, matrix, 0);
 }
 
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {

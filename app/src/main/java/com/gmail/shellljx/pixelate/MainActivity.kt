@@ -1,7 +1,6 @@
 package com.gmail.shellljx.pixelate
 
-import android.graphics.BitmapFactory
-import android.graphics.PointF
+import android.graphics.*
 import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
 import android.view.SurfaceHolder
@@ -30,9 +29,9 @@ class MainActivity : AppCompatActivity() {
                 val buffer = arrayListOf<Float>()
                 points.forEach {
                     val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f, 1f)
-                    val openglY = MathUtils.clamp(1 - it.y / pixelator.height.toFloat() * 2f, -1f, 1f)
+                    val openglY = MathUtils.clamp(it.y / pixelator.height.toFloat() * 2f, -1f, 1f)
                     buffer.add(it.x)
-                    buffer.add(pixelator.height.toFloat() - it.y)
+                    buffer.add(it.y)
                 }
                 pixelator.pushTouchBuffer(buffer.toFloatArray())
                 pixelator.refreshFrame()
@@ -40,6 +39,18 @@ class MainActivity : AppCompatActivity() {
 
             override fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float) {
                 pixelator.translate(scale, pivotX, pivotY, 0f, translateX, translateY)
+            }
+
+            override fun refresh(matrix: Matrix) {
+                val v = FloatArray(9)
+                matrix.getValues(v)
+                val glmArray = floatArrayOf(
+                    v[0], v[3], 0f, 0f,
+                    v[1], v[4], 0f, 0f,
+                    0f, 0f, 1f, 0f,
+                    v[2], v[5], 0f, 1f
+                )
+                pixelator.setMatrix(glmArray)
             }
         })
         pixelator.setRenderListener(object : IRenderListener {
@@ -51,7 +62,17 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
+                val v = FloatArray(9)
+                gestureView.transformMatrix.getValues(v)
+                val glmArray = floatArrayOf(
+                    v[0], v[3], 0f, 0f,
+                    v[1], v[4], 0f, 0f,
+                    0f, 0f, 1f, 0f,
+                    v[2], v[5], 0f, 1f
+                )
+                pixelator.setMatrix(glmArray)
                 pixelator.addImagePath("/sdcard/aftereffect/ae/tt/resource/assets/a1.png")
+                pixelator.refreshFrame()
                 isWindowCreated = true
             }
         })

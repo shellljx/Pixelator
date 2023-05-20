@@ -22,17 +22,18 @@ class ScreenRender {
  * @param height 纹理高
  * @return 绘制之后的纹理
  */
-  GLuint draw(GLuint textureId,GLuint maskTexture, int width, int height, int screenWidth, int screenHeight);
+  GLuint draw(GLuint textureId, GLuint maskTexture, int width, int height, int screenWidth, int screenHeight);
 
   void drawTexture(GLuint textureId, int width, int height, int screenWidth, int screenHeight);
 
   GLuint getTexture();
 
-  glm::mat4 getMatrix(){
+  glm::mat4 getMatrix() {
     return matrix_;
   }
 
-  void translate(float scale,float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void setMatrix(glm::mat4 matrix);
 
  private:
   GLuint program_ = 0;
