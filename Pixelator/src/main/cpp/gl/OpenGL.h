@@ -39,6 +39,22 @@ static float DEFAULT_TEXTURE_COORDINATE[] = {
     1.0f, 1.0f
 };
 
+/// 旋转270度，然后上下翻转
+static float TEXTURE_COORDINATE_270_FLIP_UP_DOWN[] = {
+    1.0f, 1.0f,
+    1.0f, 0.0f,
+    0.0f, 1.0f,
+    0.0f, 0.0f
+};
+
+/// 旋转180度，然后上下翻转
+static float TEXTURE_COORDINATE_180_FLIP_UP_DOWN[] = {
+    1.0f, 0.0f,
+    0.0f, 0.0f,
+    1.0f, 1.0f,
+    0.0f, 1.0f
+};
+
 /// 默认顶点shader
 static const char *DEFAULT_VERTEX_SHADER =
     "#ifdef GL_ES                                                                           \n"

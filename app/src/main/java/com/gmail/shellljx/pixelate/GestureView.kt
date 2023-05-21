@@ -39,6 +39,8 @@ class GestureView : View {
     private val paint = Paint()
     private var textureWidth = 0
     private var textureHeight = 0
+    private var x = 0
+    private var y = 0
 
     init {
         paint.setColor(Color.BLUE)
@@ -89,7 +91,7 @@ class GestureView : View {
                         }
                         mToPoint.set((mLastPoint.x + mCurrentPoint.x) / 2f, (mLastPoint.y + mCurrentPoint.y) / 2f)
                         mControlPoint.set(mLastPoint)
-                        val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 15f)
+                        val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 50f)
                         listener?.onMove(list)
                         mFromPoint.set(mToPoint)
                         mLastPoint.set(mCurrentPoint)
@@ -135,7 +137,7 @@ class GestureView : View {
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
         transformMatrix.postTranslate(dx, dy)
 
-        bounds.set(0f, 0f, textureWidth.toFloat(), textureHeight.toFloat())
+        bounds.set(x.toFloat(), y.toFloat(), x + textureWidth.toFloat(), y + textureHeight.toFloat())
         transformMatrix.mapRect(bounds)
         listener?.refresh(transformMatrix)
 
@@ -156,10 +158,11 @@ class GestureView : View {
     }
 
     fun initFrame(x: Int, y: Int, width: Int, height: Int) {
-        transformMatrix.setTranslate(x.toFloat(), y.toFloat())
+        //transformMatrix.setTranslate(x.toFloat(), y.toFloat())
         textureWidth = width
         textureHeight = height
-        bounds.set(x.toFloat(), y.toFloat(), x + width.toFloat(), y + height.toFloat())
+        this.x = x
+        this.y = y
     }
 
     interface GestureListener {

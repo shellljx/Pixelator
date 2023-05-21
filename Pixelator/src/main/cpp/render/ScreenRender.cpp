@@ -29,6 +29,8 @@ GLuint ScreenRender::draw(GLuint textureId, GLuint maskTexture, int width, int h
   if (frameBuffer_ == nullptr) {
     return -1;
   }
+  //cropVertexCoordinate(width, height, screenWidth, screenHeight, &fitWidth_, &fitHeight_);
+
   if (vertexCoordinate_ != nullptr) {
     vertexCoordinate_[0] = 0.f;
     vertexCoordinate_[1] = height;
@@ -39,6 +41,7 @@ GLuint ScreenRender::draw(GLuint textureId, GLuint maskTexture, int width, int h
     vertexCoordinate_[6] = width;
     vertexCoordinate_[7] = 0.f;
   }
+
   GL_CHECK(glEnable(GL_BLEND))
   GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA))
   GL_CHECK(glBlendEquation(GL_FUNC_ADD))
@@ -63,11 +66,24 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-//  matrix_ = glm::translate(matrix_, glm::vec3(translateX_, translateY_, 0.f));
-  //matrix = glm::translate(matrix, glm::vec3(x, y, 0.f));
-//  matrix_ = glm::translate(matrix_, glm::vec3(width / 2.f, height / 2.f, 0.f));
-//  matrix_ = glm::scale(matrix_, glm::vec3(scale_, scale_, 1.f));
-//  matrix_ = glm::translate(matrix_, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
+
+  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+  float frameRatio = static_cast<float>(width) / static_cast<float>(height);
+  float x = 0.f;
+  float y = 0.f;
+  if (frameRatio > screenRatio) {
+    //frame比屏幕宽
+    scale_ = screenWidth * 1.f / width;
+    y = (screenHeight - height * scale_) / 2.f;
+  } else {
+    //frame比屏幕窄
+    scale_ = screenHeight * 1.f / height;
+    x = (screenWidth - width * scale_) / 2.f;
+  }
+
+  matrix_ = glm::mat4(1);
+  matrix_ = glm::translate(matrix_, glm::vec3(x, y, 0.f));
+  matrix_ = glm::scale(matrix_, glm::vec3(scale_, scale_, 1.f));
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -106,4 +122,33 @@ void ScreenRender::translate(float scale, float pivotX, float pivotY, float angl
 
 void ScreenRender::setMatrix(glm::mat4 matrix) {
   matrix_ = matrix;
+}
+
+void ScreenRender::cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *fitWidth, int *fitHeight) {
+  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
+  float frameRatio = static_cast<float>(frameWidth) / static_cast<float>(frameHeight);
+  float widthScale = 1.f;
+  float heightScale = 1.f;
+  if (frameRatio > screenRatio) {
+    //frame比屏幕宽
+    heightScale = screenRatio / frameRatio;
+  } else {
+    //frame比屏幕窄
+    widthScale = frameRatio / screenRatio;
+  }
+  *fitHeight = static_cast<int>(screenHeight * heightScale);
+  *fitWidth = static_cast<int>(screenWidth * widthScale);
+  x_ = (screenWidth - *fitWidth) / 2.f;
+  y_ = (screenHeight - *fitHeight) / 2.f;
+
+  if (vertexCoordinate_ != nullptr) {
+    vertexCoordinate_[0] = x_;
+    vertexCoordinate_[1] = *fitHeight + y_;
+    vertexCoordinate_[2] = *fitWidth + x_;
+    vertexCoordinate_[3] = *fitHeight + y_;
+    vertexCoordinate_[4] = x_;
+    vertexCoordinate_[5] = y_;
+    vertexCoordinate_[6] = *fitWidth + x_;
+    vertexCoordinate_[7] = y_;
+  }
 }

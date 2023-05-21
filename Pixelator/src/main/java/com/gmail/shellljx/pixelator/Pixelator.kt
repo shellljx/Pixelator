@@ -21,9 +21,9 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun addImagePath(path: String, listener: IImageListener?) {
+    override fun addImagePath(path: String, rotate: Int) {
         if (mId != 0L) {
-            nativeAddImagePath(mId, path, listener)
+            nativeAddImagePath(mId, path, rotate)
         }
     }
 
@@ -58,6 +58,12 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
+    override fun save() {
+        if (mId != 0L) {
+            nativeSave(mId)
+        }
+    }
+
     override fun surfaceChanged(p0: SurfaceHolder, format: Int, width: Int, height: Int) {
         if (mId != 0L) {
             this.width = width
@@ -86,8 +92,12 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     /**
      * jni callback method
      */
-    private fun onFrameAvaliable(x:Int, y:Int, width: Int, height: Int) {
+    private fun onFrameAvaliable(x: Int, y: Int, width: Int, height: Int) {
         mRenderListener?.onFrameAvaliable(x, y, width, height)
+    }
+
+    private fun onFrameSaved(bitmap: Bitmap) {
+        mRenderListener?.onFrameSaved(bitmap)
     }
 
     override fun setRenderListener(listener: IRenderListener) {
@@ -97,12 +107,13 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun create(): Long
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
-    private external fun nativeAddImagePath(id: Long, path: String, listener: IImageListener?)
+    private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
     private external fun translate(id: Long, scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)
+    private external fun nativeSave(id: Long)
 
     companion object {
         // Used to load the 'pixelator' library on application startup.

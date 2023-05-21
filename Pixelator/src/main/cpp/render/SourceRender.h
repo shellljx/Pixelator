@@ -21,7 +21,7 @@ class SourceRender {
    * @param height 纹理高
    * @return 绘制之后的纹理
    */
-  GLuint draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight);
+  GLuint draw(GLuint textureId, int width, int height, int rotate, int screenWidth, int screenHeight);
 
   GLuint getTexture();
 
@@ -30,12 +30,8 @@ class SourceRender {
   int getTextureHeight();
 
  private:
-  void cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *textureWidth, int *textureHeight);
-
- private:
   GLuint program_ = 0;
   FrameBuffer *frameBuffer_ = nullptr;
-  float *vertexCoordinate_ = nullptr;
 };
 
 #endif //PIXELATE_SOURCERENDER_H

@@ -25,6 +25,7 @@
 #include "render/PixelationRender.h"
 #include "render/PaintRender.h"
 #include "render/ScreenRender.h"
+#include "render/BlendRender.h"
 
 using namespace glm;
 
@@ -35,20 +36,22 @@ class ImageEngine : public thread::HandlerCallback {
 
   void onSurfaceCreate(jobject surface);
   void onSurfaceChanged(int width, int height);
-  void addImagePath(const char *path);
+  void addImagePath(const char *path, int rotate);
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
   void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
   void setMatrix(float *matrix);
   void refreshFrame();
+  void save();
   void handleMessage(thread::Message *msg) override;
 
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
-  int insertImageInternal(const char *path);
+  int insertImageInternal(const char *path, int rotate);
   int refreshFrameInternal();
+  void saveInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   void renderScreen(GLuint texture, int width, int height);
   void renderScreenTexture(GLuint texture);
@@ -77,6 +80,7 @@ class ImageEngine : public thread::HandlerCallback {
   PixelationRender *pixelationRender_;
   PaintRender *paintRender_;
   ScreenRender *screenRender_;
+  BlendRender *blendRender_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_

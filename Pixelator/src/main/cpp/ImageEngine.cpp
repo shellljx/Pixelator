@@ -15,7 +15,7 @@
 #include "OpenGL.h"
 
 ImageEngine::ImageEngine(jobject object)
-    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr), screenRender_(nullptr) {
+    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr), screenRender_(nullptr), blendRender_(nullptr) {
   std::string name("pixelator thread");
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
@@ -47,6 +47,8 @@ ImageEngine::~ImageEngine() {
   sourceRender_ = nullptr;
   delete screenRender_;
   screenRender_ = nullptr;
+  delete blendRender_;
+  blendRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -71,7 +73,7 @@ void ImageEngine::onSurfaceChanged(int width, int height) {
   LOGI("leave %s", __func__);
 }
 
-void ImageEngine::addImagePath(const char *path) {
+void ImageEngine::addImagePath(const char *path, int rotate) {
   if (path == nullptr) {
     LOGE("image path is null");
     return;
@@ -83,6 +85,7 @@ void ImageEngine::addImagePath(const char *path) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kInsertImage;
   msg->obj1 = tempPath;
+  msg->arg1 = rotate;
   handler_->sendMessage(msg);
 }
 
@@ -133,6 +136,12 @@ void ImageEngine::refreshFrame() {
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::save() {
+  auto msg = new thread::Message();
+  msg->what = kSave;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::handleMessage(thread::Message *msg) {
   int what = msg->what;
   switch (what) {
@@ -155,7 +164,8 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     }
     case PixelateMessage::kInsertImage: {
       auto path = reinterpret_cast<char *>(msg->obj1);
-      insertImageInternal(path);
+      auto rotate = msg->arg1;
+      insertImageInternal(path, rotate);
       delete[] path;
       break;
     }
@@ -199,6 +209,10 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     }
     case PixelateMessage::kRefreshFrame: {
       refreshFrameInternal();
+      break;
+    }
+    case PixelateMessage::kSave: {
+      saveInternal();
       break;
     }
   }
@@ -245,6 +259,9 @@ int ImageEngine::createEGLSurfaceInternal() {
   if (screenRender_ == nullptr) {
     screenRender_ = new ScreenRender();
   }
+  if (blendRender_ == nullptr) {
+    blendRender_ = new BlendRender(pixelator_.get());
+  }
   callJavaEGLWindowCreate();
   LOGI("leave %s", __func__);
   return 0;
@@ -256,21 +273,25 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
   return 0;
 }
 
-int ImageEngine::insertImageInternal(const char *path) {
+int ImageEngine::insertImageInternal(const char *path, int rotate) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
-  sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, surfaceWidth_, surfaceHeight_);
+  sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, rotate, surfaceWidth_, surfaceHeight_);
   pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
-  float x = (surfaceWidth_ - sourceRender_->getTextureWidth()) / 2.f;
-  float y = (surfaceHeight_ - sourceRender_->getTextureHeight()) / 2.f;
-  callJavaFrameAvaliable(x, y, sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
   refreshFrameInternal();
+  callJavaFrameAvaliable(screenRender_->getX(), screenRender_->getY(), screenRender_->getFitWidth(), screenRender_->getFitHeight());
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
+  paintRender_->setMatrix(screenRender_->getMatrix());
+  paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
   paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
   renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
   return 0;
+}
+
+void ImageEngine::saveInternal() {
+  blendRender_->draw(sourceRender_->getTexture(), paintRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
 }
 
 int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int *height) {

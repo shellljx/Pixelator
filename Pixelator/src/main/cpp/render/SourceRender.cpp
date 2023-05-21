@@ -10,9 +10,7 @@
 
 SourceRender::SourceRender() {
   frameBuffer_ = new FrameBuffer();
-  program_ = Program::CreateProgram(DEFAULT_MATRIX_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
-  vertexCoordinate_ = new float[8];
-  memcpy(vertexCoordinate_, DEFAULT_VERTEX_COORDINATE, sizeof(float) * 8);
+  program_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
 }
 
 SourceRender::~SourceRender() {
@@ -21,10 +19,6 @@ SourceRender::~SourceRender() {
   if (program_ > 0) {
     glDeleteProgram(program_);
     program_ = 0;
-  }
-  if (vertexCoordinate_ != nullptr) {
-    delete[] vertexCoordinate_;
-    vertexCoordinate_ = nullptr;
   }
 }
 
@@ -40,25 +34,37 @@ void PrintGLError() {
 GLuint SourceRender::draw(GLuint textureId,
                           int width,
                           int height,
+                          int rotate,
                           int screenWidth,
                           int screenHeight) {
   if (frameBuffer_ == nullptr) {
     return -1;
   }
-  int textureWidth;
-  int textureHeight;
-  cropVertexCoordinate(width, height, screenWidth, screenHeight, &textureWidth, &textureHeight);
-  frameBuffer_->createFrameBuffer(textureWidth, textureHeight);
-  glm::mat4 projection = glm::ortho(0.f, static_cast<float>(textureWidth),
-                                    0.f, static_cast<float>(textureHeight), 1.f, 100.f);
-  glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
-  glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
-  glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
-  glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-  auto matrix = glm::mat4(1);
+  int frameWidth = width;
+  int frameHeight = height;
+  //cropVertexCoordinate(width, height, screenWidth, screenHeight, &textureWidth, &textureHeight);
+  float *textureCoordinate = DEFAULT_TEXTURE_COORDINATE;
+  if (rotate % 360 == 90) {
+    frameWidth = height;
+    frameHeight = width;
+    textureCoordinate = TEXTURE_COORDINATE_270_FLIP_UP_DOWN;
+  } else if (rotate % 360 == 180) {
+    textureCoordinate = TEXTURE_COORDINATE_180_FLIP_UP_DOWN;
+  } else if (rotate % 360 == 270) {
+    frameWidth = height;
+    frameHeight = width;
+  }
+  frameBuffer_->createFrameBuffer(frameWidth, frameHeight);
+//  glm::mat4 projection = glm::ortho(0.f, static_cast<float>(textureWidth),
+//                                    0.f, static_cast<float>(textureHeight), 1.f, 100.f);
+//  glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
+//  glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
+//  glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
+//  glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
+//  auto matrix = glm::mat4(1);
 
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
-  glViewport(0, 0, textureWidth, textureHeight);
+  glViewport(0, 0, frameWidth, frameHeight);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   glClearColor(1.f, 1.f, 1.f, 1.f);
   glUseProgram(program_);
@@ -66,15 +72,15 @@ GLuint SourceRender::draw(GLuint textureId,
   auto positionLoc = glGetAttribLocation(program_, "position");
   glEnableVertexAttribArray(positionLoc);
   glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                        vertexCoordinate_);
+                        DEFAULT_VERTEX_COORDINATE);
   auto textureCoordinateLoc = glGetAttribLocation(program_, "inputTextureCoordinate");
   glEnableVertexAttribArray(textureCoordinateLoc);
   glVertexAttribPointer(textureCoordinateLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                        DEFAULT_TEXTURE_COORDINATE);
+                        textureCoordinate);
 
-  matrix = projection * viewMatrix * matrix;
-  auto mvpLoc = glGetUniformLocation(program_, "mvp");
-  glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
+  //matrix = projection * viewMatrix * matrix;
+  //auto mvpLoc = glGetUniformLocation(program_, "mvp");
+  //glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
   auto inputTextureLoc = glGetUniformLocation(program_, "inputImageTexture");
   glActiveTexture(GL_TEXTURE0);
@@ -102,31 +108,4 @@ int SourceRender::getTextureWidth() {
 
 int SourceRender::getTextureHeight() {
   return frameBuffer_->getTextureHeight();
-}
-
-void SourceRender::cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *textureWidth, int *textureHeight) {
-  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-  float frameRatio = static_cast<float>(frameWidth) / static_cast<float>(frameHeight);
-  float widthScale = 1.f;
-  float heightScale = 1.f;
-  if (frameRatio > screenRatio) {
-    //frame比屏幕宽
-    heightScale = screenRatio / frameRatio;
-  } else {
-    //frame比屏幕窄
-    widthScale = frameRatio / screenRatio;
-  }
-  *textureHeight = static_cast<int>(screenHeight * heightScale);
-  *textureWidth = static_cast<int>(screenWidth * widthScale);
-
-  if (vertexCoordinate_ != nullptr) {
-    vertexCoordinate_[0] = 0.f;
-    vertexCoordinate_[1] = *textureHeight;
-    vertexCoordinate_[2] = *textureWidth;
-    vertexCoordinate_[3] = *textureHeight;
-    vertexCoordinate_[4] = 0.f;
-    vertexCoordinate_[5] = 0.f;
-    vertexCoordinate_[6] = *textureWidth;
-    vertexCoordinate_[7] = 0.f;
-  }
 }

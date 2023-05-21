@@ -20,6 +20,7 @@ enum PixelateMessage {
   kTouchEvent,
   kTranslate,
   kSetMatrix,
-  kRefreshFrame
+  kRefreshFrame,
+  kSave
 };
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_MESSAGES_H_

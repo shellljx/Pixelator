@@ -4,7 +4,7 @@ import android.graphics.Bitmap
 
 interface IPixelator {
 
-    fun addImagePath(path: String, listener: IImageListener? = null)
+    fun addImagePath(path: String, rotate: Int)
 
     fun setBrush(bitmap: Bitmap)
 
@@ -17,4 +17,5 @@ interface IPixelator {
     fun refreshFrame()
 
     fun setRenderListener(listener: IRenderListener)
+    fun save()
 }

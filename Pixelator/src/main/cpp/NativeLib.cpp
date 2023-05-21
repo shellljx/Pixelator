@@ -21,11 +21,11 @@ void Android_Jni_surface_changed(JNIEnv *env, jobject object, jlong id, jint wid
   pixelator->onSurfaceChanged(width, height);
 }
 
-void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath, jobject jlistener) {
+void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath, jint rotate) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   auto path = env->GetStringUTFChars(jpath, JNI_FALSE);
 
-  pixelator->addImagePath(path);
+  pixelator->addImagePath(path, rotate);
   env->ReleaseStringUTFChars(jpath, path);
 }
 
@@ -64,4 +64,9 @@ void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray f
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   pixelator->refreshFrame();
+}
+
+void Android_Jni_save(JNIEnv *env, jobject object, jlong id) {
+  auto pixelator = reinterpret_cast<ImageEngine *>(id);
+  pixelator->save();
 }

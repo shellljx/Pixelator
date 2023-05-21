@@ -28,6 +28,7 @@ add_library( # Sets the name of the library.
         SHARED
         gl/FrameBuffer.cpp
         gl/Program.cpp
+        render/BlendRender.cpp
         render/ImageFrameBuffer.cpp
         render/PaintRender.cpp
         render/PixelationRender.cpp

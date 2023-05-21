@@ -100,7 +100,7 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
   auto pointSizeLocation = glGetUniformLocation(program_, "pointSize");
-  glUniform1f(pointSizeLocation, 100.f / scale_);
+  glUniform1f(pointSizeLocation, 150.f / scale_);
 
   auto textureSizeLocation = glGetUniformLocation(program_, "textureSize");
   float textureSize[] = {(float) width, (float) height};
