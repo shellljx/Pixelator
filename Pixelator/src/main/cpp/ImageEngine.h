@@ -57,7 +57,7 @@ class ImageEngine : public thread::HandlerCallback {
   void renderScreenTexture(GLuint texture);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
-  void callJavaFrameAvaliable(int x, int y, int width, int height);
+  void callJavaFrameBoundsChanged(float left, float top, float right, float bottom);
 
  private:
   std::unique_ptr<thread::HandlerThread> handlerThread_ = nullptr;

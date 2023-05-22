@@ -92,8 +92,8 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     /**
      * jni callback method
      */
-    private fun onFrameAvaliable(x: Int, y: Int, width: Int, height: Int) {
-        mRenderListener?.onFrameAvaliable(x, y, width, height)
+    private fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+        mRenderListener?.onFrameBoundsChanged(left, top, right, bottom)
     }
 
     private fun onFrameSaved(bitmap: Bitmap) {

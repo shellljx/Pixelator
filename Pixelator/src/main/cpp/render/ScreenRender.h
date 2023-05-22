@@ -15,6 +15,7 @@ class ScreenRender {
   ScreenRender();
   ~ScreenRender();
 
+  void initMatrix(int screenWidth, int screenHeight, int textureWidth, int textureHeight);
   /**
  * 绘制一个纹理到 framebuffer
  * @param textureId 纹理 id
@@ -28,8 +29,8 @@ class ScreenRender {
 
   GLuint getTexture();
 
-  glm::mat4 getMatrix() {
-    return matrix_;
+  glm::mat4 getModelMatrix() {
+    return transformMatrix_ * modelMatrix_;
   }
 
   int getFitWidth() {
@@ -50,6 +51,9 @@ class ScreenRender {
 
   void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
   void setMatrix(glm::mat4 matrix);
+  float getScale() {
+    return scale_;
+  }
  private:
   void cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *fitWidth, int *fitHeight);
  private:
@@ -66,7 +70,10 @@ class ScreenRender {
   int y_ = 0;
   FrameBuffer *frameBuffer_;
   float *vertexCoordinate_;
-  glm::mat4 matrix_ = glm::mat4(1);
+  glm::mat4 projectionMatrix_ = glm::mat4(1);
+  glm::mat4 viewMatrix_ = glm::mat4(1);
+  glm::mat4 modelMatrix_ = glm::mat4(1);
+  glm::mat4 transformMatrix_ = glm::mat4(1);
 };
 
 #endif //PIXELATE_SCREENRENDER_H

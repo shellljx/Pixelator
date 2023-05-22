@@ -191,8 +191,8 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto pivotX = msg->arg7;
       auto pivotY = msg->arg8;
       screenRender_->translate(scale, pivotX, pivotY, angle, translateX, translateY);
-      paintRender_->setMatrix(screenRender_->getMatrix());
-      paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
+      paintRender_->setMatrix(screenRender_->getModelMatrix());
+      paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
       renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
       break;
     }
@@ -201,9 +201,14 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       glm::mat4 matrix = glm::make_mat4(buffer);
       screenRender_->setMatrix(matrix);
-      paintRender_->setMatrix(screenRender_->getMatrix());
-      paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
+      paintRender_->setMatrix(screenRender_->getModelMatrix());
+      paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
       renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+      glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
+      glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
+      lt = screenRender_->getModelMatrix() * lt;
+      rb = screenRender_->getModelMatrix() * rb;
+      callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y);
       delete[] buffer;
       break;
     }
@@ -277,14 +282,14 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
   sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, rotate, surfaceWidth_, surfaceHeight_);
   pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  screenRender_->initMatrix(surfaceWidth_, surfaceHeight_, sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  paintRender_->setMatrix(screenRender_->getModelMatrix());
+  paintRender_->translate(screenRender_->getScale(), 0.f, 0.f, 0.f, 0.f, 0.f);
   refreshFrameInternal();
-  callJavaFrameAvaliable(screenRender_->getX(), screenRender_->getY(), screenRender_->getFitWidth(), screenRender_->getFitHeight());
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  paintRender_->setMatrix(screenRender_->getMatrix());
-  paintRender_->translate(screenRender_->getMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
   paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
   renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
   return 0;
@@ -376,16 +381,16 @@ void ImageEngine::callJavaEGLWindowCreate() {
   }
 }
 
-void ImageEngine::callJavaFrameAvaliable(int x, int y, int width, int height) {
+void ImageEngine::callJavaFrameBoundsChanged(float left, float top, float right, float bottom) {
   if (pixelator_.empty()) {
     return;
   }
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
-    jmethodID frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameAvaliable", "(IIII)V");
+    jmethodID frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameBoundsChanged", "(FFFF)V");
     if (frameAvaliableMethodId != nullptr) {
-      env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, x, y, width, height);
+      env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, left, top, right, bottom);
     }
   }
 }

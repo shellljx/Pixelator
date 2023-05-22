@@ -21,7 +21,6 @@ class GestureView : View {
     var transformMatrix = Matrix()
 
     private var listener: GestureListener? = null
-    private var transformProcessor = TransformProcessor()
     private var mTouchSlop: Int
     private var mLastPoint = PointF()
     private var mLastPoint2 = PointF()
@@ -37,10 +36,6 @@ class GestureView : View {
     private var mInMove = false
     private val bounds = RectF()
     private val paint = Paint()
-    private var textureWidth = 0
-    private var textureHeight = 0
-    private var x = 0
-    private var y = 0
 
     init {
         paint.setColor(Color.BLUE)
@@ -137,8 +132,6 @@ class GestureView : View {
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
         transformMatrix.postTranslate(dx, dy)
 
-        bounds.set(x.toFloat(), y.toFloat(), x + textureWidth.toFloat(), y + textureHeight.toFloat())
-        transformMatrix.mapRect(bounds)
         listener?.refresh(transformMatrix)
 
         mLastAngle = angle.toFloat()
@@ -157,12 +150,9 @@ class GestureView : View {
         this.listener = listener
     }
 
-    fun initFrame(x: Int, y: Int, width: Int, height: Int) {
-        //transformMatrix.setTranslate(x.toFloat(), y.toFloat())
-        textureWidth = width
-        textureHeight = height
-        this.x = x
-        this.y = y
+    fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+        bounds.set(left, top, right, bottom)
+        invalidate()
     }
 
     interface GestureListener {

@@ -70,18 +70,8 @@ class MainActivity : AppCompatActivity() {
                 isWindowCreated = true
             }
 
-            override fun onFrameAvaliable(x: Int, y: Int, width: Int, height: Int) {
-                gestureView.initFrame(x, y, width, height)
-                val v = FloatArray(9)
-                gestureView.transformMatrix.getValues(v)
-                val glmArray = floatArrayOf(
-                    v[0], v[3], 0f, 0f,
-                    v[1], v[4], 0f, 0f,
-                    0f, 0f, 1f, 0f,
-                    v[2], v[5], 0f, 1f
-                )
-                //pixelator.setMatrix(glmArray)
-                //pixelator.refreshFrame()
+            override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+                gestureView.onFrameBoundsChanged(left, top, right, bottom)
             }
 
             override fun onFrameSaved(bitmap: Bitmap) {
