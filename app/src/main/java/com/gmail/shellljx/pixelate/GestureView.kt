@@ -157,7 +157,6 @@ class GestureView : View {
 
     interface GestureListener {
         fun onMove(points: List<PointF>)
-        fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
         fun refresh(matrix: Matrix)
     }
 }

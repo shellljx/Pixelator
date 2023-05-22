@@ -18,7 +18,6 @@ enum PixelateMessage {
   kInsertImage = 100,
   kSetBrush,
   kTouchEvent,
-  kTranslate,
   kSetMatrix,
   kRefreshFrame,
   kSave

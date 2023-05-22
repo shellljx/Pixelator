@@ -39,7 +39,6 @@ class ImageEngine : public thread::HandlerCallback {
   void addImagePath(const char *path, int rotate);
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
-  void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
   void setMatrix(float *matrix);
   void refreshFrame();
   void save();
@@ -51,10 +50,10 @@ class ImageEngine : public thread::HandlerCallback {
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path, int rotate);
   int refreshFrameInternal();
+  void refreshTransform();
   void saveInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   void renderScreen(GLuint texture, int width, int height);
-  void renderScreenTexture(GLuint texture);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
   void callJavaFrameBoundsChanged(float left, float top, float right, float bottom);

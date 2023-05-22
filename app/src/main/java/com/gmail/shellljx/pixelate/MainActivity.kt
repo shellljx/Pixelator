@@ -2,14 +2,13 @@ package com.gmail.shellljx.pixelate
 
 import android.graphics.*
 import android.media.ExifInterface
-import androidx.appcompat.app.AppCompatActivity
 import android.os.Bundle
+import android.util.DisplayMetrics
 import android.view.SurfaceHolder
 import android.view.SurfaceView
-import android.widget.CompoundButton
+import android.widget.*
 import android.widget.CompoundButton.OnCheckedChangeListener
-import android.widget.Switch
-import android.widget.TextView
+import androidx.appcompat.app.AppCompatActivity
 import androidx.core.math.MathUtils
 import com.gmail.shellljx.pixelator.IRenderListener
 import com.gmail.shellljx.pixelator.Pixelator
@@ -23,6 +22,7 @@ class MainActivity : AppCompatActivity() {
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        getwcreenheight()
         surfaceView = findViewById(R.id.surface_view)
         gestureView = findViewById(R.id.gesture_view)
         surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
@@ -38,10 +38,6 @@ class MainActivity : AppCompatActivity() {
                 }
                 pixelator.pushTouchBuffer(buffer.toFloatArray())
                 pixelator.refreshFrame()
-            }
-
-            override fun onTranslate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float) {
-                pixelator.translate(scale, pivotX, pivotY, 0f, translateX, translateY)
             }
 
             override fun refresh(matrix: Matrix) {
@@ -65,7 +61,7 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
-                val path = "/sdcard/DCIM/Camera/20230520_202707.jpg"
+                val path = "/sdcard/aftereffect/ae/asset13.png"
                 pixelator.addImagePath(path, getRotate(path))
                 isWindowCreated = true
             }
@@ -126,5 +122,13 @@ class MainActivity : AppCompatActivity() {
         } catch (e: Exception) {
             0
         }
+    }
+
+    private fun getwcreenheight(){
+        val manager = this.windowManager
+        val outMetrics = DisplayMetrics()
+        manager.defaultDisplay.getMetrics(outMetrics)
+        val width2 = outMetrics.widthPixels
+        val height2 = outMetrics.heightPixels
     }
 }

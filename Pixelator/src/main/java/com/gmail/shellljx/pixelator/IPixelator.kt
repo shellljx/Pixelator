@@ -10,8 +10,6 @@ interface IPixelator {
 
     fun pushTouchBuffer(buffer: FloatArray)
 
-    fun translate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
-
     fun setMatrix(matrix: FloatArray)
 
     fun refreshFrame()

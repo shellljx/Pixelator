@@ -111,18 +111,6 @@ void ImageEngine::pushTouchBuffer(float *buffer, int length) {
   handler_->sendMessage(msg);
 }
 
-void ImageEngine::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
-  auto msg = new thread::Message();
-  msg->what = PixelateMessage::kTranslate;
-  msg->arg3 = scale;
-  msg->arg4 = angle;
-  msg->arg5 = translateX;
-  msg->arg6 = translateY;
-  msg->arg7 = pivotX;
-  msg->arg8 = pivotY;
-  handler_->sendMessage(msg);
-}
-
 void ImageEngine::setMatrix(float *matrix) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kSetMatrix;
@@ -179,21 +167,8 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       int length = msg->arg1;
       paintRender_->processPushBufferInternal(buffer, length);
+      paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
       delete[] buffer;
-      break;
-    }
-
-    case PixelateMessage::kTranslate: {
-      auto scale = msg->arg3;
-      auto angle = msg->arg4;
-      auto translateX = msg->arg5;
-      auto translateY = msg->arg6;
-      auto pivotX = msg->arg7;
-      auto pivotY = msg->arg8;
-      screenRender_->translate(scale, pivotX, pivotY, angle, translateX, translateY);
-      paintRender_->setMatrix(screenRender_->getModelMatrix());
-      paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
-      renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
       break;
     }
 
@@ -201,14 +176,8 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       glm::mat4 matrix = glm::make_mat4(buffer);
       screenRender_->setMatrix(matrix);
-      paintRender_->setMatrix(screenRender_->getModelMatrix());
-      paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
-      renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
-      glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
-      glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
-      lt = screenRender_->getModelMatrix() * lt;
-      rb = screenRender_->getModelMatrix() * rb;
-      callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y);
+      refreshTransform();
+      refreshFrameInternal();
       delete[] buffer;
       break;
     }
@@ -282,17 +251,27 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
   sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, rotate, surfaceWidth_, surfaceHeight_);
   pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
   screenRender_->initMatrix(surfaceWidth_, surfaceHeight_, sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
-  paintRender_->setMatrix(screenRender_->getModelMatrix());
-  paintRender_->translate(screenRender_->getScale(), 0.f, 0.f, 0.f, 0.f, 0.f);
+  refreshTransform();
   refreshFrameInternal();
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
-  renderScreen(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  screenRender_->draw(sourceRender_->getTexture(), paintRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
+  eglCore_->swapBuffers(renderSurface_);
   return 0;
+}
+
+void ImageEngine::refreshTransform() {
+  paintRender_->setMatrix(screenRender_->getModelMatrix());
+  paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
+  glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
+  glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
+  lt = screenRender_->getModelMatrix() * lt;
+  rb = screenRender_->getModelMatrix() * rb;
+  callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y);
 }
 
 void ImageEngine::saveInternal() {
@@ -326,29 +305,7 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
 }
 
 void ImageEngine::renderScreen(GLuint texture, int width, int height) {
-  screenRender_->draw(texture, paintRender_->getTexture(), width, height, surfaceWidth_, surfaceHeight_);
-  eglCore_->swapBuffers(renderSurface_);
-}
 
-void ImageEngine::renderScreenTexture(GLuint texture) {
-
-  GL_CHECK(glUseProgram(program2_));
-  auto positionLoction = glGetAttribLocation(program2_, "position");
-  GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_VERTEX_COORDINATE))
-  auto textureLocation = glGetAttribLocation(program2_, "inputTextureCoordinate");
-  GL_CHECK(glEnableVertexAttribArray(textureLocation));
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 TEXTURE_COORDINATE_FLIP_UP_DOWN))
-  GL_CHECK(glActiveTexture(GL_TEXTURE0));
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, texture));
-  auto inputTextureLocation = glGetUniformLocation(program2_, "inputImageTexture");
-  GL_CHECK(glUniform1i(inputTextureLocation, 0))
-  GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4))
-  GL_CHECK(glDisableVertexAttribArray(positionLoction))
-  GL_CHECK(glDisableVertexAttribArray(textureLocation))
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
 }
 
 void ImageEngine::callJavaEGLContextCreate() {

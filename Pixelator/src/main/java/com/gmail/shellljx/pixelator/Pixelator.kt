@@ -40,12 +40,6 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun translate(scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float) {
-        if (mId != 0L) {
-            translate(mId, scale, pivotX, pivotY, angle, translateX, translateY)
-        }
-    }
-
     override fun setMatrix(matrix: FloatArray) {
         if (mId != 0L) {
             nativeSetMatrix(mId, matrix)
@@ -110,7 +104,6 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
-    private external fun translate(id: Long, scale: Float, pivotX: Float, pivotY: Float, angle: Float, translateX: Float, translateY: Float)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)
     private external fun nativeSave(id: Long)
