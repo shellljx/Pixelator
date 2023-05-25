@@ -21,7 +21,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var surfaceView: SurfaceView
     lateinit var gestureView: GestureView
     private var isWindowCreated = false
-    private val effectsPanel = EffectsPanel(this)
+    private val serviceManager = ServiceManager(this)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -39,7 +39,8 @@ class MainActivity : AppCompatActivity() {
                 // 未授予读写权限，发起权限请求
                 requestPermissions(permissions, REQUEST_PERMISSION_CODE)
             }
-            effectsPanel.onViewCreated()
+            serviceManager.effectPanel.onViewCreated()
+            serviceManager.start()
         }
 
         surfaceView = findViewById(R.id.surface_view)

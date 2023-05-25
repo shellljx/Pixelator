@@ -7,17 +7,26 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
+import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.R
+import java.util.ArrayList
 
 class EffectsPanel(private val context: Activity) {
 
     private val mEffectsRecyclerView by lazy { context.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
+    private val effectItems = arrayListOf<EffectItem>()
 
     fun onViewCreated() {
         mEffectsRecyclerView.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView.adapter = mEffectsAdapter
         mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
+    }
+
+    fun setEffectItems(effectList: ArrayList<EffectItem>) {
+        val startPosition = effectItems.size
+        effectItems.addAll(effectList)
+        mEffectsAdapter.notifyItemRangeInserted(startPosition, effectList.size)
     }
 
     inner class EffectAdapter : Adapter<ViewHolder>() {
@@ -26,7 +35,7 @@ class EffectsPanel(private val context: Activity) {
         }
 
         override fun getItemCount(): Int {
-            return 20
+            return effectItems.size
         }
 
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
