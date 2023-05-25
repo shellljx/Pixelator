@@ -4,36 +4,70 @@
     xmlns:tools="http://schemas.android.com/tools"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
+    android:background="@color/black"
     tools:context=".MainActivity">
 
     <SurfaceView
         android:id="@+id/surface_view"
         android:layout_width="match_parent"
-        android:layout_height="match_parent" />
+        android:layout_height="match_parent"
+        android:layout_marginBottom="200dp" />
 
     <com.gmail.shellljx.pixelate.GestureView
         android:id="@+id/gesture_view"
         android:layout_width="match_parent"
         android:layout_height="match_parent"
-        android:clickable="true" />
+        android:layout_marginBottom="200dp" />
 
-    <Switch
-        android:id="@+id/editswitch"
+    <FrameLayout
+        android:id="@+id/tv_settings"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:checked="true"
+        android:layout_height="26dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="12dp"
+        android:background="@drawable/bg_white_right_round_rect"
+        android:textColor="@color/black"
         app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toTopOf="parent" />
+        app:layout_constraintTop_toTopOf="parent">
+
+        <ImageView
+            android:layout_width="20dp"
+            android:layout_height="20dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginStart="4dp"
+            android:layout_marginEnd="4dp"
+            android:src="@drawable/ic_dot_settings" />
+    </FrameLayout>
 
     <TextView
-        android:id="@+id/savebutton"
+        android:id="@+id/tv_save"
         android:layout_width="wrap_content"
-        android:layout_height="wrap_content"
-        android:layout_margin="20dp"
-        android:text="保持"
-        android:textSize="20sp"
-        app:layout_constraintRight_toRightOf="parent"
-        app:layout_constraintTop_toBottomOf="@id/editswitch" />
+        android:layout_height="26dp"
+        android:layout_marginTop="40dp"
+        android:layout_marginEnd="4dp"
+        android:background="@drawable/bg_white_left_round_rect"
+        android:gravity="center_vertical"
+        android:paddingStart="10dp"
+        android:paddingEnd="8dp"
+        android:text="保存"
+        android:textColor="@color/black"
+        android:textSize="12sp"
+        app:layout_constraintRight_toLeftOf="@id/tv_settings"
+        app:layout_constraintTop_toTopOf="parent" />
 
+    <ImageView
+        android:id="@+id/iv_compare"
+        android:layout_width="24dp"
+        android:layout_height="22dp"
+        android:layout_marginTop="30dp"
+        android:src="@drawable/ic_compare"
+        app:layout_constraintLeft_toLeftOf="@id/tv_settings"
+        app:layout_constraintTop_toBottomOf="@id/tv_settings" />
+
+
+    <androidx.coordinatorlayout.widget.CoordinatorLayout
+        android:layout_width="match_parent"
+        android:layout_height="match_parent">
+        <include layout="@layout/include_operation_panel_layout" />
+    </androidx.coordinatorlayout.widget.CoordinatorLayout>
 </androidx.constraintlayout.widget.ConstraintLayout>

@@ -1,15 +1,17 @@
 package com.gmail.shellljx.pixelate
 
+import android.Manifest
+import android.app.Activity
+import android.content.pm.PackageManager
 import android.graphics.*
 import android.media.ExifInterface
+import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.SurfaceHolder
-import android.view.SurfaceView
-import android.widget.*
-import android.widget.CompoundButton.OnCheckedChangeListener
+import android.view.*
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.math.MathUtils
+import com.gmail.shellljx.pixelate.panels.EffectsPanel
 import com.gmail.shellljx.pixelator.IRenderListener
 import com.gmail.shellljx.pixelator.Pixelator
 import java.io.*
@@ -19,10 +21,27 @@ class MainActivity : AppCompatActivity() {
     lateinit var surfaceView: SurfaceView
     lateinit var gestureView: GestureView
     private var isWindowCreated = false
+    private val effectsPanel = EffectsPanel(this)
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         getwcreenheight()
+        setTransparent()
+        val REQUEST_PERMISSION_CODE = 1
+        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 检查权限是否已被授予
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                // 已经授予了读写权限
+                // 可以进行读写操作
+            } else {
+                // 未授予读写权限，发起权限请求
+                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
+            }
+            effectsPanel.onViewCreated()
+        }
+
         surfaceView = findViewById(R.id.surface_view)
         gestureView = findViewById(R.id.gesture_view)
         surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
@@ -74,14 +93,6 @@ class MainActivity : AppCompatActivity() {
                 saveBitmap(bitmap)
             }
         })
-        findViewById<Switch>(R.id.editswitch).setOnCheckedChangeListener(object : OnCheckedChangeListener {
-            override fun onCheckedChanged(p0: CompoundButton?, p1: Boolean) {
-                gestureView.editEnable = p1
-            }
-        })
-        findViewById<TextView>(R.id.savebutton).setOnClickListener {
-            pixelator.save()
-        }
     }
 
     private fun saveBitmap(bitmap: Bitmap) {
@@ -124,11 +135,51 @@ class MainActivity : AppCompatActivity() {
         }
     }
 
-    private fun getwcreenheight(){
+    private fun getwcreenheight() {
         val manager = this.windowManager
         val outMetrics = DisplayMetrics()
         manager.defaultDisplay.getMetrics(outMetrics)
         val width2 = outMetrics.widthPixels
         val height2 = outMetrics.heightPixels
+    }
+
+    fun setTransparent() {
+        transparentStatusBar(this)
+        hintNavigationBar(this)
+    }
+
+    private fun transparentStatusBar(activity: Activity) {
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
+            activity.window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
+            activity.window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+            activity.window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+            //            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
+            activity.window.statusBarColor = Color.TRANSPARENT
+        } else {
+            activity.window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
+        }
+    }
+
+    private fun setRootView(activity: Activity) {
+        val parent = activity.findViewById<View>(android.R.id.content) as ViewGroup
+        var i = 0
+        val count = parent.childCount
+        while (i < count) {
+            val childView = parent.getChildAt(i)
+            if (childView is ViewGroup) {
+                childView.setFitsSystemWindows(true)
+                childView.clipToPadding = true
+            }
+            i++
+        }
+    }
+
+    fun hintNavigationBar(activity: Activity) {
+        activity.window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                or View.SYSTEM_UI_FLAG_FULLSCREEN
+                or View.SYSTEM_UI_FLAG_IMMERSIVE) //API19
     }
 }

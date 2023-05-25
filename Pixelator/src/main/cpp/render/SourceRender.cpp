@@ -66,7 +66,6 @@ GLuint SourceRender::draw(GLuint textureId,
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
   glViewport(0, 0, frameWidth, frameHeight);
   glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
-  glClearColor(1.f, 1.f, 1.f, 1.f);
   glUseProgram(program_);
 
   auto positionLoc = glGetAttribLocation(program_, "position");

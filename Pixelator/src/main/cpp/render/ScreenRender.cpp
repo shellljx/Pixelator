@@ -76,7 +76,7 @@ GLuint ScreenRender::draw(GLuint textureId, GLuint maskTexture, int width, int h
   GL_CHECK(glViewport(0, 0, screenWidth, screenHeight));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-  drawTexture(textureId, width, height, screenWidth, screenHeight);
+    drawTexture(textureId, width, height, screenWidth, screenHeight);
   drawTexture(maskTexture, width, height, screenWidth, screenHeight);
 
   GL_CHECK(glDisable(GL_BLEND))
