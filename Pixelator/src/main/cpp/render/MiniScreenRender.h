@@ -27,6 +27,7 @@ class MiniScreenRender {
   }
   void destroyEglSurface(EGLCore *eglCore);
   void tranlate(float x, float y);
+  void setBounds(float left, float top, float right, float bottom);
  private:
   ANativeWindow *nativeWindow_ = nullptr;
   EGLSurface eglSurface_ = EGL_NO_SURFACE;
@@ -36,6 +37,10 @@ class MiniScreenRender {
   int surfaceHeight_ = 0;
   float x_ = 0.f;
   float y_ = 0.f;
+  float left_ = 0.f;
+  float top_ = 0.f;
+  float right_ = 0.f;
+  float bottom_ = 0.f;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_MINISCREENRENDER_H_

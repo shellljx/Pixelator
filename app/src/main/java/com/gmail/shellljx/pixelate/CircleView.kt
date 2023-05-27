@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.View
+import com.gmail.shellljx.pixelate.extension.dp
 
 class CircleView @JvmOverloads constructor(
     context: Context,
@@ -24,12 +25,12 @@ class CircleView @JvmOverloads constructor(
         // 设置白色边框
         borderPaint.color = Color.WHITE
         borderPaint.style = Paint.Style.STROKE
-        borderPaint.strokeWidth = 5f
+        borderPaint.strokeWidth = 1.dp().toFloat()
     }
 
     override fun onSizeChanged(w: Int, h: Int, oldw: Int, oldh: Int) {
         super.onSizeChanged(w, h, oldw, oldh)
-        radius = (Math.min(width, height) / 2).toFloat()-5
+        radius = (Math.min(width, height) / 2).toFloat() - 1.dp().toFloat()
         centerX = (width / 2).toFloat()
         centerY = (height / 2).toFloat()
     }

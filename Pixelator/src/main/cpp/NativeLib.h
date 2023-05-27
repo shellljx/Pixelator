@@ -32,7 +32,8 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jobject object,
                                  jlong id,
                                  jfloatArray buffer,
-                                 jint count);
+                                 jfloat cx,
+                                 jfloat cy);
 
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray);
 
@@ -50,7 +51,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
     {"nativeAddImagePath", "(JLjava/lang/String;I)V", (void **) Android_Jni_add_image_path},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
-    {"pushTouchBuffer", "(J[FI)V", (void **) Android_Jni_pushTouchBuffer},
+    {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},
     {"refreshFrame", "(J)V", (void **) Andriod_Jni_refresh_frame},
     {"nativeSetMatrix", "(J[F)V", (void **) Android_Jni_set_matrix},
     {"nativeSave", "(J)V", (void **) Android_Jni_save}

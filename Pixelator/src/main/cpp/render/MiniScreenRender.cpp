@@ -83,6 +83,26 @@ void MiniScreenRender::destroyEglSurface(EGLCore *eglCore) {
 }
 
 void MiniScreenRender::tranlate(float x, float y) {
-  x_ = x;
-  y_ = y;
+  auto spaceX = surfaceWidth_ / 2.f;
+  auto spaceY = surfaceHeight_ / 2.f;
+  if (x - left_ < spaceX) {
+    x_ = spaceX + left_;
+  } else if (right_ - x < spaceX) {
+    x_ = right_ - spaceX;
+  } else {
+    x_ = x;
+  }
+  if (y - top_ < spaceY) {
+    y_ = spaceY + top_;
+  } else if (bottom_ - y < spaceY) {
+    y_ = bottom_ - spaceY;
+  } else {
+    y_ = y;
+  }
+}
+void MiniScreenRender::setBounds(float left, float top, float right, float bottom) {
+  left_ = left;
+  top_ = top;
+  right_ = right;
+  bottom_ = bottom;
 }

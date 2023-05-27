@@ -23,6 +23,7 @@ class MainActivity : AppCompatActivity() {
     lateinit var gestureView: GestureView
     private var isWindowCreated = false
     private val serviceManager = ServiceManager(this)
+    private val bounds = RectF()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -50,7 +51,7 @@ class MainActivity : AppCompatActivity() {
         gestureView = findViewById(R.id.gesture_view)
         surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
         gestureView.setGestureListener(object : GestureView.GestureListener {
-            override fun onMove(points: List<PointF>) {
+            override fun onMove(points: List<PointF>, current: PointF) {
                 if (!isWindowCreated) return
                 val buffer = arrayListOf<Float>()
                 points.forEach {
@@ -63,7 +64,8 @@ class MainActivity : AppCompatActivity() {
                     buffer.add(it.x)
                     buffer.add(it.y)
                 }
-                pixelator.pushTouchBuffer(buffer.toFloatArray())
+                pixelator.pushTouchBuffer(buffer.toFloatArray(), current.x, current.y)
+                serviceManager.miniScreenPanel.translate(current.x, current.y, bounds)
                 pixelator.refreshFrame()
             }
 
@@ -103,6 +105,7 @@ class MainActivity : AppCompatActivity() {
                 right: Float,
                 bottom: Float
             ) {
+                bounds.set(left, top, right, bottom)
                 gestureView.onFrameBoundsChanged(left, top, right, bottom)
             }
 

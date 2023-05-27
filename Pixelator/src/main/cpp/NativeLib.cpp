@@ -57,14 +57,14 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jobject object,
                                  jlong id,
                                  jfloatArray buffer,
-                                 jint count) {
+                                 jfloat cx, jfloat cy) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   jfloat *touchBuffer = env->GetFloatArrayElements(buffer, nullptr);
   jsize length = env->GetArrayLength(buffer);
 
   auto *copyBuffer = new float[length];
   memcpy(copyBuffer, touchBuffer, length * sizeof(float));
-  pixelator->pushTouchBuffer(copyBuffer, length);
+  pixelator->pushTouchBuffer(copyBuffer, length, cx, cy);
   env->ReleaseFloatArrayElements(buffer, touchBuffer, 0);
 }
 

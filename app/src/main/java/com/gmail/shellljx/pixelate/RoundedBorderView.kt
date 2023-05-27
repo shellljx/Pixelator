@@ -9,6 +9,7 @@ import android.graphics.Paint
 import android.graphics.Path
 import android.graphics.RectF
 import android.util.AttributeSet
+import com.gmail.shellljx.pixelate.extension.dp
 
 class RoundedBorderView @JvmOverloads constructor(
     context: Context,
@@ -20,8 +21,8 @@ class RoundedBorderView @JvmOverloads constructor(
     private val borderPath: Path = Path()
     private val borderRect: RectF = RectF()
 
-    private var cornerRadius: Float = 14f
-    private var borderWidth: Float = 10f
+    private var cornerRadius: Float = 5.dp().toFloat()
+    private var borderWidth: Float = 4.dp().toFloat()
     private var borderColor: Int = Color.WHITE
 
     init {

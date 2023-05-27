@@ -53,10 +53,10 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun pushTouchBuffer(buffer: FloatArray) {
+    override fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float) {
         if (buffer.isEmpty()) return
         if (mId != 0L) {
-            pushTouchBuffer(mId, buffer, buffer.size)
+            pushTouchBuffer(mId, buffer, cx, cy)
         }
     }
 
@@ -130,7 +130,7 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
-    private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)
+    private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)
     private external fun nativeSave(id: Long)

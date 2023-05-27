@@ -141,10 +141,12 @@ bool ImageEngine::setBrush(jobject bitmap) {
   return true;
 }
 
-void ImageEngine::pushTouchBuffer(float *buffer, int length) {
+void ImageEngine::pushTouchBuffer(float *buffer, int length, float cx, float cy) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kTouchEvent;
   msg->arg1 = length;
+  msg->arg3 = cx;
+  msg->arg4 = cy;
   msg->obj1 = buffer;
   handler_->sendMessage(msg);
 }
@@ -204,11 +206,11 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kTouchEvent: {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       int length = msg->arg1;
+      float cx = msg->arg3;
+      float cy = msg->arg4;
 
       if (miniScreenRender_ != nullptr && length >= 2) {
-        float x = buffer[0];
-        float y = buffer[1];
-        miniScreenRender_->tranlate(x, y);
+        miniScreenRender_->tranlate(cx, cy);
       }
       paintRender_->processPushBufferInternal(buffer, length);
       paintRender_->draw(pixelationRender_->getTexture(),
@@ -377,6 +379,9 @@ void ImageEngine::refreshTransform() {
   glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
   lt = screenRender_->getModelMatrix() * lt;
   rb = screenRender_->getModelMatrix() * rb;
+  if (miniScreenRender_ != nullptr) {
+    miniScreenRender_->setBounds(lt.x, lt.y, rb.x, rb.y);
+  }
   callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y);
 }
 
