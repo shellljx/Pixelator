@@ -22,7 +22,10 @@ class BlendRender {
 
   void drawTexture(GLuint textureId, int width, int height);
 
+  void save();
   GLuint getTexture();
+  int getWidth();
+  int getHeight();
 
  private:
   void createBlendBitmap(int width, int height);

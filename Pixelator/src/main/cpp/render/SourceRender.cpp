@@ -43,7 +43,7 @@ GLuint SourceRender::draw(GLuint textureId,
   int frameWidth = width;
   int frameHeight = height;
   //cropVertexCoordinate(width, height, screenWidth, screenHeight, &textureWidth, &textureHeight);
-  float *textureCoordinate = DEFAULT_TEXTURE_COORDINATE;
+  float *textureCoordinate = DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP;
   if (rotate % 360 == 90) {
     frameWidth = height;
     frameHeight = width;

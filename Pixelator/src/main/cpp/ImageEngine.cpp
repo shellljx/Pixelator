@@ -15,7 +15,12 @@
 #include "OpenGL.h"
 
 ImageEngine::ImageEngine(jobject object)
-    : sourceRender_(nullptr), pixelationRender_(nullptr), paintRender_(nullptr), screenRender_(nullptr), blendRender_(nullptr) {
+    : sourceRender_(nullptr),
+      pixelationRender_(nullptr),
+      paintRender_(nullptr),
+      screenRender_(nullptr),
+      blendRender_(nullptr),
+      miniScreenRender_(nullptr) {
   std::string name("pixelator thread");
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
@@ -49,13 +54,19 @@ ImageEngine::~ImageEngine() {
   screenRender_ = nullptr;
   delete blendRender_;
   blendRender_ = nullptr;
+  delete miniScreenRender_;
+  miniScreenRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
   LOGI("enter %s", __func__);
   JNIEnv *env = JNIEnvironment::Current();
+  //todo 赋值和销毁在一个线程
   if (env != nullptr) {
     nativeWindow_ = ANativeWindow_fromSurface(env, surface);
+  }
+  if (nativeWindow_ == nullptr) {
+    return;
   }
   auto msg = new thread::Message();
   msg->what = EGLMessage::kCreateEGLSurface;
@@ -71,6 +82,33 @@ void ImageEngine::onSurfaceChanged(int width, int height) {
   msg->arg2 = height;
   handler_->sendMessage(msg);
   LOGI("leave %s", __func__);
+}
+
+void ImageEngine::onMiniSurfaceCreate(jobject surface) {
+  JNIEnv *env = JNIEnvironment::Current();
+  ANativeWindow *window = nullptr;
+  if (env != nullptr) {
+    window = ANativeWindow_fromSurface(env, surface);
+  }
+  if (window != nullptr) {
+    auto msg = new thread::Message();
+    msg->what = PixelateMessage::kCreateMiniSurface;
+    msg->obj1 = window;
+    handler_->sendMessage(msg);
+  }
+}
+void ImageEngine::onMiniSurfaceChanged(int width, int height) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kMiniSurfaceChanged;
+  msg->arg1 = width;
+  msg->arg2 = height;
+  handler_->sendMessage(msg);
+}
+
+void ImageEngine::onMiniSurfaceDestroy() {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kMiniSurfaceDestroy;
+  handler_->sendMessage(msg);
 }
 
 void ImageEngine::addImagePath(const char *path, int rotate) {
@@ -166,8 +204,18 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kTouchEvent: {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       int length = msg->arg1;
+
+      if (miniScreenRender_ != nullptr && length >= 2) {
+        float x = buffer[0];
+        float y = buffer[1];
+        miniScreenRender_->tranlate(x, y);
+      }
       paintRender_->processPushBufferInternal(buffer, length);
-      paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
+      paintRender_->draw(pixelationRender_->getTexture(),
+                         sourceRender_->getTextureWidth(),
+                         sourceRender_->getTextureHeight(),
+                         surfaceWidth_,
+                         surfaceHeight_);
       delete[] buffer;
       break;
     }
@@ -175,7 +223,10 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kSetMatrix: {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
       glm::mat4 matrix = glm::make_mat4(buffer);
-      screenRender_->setMatrix(matrix);
+      screenRender_->setTransformMatrix(matrix);
+      if (miniScreenRender_ != nullptr) {
+        miniScreenRender_->setTransformMatrix(screenRender_->getModelMatrix());
+      }
       refreshTransform();
       refreshFrameInternal();
       delete[] buffer;
@@ -187,6 +238,32 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     }
     case PixelateMessage::kSave: {
       saveInternal();
+      break;
+    }
+    case PixelateMessage::kCreateMiniSurface: {
+      if (eglCore_ == nullptr) {
+        return;
+      }
+      if (miniScreenRender_ == nullptr) {
+        miniScreenRender_ = new MiniScreenRender(eglCore_.get());
+      }
+      auto window = reinterpret_cast<ANativeWindow *>(msg->obj1);
+      miniScreenRender_->createEglSurface(eglCore_.get(), window);
+      miniScreenRender_->setTransformMatrix(screenRender_->getModelMatrix());
+      break;
+    }
+    case PixelateMessage::kMiniSurfaceChanged: {
+      if (miniScreenRender_ != nullptr) {
+        int width = msg->arg1;
+        int height = msg->arg2;
+        miniScreenRender_->surfaceChanged(width, height);
+      }
+      break;
+    }
+    case PixelateMessage::kMiniSurfaceDestroy: {
+      if (miniScreenRender_ != nullptr) {
+        miniScreenRender_->destroyEglSurface(eglCore_.get());
+      }
       break;
     }
   }
@@ -249,18 +326,47 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 
 int ImageEngine::insertImageInternal(const char *path, int rotate) {
   auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
-  sourceRender_->draw(imageTexture_, imageWidth_, imageHeight_, rotate, surfaceWidth_, surfaceHeight_);
-  pixelationRender_->draw(sourceRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
-  paintRender_->draw(pixelationRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
-  screenRender_->initMatrix(surfaceWidth_, surfaceHeight_, sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  sourceRender_->draw(imageTexture_,
+                      imageWidth_,
+                      imageHeight_,
+                      rotate,
+                      surfaceWidth_,
+                      surfaceHeight_);
+  pixelationRender_->draw(sourceRender_->getTexture(),
+                          sourceRender_->getTextureWidth(),
+                          sourceRender_->getTextureHeight());
+  paintRender_->draw(pixelationRender_->getTexture(),
+                     sourceRender_->getTextureWidth(),
+                     sourceRender_->getTextureHeight(),
+                     surfaceWidth_,
+                     surfaceHeight_);
+  screenRender_->initMatrix(surfaceWidth_,
+                            surfaceHeight_,
+                            sourceRender_->getTextureWidth(),
+                            sourceRender_->getTextureHeight());
   refreshTransform();
   refreshFrameInternal();
   return 0;
 }
 
 int ImageEngine::refreshFrameInternal() {
-  screenRender_->draw(sourceRender_->getTexture(), paintRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), surfaceWidth_, surfaceHeight_);
+  if (renderSurface_ != EGL_NO_SURFACE) {
+    eglCore_->makeCurrent(renderSurface_);
+  }
+  blendRender_->draw(sourceRender_->getTexture(),
+                     paintRender_->getTexture(),
+                     sourceRender_->getTextureWidth(),
+                     sourceRender_->getTextureHeight());
+  screenRender_->draw(blendRender_->getTexture(),
+                      sourceRender_->getTextureWidth(),
+                      sourceRender_->getTextureHeight(),
+                      surfaceWidth_,
+                      surfaceHeight_);
   eglCore_->swapBuffers(renderSurface_);
+  eglCore_->makeCurrent(EGL_NO_SURFACE);
+  if (miniScreenRender_ != nullptr) {
+    miniScreenRender_->draw(blendRender_->getTexture(), eglCore_.get(), blendRender_->getWidth(), blendRender_->getHeight());
+  }
   return 0;
 }
 
@@ -275,7 +381,7 @@ void ImageEngine::refreshTransform() {
 }
 
 void ImageEngine::saveInternal() {
-  blendRender_->draw(sourceRender_->getTexture(), paintRender_->getTexture(), sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight());
+  blendRender_->save();
 }
 
 int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int *height) {
@@ -345,7 +451,8 @@ void ImageEngine::callJavaFrameBoundsChanged(float left, float top, float right,
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
-    jmethodID frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameBoundsChanged", "(FFFF)V");
+    jmethodID
+        frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameBoundsChanged", "(FFFF)V");
     if (frameAvaliableMethodId != nullptr) {
       env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, left, top, right, bottom);
     }

@@ -30,6 +30,7 @@ add_library( # Sets the name of the library.
         gl/Program.cpp
         render/BlendRender.cpp
         render/ImageFrameBuffer.cpp
+        render/MiniScreenRender.cpp
         render/PaintRender.cpp
         render/PixelationRender.cpp
         render/ScreenRender.cpp

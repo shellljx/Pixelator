@@ -9,6 +9,7 @@ import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.*
+import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.math.MathUtils
 import com.gmail.shellljx.pixelate.panels.EffectsPanel
@@ -28,19 +29,21 @@ class MainActivity : AppCompatActivity() {
         getwcreenheight()
         setTransparent()
         val REQUEST_PERMISSION_CODE = 1
-        val permissions = arrayOf(Manifest.permission.READ_EXTERNAL_STORAGE, Manifest.permission.WRITE_EXTERNAL_STORAGE)
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
             // 检查权限是否已被授予
             if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED) {
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            ) {
                 // 已经授予了读写权限
                 // 可以进行读写操作
             } else {
                 // 未授予读写权限，发起权限请求
                 requestPermissions(permissions, REQUEST_PERMISSION_CODE)
             }
-            serviceManager.effectPanel.onViewCreated()
-            serviceManager.start()
         }
 
         surfaceView = findViewById(R.id.surface_view)
@@ -51,7 +54,11 @@ class MainActivity : AppCompatActivity() {
                 if (!isWindowCreated) return
                 val buffer = arrayListOf<Float>()
                 points.forEach {
-                    val openglX = MathUtils.clamp(it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1, -1f, 1f)
+                    val openglX = MathUtils.clamp(
+                        it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1,
+                        -1f,
+                        1f
+                    )
                     val openglY = MathUtils.clamp(it.y / pixelator.height.toFloat() * 2f, -1f, 1f)
                     buffer.add(it.x)
                     buffer.add(it.y)
@@ -81,12 +88,21 @@ class MainActivity : AppCompatActivity() {
                 val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
                 pixelator.setBrush(bitmap)
                 bitmap.recycle()
-                val path = "/sdcard/aftereffect/ae/asset13.png"
+                val path = "/sdcard/aftereffect/ae/tt/resource/assets/a11.jpg"
                 pixelator.addImagePath(path, getRotate(path))
                 isWindowCreated = true
+
+                surfaceView.post {
+                    serviceManager.miniScreenPanel.onCreateView(findViewById(R.id.layout_miniscreen))
+                }
             }
 
-            override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+            override fun onFrameBoundsChanged(
+                left: Float,
+                top: Float,
+                right: Float,
+                bottom: Float
+            ) {
                 gestureView.onFrameBoundsChanged(left, top, right, bottom)
             }
 
@@ -94,6 +110,12 @@ class MainActivity : AppCompatActivity() {
                 saveBitmap(bitmap)
             }
         })
+        findViewById<TextView>(R.id.tv_save).setOnClickListener {
+            pixelator.save()
+        }
+        serviceManager.miniScreenPanel.imageSdk = pixelator
+        serviceManager.effectPanel.onViewCreated()
+        serviceManager.start()
     }
 
     private fun saveBitmap(bitmap: Bitmap) {
@@ -125,7 +147,10 @@ class MainActivity : AppCompatActivity() {
     private fun getRotate(path: String): Int {
         return try {
             val exifInterface = ExifInterface(path)
-            when (exifInterface.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)) {
+            when (exifInterface.getAttributeInt(
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
+            )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
                 ExifInterface.ORIENTATION_ROTATE_270 -> 270
@@ -153,7 +178,10 @@ class MainActivity : AppCompatActivity() {
         if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.LOLLIPOP) {
             activity.window.addFlags(WindowManager.LayoutParams.FLAG_DRAWS_SYSTEM_BAR_BACKGROUNDS)
             activity.window.clearFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-            activity.window.setFlags(WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS, WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS)
+            activity.window.setFlags(
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS,
+                WindowManager.LayoutParams.FLAG_LAYOUT_NO_LIMITS
+            )
             //            activity.getWindow().addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_NAVIGATION);
             activity.window.statusBarColor = Color.TRANSPARENT
         } else {

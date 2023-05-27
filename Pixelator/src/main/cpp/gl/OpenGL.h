@@ -24,6 +24,13 @@ static float DEFAULT_VERTEX_COORDINATE[] = {
     1.F, 1.F
 };
 
+static float DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP[] = {
+    -1.F, 1.F,
+    1.F, 1.F,
+    -1.F, -1.F,
+    1.F, -1.F
+};
+
 /// 上下翻转的纹理坐标
 static float TEXTURE_COORDINATE_FLIP_UP_DOWN[] = {
     0.0f, 1.0f,
@@ -37,6 +44,13 @@ static float DEFAULT_TEXTURE_COORDINATE[] = {
     1.0f, 0.0f,
     0.0f, 1.0f,
     1.0f, 1.0f
+};
+
+static float DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP[] = {
+    0.0f, 1.0f,
+    1.0f, 1.0f,
+    0.0f, 0.0f,
+    1.0f, 0.0f
 };
 
 /// 旋转270度，然后上下翻转

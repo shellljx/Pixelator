@@ -14,6 +14,8 @@ interface IPixelator {
 
     fun refreshFrame()
 
+    fun getMiniScreen(): IMiniScreen
+
     fun setRenderListener(listener: IRenderListener)
     fun save()
 }

@@ -35,6 +35,8 @@ class EGLCore {
 
   bool swapBuffers(EGLSurface pVoid);
 
+  void releaseSurface(EGLSurface surface);
+
  private:
   //显示设备
   EGLDisplay display_ = EGL_NO_DISPLAY;

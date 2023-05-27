@@ -7,17 +7,20 @@ import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
-import com.gmail.shellljx.pixelate.EffectItem
-import com.gmail.shellljx.pixelate.R
+import com.gmail.shellljx.pixelate.*
 import java.util.ArrayList
 
-class EffectsPanel(private val context: Activity) {
+class EffectsPanel(private val context: Activity) : IPanel {
 
     private val mEffectsRecyclerView by lazy { context.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
 
-    fun onViewCreated() {
+    override fun onCreateView(parent: ViewGroup) {
+        //do nothing
+    }
+
+    override fun onViewCreated() {
         mEffectsRecyclerView.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView.adapter = mEffectsAdapter
         mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 15, true))

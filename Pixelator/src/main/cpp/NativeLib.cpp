@@ -21,6 +21,25 @@ void Android_Jni_surface_changed(JNIEnv *env, jobject object, jlong id, jint wid
   pixelator->onSurfaceChanged(width, height);
 }
 
+void Android_Jni_mini_surface_create(JNIEnv *env, jobject object, jlong id, jobject jsurface) {
+  auto pixelator = reinterpret_cast<ImageEngine *>(id);
+  pixelator->onMiniSurfaceCreate(jsurface);
+}
+
+void Android_Jni_mini_surface_changed(JNIEnv *env,
+                                      jobject object,
+                                      jlong id,
+                                      jint width,
+                                      jint height) {
+  auto pixelator = reinterpret_cast<ImageEngine *>(id);
+  pixelator->onMiniSurfaceChanged(width, height);
+}
+
+void Android_Jni_mini_surface_destroy(JNIEnv *env, jobject object, jlong id) {
+  auto pixelator = reinterpret_cast<ImageEngine *>(id);
+  pixelator->onMiniSurfaceDestroy();
+}
+
 void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath, jint rotate) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   auto path = env->GetStringUTFChars(jpath, JNI_FALSE);
@@ -34,7 +53,11 @@ jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bit
   return pixelator->setBrush(bitmap);
 }
 
-void Android_Jni_pushTouchBuffer(JNIEnv *env, jobject object, jlong id, jfloatArray buffer, jint count) {
+void Android_Jni_pushTouchBuffer(JNIEnv *env,
+                                 jobject object,
+                                 jlong id,
+                                 jfloatArray buffer,
+                                 jint count) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   jfloat *touchBuffer = env->GetFloatArrayElements(buffer, nullptr);
   jsize length = env->GetArrayLength(buffer);

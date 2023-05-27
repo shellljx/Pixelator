@@ -96,6 +96,10 @@ bool EGLCore::swapBuffers(EGLSurface pVoid) {
   return eglSwapBuffers(display_, pVoid);
 }
 
+void EGLCore::releaseSurface(EGLSurface surface) {
+  eglDestroySurface(display_, surface);
+}
+
 extern "C"
 JNIEXPORT void JNICALL
 Java_com_gmail_shellljx_camerarecord_Test_test2(JNIEnv *env, jobject thiz) {

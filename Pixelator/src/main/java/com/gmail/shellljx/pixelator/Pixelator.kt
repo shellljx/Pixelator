@@ -15,6 +15,26 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         mId = create()
     }
 
+    private val miniScreen = object : IMiniScreen {
+        override fun onSurfaceCreated(surface: Surface) {
+            if (mId != 0L) {
+                onMiniScreenSurfaceCreate(mId, surface)
+            }
+        }
+
+        override fun onSurfaceChanged(width: Int, height: Int) {
+            if (mId != 0L) {
+                onMiniScreenSurfaceChanged(mId, width, height)
+            }
+        }
+
+        override fun onSurfaceDestroy() {
+            if (mId != 0L) {
+                onMiniScreenSurfaceDestroy(mId)
+            }
+        }
+    }
+
     override fun surfaceCreated(p0: SurfaceHolder) {
         if (mId != 0L) {
             onSurfaceCreate(mId, p0.surface)
@@ -50,6 +70,10 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         if (mId != 0L) {
             refreshFrame(mId);
         }
+    }
+
+    override fun getMiniScreen(): IMiniScreen {
+        return miniScreen
     }
 
     override fun save() {
@@ -101,6 +125,9 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
     private external fun create(): Long
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
+    private external fun onMiniScreenSurfaceCreate(id: Long, surface: Surface)
+    private external fun onMiniScreenSurfaceChanged(id: Long, width: Int, height: Int)
+    private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, count: Int)

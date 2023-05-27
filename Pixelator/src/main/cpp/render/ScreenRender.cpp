@@ -26,6 +26,7 @@ ScreenRender::~ScreenRender() {
 }
 
 void ScreenRender::initMatrix(int screenWidth, int screenHeight, int textureWidth, int textureHeight) {
+  //这个投影矩阵反转是因为双指手势和view坐标系一致
   projectionMatrix_ = glm::ortho(0.f, static_cast<float>(screenWidth),
                                     static_cast<float>(screenHeight), 0.f, 1.f, 100.f);
   glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
@@ -50,7 +51,7 @@ void ScreenRender::initMatrix(int screenWidth, int screenHeight, int textureWidt
   modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(scale_, scale_, 1.f));
 }
 
-GLuint ScreenRender::draw(GLuint textureId, GLuint maskTexture, int width, int height, int screenWidth, int screenHeight) {
+GLuint ScreenRender::draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight) {
   if (frameBuffer_ == nullptr) {
     return -1;
   }
@@ -76,8 +77,7 @@ GLuint ScreenRender::draw(GLuint textureId, GLuint maskTexture, int width, int h
   GL_CHECK(glViewport(0, 0, screenWidth, screenHeight));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
 
-    drawTexture(textureId, width, height, screenWidth, screenHeight);
-  drawTexture(maskTexture, width, height, screenWidth, screenHeight);
+  drawTexture(textureId, width, height, screenWidth, screenHeight);
 
   GL_CHECK(glDisable(GL_BLEND))
 
@@ -93,7 +93,7 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   auto textureLocation = glGetAttribLocation(program_, "inputTextureCoordinate");
   GL_CHECK(glEnableVertexAttribArray(textureLocation))
   GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_TEXTURE_COORDINATE))
+                                 DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP))
   auto matrix = projectionMatrix_ * viewMatrix_ * transformMatrix_  * modelMatrix_;
   auto mvpLoc = glGetUniformLocation(program_, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
@@ -121,7 +121,7 @@ void ScreenRender::translate(float scale, float pivotX, float pivotY, float angl
   translateY_ = translateY;
 }
 
-void ScreenRender::setMatrix(glm::mat4 matrix) {
+void ScreenRender::setTransformMatrix(glm::mat4 matrix) {
   transformMatrix_ = matrix;
 }
 

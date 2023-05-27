@@ -26,6 +26,7 @@
 #include "render/PaintRender.h"
 #include "render/ScreenRender.h"
 #include "render/BlendRender.h"
+#include "render/MiniScreenRender.h"
 
 using namespace glm;
 
@@ -36,6 +37,9 @@ class ImageEngine : public thread::HandlerCallback {
 
   void onSurfaceCreate(jobject surface);
   void onSurfaceChanged(int width, int height);
+  void onMiniSurfaceCreate(jobject surface);
+  void onMiniSurfaceChanged(int width, int height);
+  void onMiniSurfaceDestroy();
   void addImagePath(const char *path, int rotate);
   bool setBrush(jobject bitmap);
   void pushTouchBuffer(float *buffer, int length);
@@ -80,6 +84,7 @@ class ImageEngine : public thread::HandlerCallback {
   PaintRender *paintRender_;
   ScreenRender *screenRender_;
   BlendRender *blendRender_;
+  MiniScreenRender *miniScreenRender_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_
