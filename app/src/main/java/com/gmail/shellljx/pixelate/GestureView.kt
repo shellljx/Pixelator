@@ -1,14 +1,10 @@
 package com.gmail.shellljx.pixelate
 
-import android.animation.*
-import android.animation.Animator.AnimatorListener
+import android.animation.ObjectAnimator
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
-import android.view.MotionEvent
-import android.view.View
-import android.view.ViewConfiguration
-import kotlin.math.atan2
+import android.view.*
 import kotlin.math.sqrt
 
 class GestureView : View {
@@ -32,7 +28,8 @@ class GestureView : View {
     private var mInMove = false
     private val bounds = RectF()
     private val paint = Paint()
-    private val innerBounds = RectF(50f, 50f, 1000f, 1500f)
+    private val innerBounds = RectF(0f, 50f, 1080f, 1500f)
+    private val initBounds = RectF()
 
     init {
         paint.setColor(Color.BLUE)
@@ -103,10 +100,10 @@ class GestureView : View {
 
     private fun animationRect() {
         val from = RectF(bounds)
-        val to = generateToRect()
+        val to = generateToRect() ?: return
         val animator = ObjectAnimator.ofObject(RectfEvaluator(), from, to)
         animator.duration = 200
-        var lastRect: RectF = from
+        val lastRect: RectF = from
         animator.addUpdateListener {
             val rect = it.animatedValue as RectF
             val matrix = Matrix()
@@ -119,19 +116,40 @@ class GestureView : View {
         animator.start()
     }
 
-    private fun generateToRect(): RectF {
+    private fun generateToRect(): RectF? {
         val to = RectF(bounds)
-        if (bounds.height()>innerBounds.height()){
-            if (bounds.bottom < innerBounds.bottom) {
-                to.offset(0f, innerBounds.bottom - bounds.bottom)
-            } else if (bounds.top > innerBounds.top) {
-                to.offset(0f, innerBounds.top - bounds.top)
+        if (to.width() / initBounds.width() < 0.5) {
+            to.set(0f, 0f, initBounds.width() * 0.5f, initBounds.height() * 0.5f)
+        }
+        var offsetX = 0f
+        var offsetY = 0f
+        if (to.height() >= innerBounds.height()) {
+            if (to.bottom < innerBounds.bottom) {
+                offsetY = innerBounds.bottom - to.bottom
+            } else if (to.top > innerBounds.top) {
+                offsetY = innerBounds.top - to.top
             }
-        }else{
-            to.offsetTo(bounds.left, (innerBounds.height() - bounds.height())/2f)
+        } else {
+            val newTop = (innerBounds.height() - to.height()) / 2f
+            offsetY = newTop - to.top
         }
 
-        return to
+        if (to.width() >= innerBounds.width()) {
+            if (to.right < innerBounds.right) {
+                offsetX = innerBounds.right - to.right
+            } else if (to.left > innerBounds.left) {
+                offsetX = innerBounds.left - to.left
+            }
+        } else {
+            val newLeft = (innerBounds.width() - to.width()) / 2f
+            offsetX = newLeft - to.left
+        }
+
+        if (offsetX != 0f || offsetY != 0f) {
+            to.offset(offsetX, offsetY)
+            return to
+        }
+        return null
     }
 
     private fun scaleAndRotateByFlingers(event: MotionEvent) {
@@ -139,12 +157,18 @@ class GestureView : View {
         val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
         val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
         val y2 = event.getY(event.findPointerIndex(mActivePointerId2))
-        var scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
+        val scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
             ((mLastPoint2.x - mLastPoint.x) * (mLastPoint2.x - mLastPoint.x) + (mLastPoint2.y - mLastPoint.y) * (mLastPoint2.y - mLastPoint.y)).toDouble()
         ).toFloat()
 
+        val matrixValues = FloatArray(9)
+        transformMatrix.getValues(matrixValues)
+        val scaleX = matrixValues[Matrix.MSCALE_X]
+        val scaleLimit = scaleX >4f && scale > 1f
+        if (!scaleLimit) {
+            transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
+        }
 
-        transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
         val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
         transformMatrix.postTranslate(dx, dy)
@@ -167,6 +191,9 @@ class GestureView : View {
 
     fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
         bounds.set(left, top, right, bottom)
+        if (initBounds.isEmpty) {
+            initBounds.set(bounds)
+        }
         invalidate()
     }
 
