@@ -1,4 +1,4 @@
-package com.gmail.shellljx.pixelate
+package com.gmail.shellljx.pixelate.view
 
 import android.content.Context
 import android.graphics.*

@@ -2,15 +2,13 @@ package com.gmail.shellljx.pixelate.panels
 
 import android.app.Activity
 import android.graphics.*
-import android.os.Build
 import android.view.*
 import android.widget.FrameLayout
-import androidx.annotation.RequiresApi
-import androidx.constraintlayout.widget.ConstraintLayout
 import com.gmail.shellljx.pixelate.*
 import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.view.CircleView
+import com.gmail.shellljx.pixelate.view.RoundedBorderView
 import com.gmail.shellljx.pixelator.IPixelator
-import kotlin.math.round
 
 class MiniScreenPanel(private val context: Activity) : IPanel, SurfaceHolder.Callback {
     private var miniScreen: SurfaceView? = null

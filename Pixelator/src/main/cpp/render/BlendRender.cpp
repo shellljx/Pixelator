@@ -35,7 +35,7 @@ GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int he
   }
   GL_CHECK(glViewport(0, 0, width, height));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-  GL_CHECK(glClearColor(1.f, 1.f, 1.f, 1.f))
+  GL_CHECK(glClearColor(0.f, 0.f, 0.f, 0.f))
 
   drawTexture(textureId, width, height);
   drawTexture(maskTexture, width, height);

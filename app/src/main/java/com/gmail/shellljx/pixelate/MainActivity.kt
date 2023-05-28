@@ -12,7 +12,8 @@ import android.view.*
 import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
 import androidx.core.math.MathUtils
-import com.gmail.shellljx.pixelate.panels.EffectsPanel
+import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.view.*
 import com.gmail.shellljx.pixelator.IRenderListener
 import com.gmail.shellljx.pixelator.Pixelator
 import java.io.*
@@ -21,6 +22,8 @@ class MainActivity : AppCompatActivity() {
     val pixelator = Pixelator.create()
     lateinit var surfaceView: SurfaceView
     lateinit var gestureView: GestureView
+    lateinit var pointView: CircleView
+    lateinit var pointSeekBar: CircleSeekbarView
     private var isWindowCreated = false
     private val serviceManager = ServiceManager(this)
     private val bounds = RectF()
@@ -49,6 +52,26 @@ class MainActivity : AppCompatActivity() {
 
         surfaceView = findViewById(R.id.surface_view)
         gestureView = findViewById(R.id.gesture_view)
+        pointView = findViewById(R.id.point_view)
+        pointSeekBar = findViewById(R.id.point_seekbar)
+        pointSeekBar.setSeekPercentListener(object : CircleSeekbarView.OnSeekPercentListener {
+            override fun onSeekStart() {
+                pointView.visibility = View.VISIBLE
+            }
+
+            override fun onSeekPercent(percent: Float) {
+                val lp = pointView.layoutParams
+                val size = (10.dp() + 40.dp().toFloat() * percent).toInt()
+                lp.width = size
+                lp.height = size
+                pointView.layoutParams = lp
+            }
+
+            override fun onSeekComplete() {
+                pointView.visibility = View.GONE
+            }
+        })
+
         surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
         gestureView.setGestureListener(object : GestureView.GestureListener {
             override fun onMove(points: List<PointF>, current: PointF) {

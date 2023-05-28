@@ -1,4 +1,4 @@
-package com.gmail.shellljx.pixelate
+package com.gmail.shellljx.pixelate.view
 
 import android.view.View
 
@@ -17,7 +17,6 @@ class RoundedBorderView @JvmOverloads constructor(
     defStyleAttr: Int = 0
 ) : View(context, attrs, defStyleAttr) {
     private val borderPaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
-    private val circlePaint: Paint = Paint(Paint.ANTI_ALIAS_FLAG)
     private val borderPath: Path = Path()
     private val borderRect: RectF = RectF()
 

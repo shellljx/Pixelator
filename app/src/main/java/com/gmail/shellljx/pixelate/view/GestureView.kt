@@ -1,10 +1,12 @@
-package com.gmail.shellljx.pixelate
+package com.gmail.shellljx.pixelate.view
 
-import android.animation.ObjectAnimator
+import android.animation.*
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.*
+import com.gmail.shellljx.pixelate.PointUtils
+import com.gmail.shellljx.pixelate.RectfEvaluator
 import kotlin.math.sqrt
 
 class GestureView : View {
@@ -30,6 +32,7 @@ class GestureView : View {
     private val paint = Paint()
     private val innerBounds = RectF(0f, 50f, 1080f, 1500f)
     private val initBounds = RectF()
+    private var isAnimating = false
 
     init {
         paint.setColor(Color.BLUE)
@@ -65,6 +68,9 @@ class GestureView : View {
             }
 
             MotionEvent.ACTION_MOVE -> {
+                if (isAnimating) {
+                    return true
+                }
                 if (mActivePointerId1 != INVALID_POINTER_ID && mActivePointerId2 != INVALID_POINTER_ID) {
                     scaleAndRotateByFlingers(event)
                 } else if (mActivePointerId1 != INVALID_POINTER_ID) {
@@ -92,7 +98,9 @@ class GestureView : View {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 mActivePointerId1 = INVALID_POINTER_ID
                 mActivePointerId2 = INVALID_POINTER_ID
-                animationRect()
+                if (!isAnimating) {
+                    animationRect()
+                }
             }
         }
         return true
@@ -113,6 +121,19 @@ class GestureView : View {
             transformMatrix.set(matrix)
             lastRect.set(rect)
         }
+        animator.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationStart(animation: Animator?) {
+                isAnimating = true
+            }
+
+            override fun onAnimationEnd(animation: Animator?) {
+                isAnimating = false
+            }
+
+            override fun onAnimationCancel(animation: Animator?) {
+                isAnimating = false
+            }
+        })
         animator.start()
     }
 
@@ -153,6 +174,7 @@ class GestureView : View {
     }
 
     private fun scaleAndRotateByFlingers(event: MotionEvent) {
+        if (mActivePointerId1 == mActivePointerId2) return
         val x1 = event.getX(event.findPointerIndex(mActivePointerId1))
         val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
         val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
@@ -164,13 +186,14 @@ class GestureView : View {
         val matrixValues = FloatArray(9)
         transformMatrix.getValues(matrixValues)
         val scaleX = matrixValues[Matrix.MSCALE_X]
-        val scaleLimit = scaleX >4f && scale > 1f
+        val scaleLimit = scaleX > 4f && scale > 1f
         if (!scaleLimit) {
             transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
         }
 
         val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
+
         transformMatrix.postTranslate(dx, dy)
 
         listener?.refresh(transformMatrix)
