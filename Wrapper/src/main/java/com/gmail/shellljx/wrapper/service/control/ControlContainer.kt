@@ -13,7 +13,7 @@ import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.widget.IWidget
 
 class ControlContainer : FrameLayout, IControlContainer {
-    private lateinit var mVEContainer: IContainer
+    private lateinit var mContainer: IContainer
     private var mControlConfig: Config.ControlContainerConfig? = null
     private val mWidgets = mutableListOf<IWidget>()
 
@@ -22,7 +22,7 @@ class ControlContainer : FrameLayout, IControlContainer {
     constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def)
 
     override fun bindVEContainer(veContainer: IContainer) {
-        mVEContainer = veContainer
+        mContainer = veContainer
     }
 
     override fun setConfig(config: Config.ControlContainerConfig) {
@@ -82,7 +82,7 @@ class ControlContainer : FrameLayout, IControlContainer {
 
     private fun bindContextToWidget() {
         mWidgets.forEach {
-            it.bindVEContainer(mVEContainer)
+            it.bindVEContainer(mContainer)
         }
     }
 

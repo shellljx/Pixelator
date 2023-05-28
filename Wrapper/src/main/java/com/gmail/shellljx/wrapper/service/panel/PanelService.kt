@@ -8,7 +8,6 @@ import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.GesturePriorityProcessor
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleTapListener
-import com.gmail.shellljx.wrapper.utils.VELogger
 import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.*
@@ -18,24 +17,24 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
         private const val TAG = "PanelService"
     }
 
-    private lateinit var mVEContainer: IContainer
+    private lateinit var mContainer: IContainer
     private var mPanelContainer: PanelContainer? = null
     private val mPanelStackChangedObservers = arrayListOf<PanelStackChangedObserver>()
     private val mPanelTokenMap = hashMapOf<PanelToken, PanelRecord>()
     private val mPanelStack = Stack<PanelRecord>()
     override fun onStart() {
-        mVEContainer.getLifeCycleService()?.addObserver(this)
-        mVEContainer.getGestureService()?.addSingleTapListener(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
+        mContainer.getLifeCycleService()?.addObserver(this)
+        mContainer.getGestureService()?.addSingleTapListener(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
     }
 
     override fun bindVEContainer(veContainer: IContainer) {
-        mVEContainer = veContainer
+        mContainer = veContainer
     }
 
     override fun createView(context: Context): View {
         val panelContainer = PanelContainer(context)
         panelContainer.id = R.id.panel_container
-        panelContainer.bindVEContainer(mVEContainer)
+        panelContainer.bindVEContainer(mContainer)
         mPanelContainer = panelContainer
         return panelContainer
     }
@@ -70,7 +69,7 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
         val token = PanelToken(panelClazz)
         panel.mToken = token
         record = PanelRecord(panel, token, panel.panelConfig)
-        panel.bindVEContainer(mVEContainer)
+        panel.bindVEContainer(mContainer)
         mPanelTokenMap[token] = record
         showPanelInternal(record, payload)
         return token
@@ -163,7 +162,7 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
     private fun createPanel(clazz: Class<out AbsPanel>): AbsPanel? {
         try {
             val constructor = clazz.getConstructor(Context::class.java)
-            return constructor.newInstance(mVEContainer.getContext())
+            return constructor.newInstance(mContainer.getContext())
         } catch (e: Exception) {
             throw IllegalStateException("create panel failed: $e")
         }
@@ -174,7 +173,6 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
         val config = mPanelTokenMap[topPanel.token]?.config ?: return false
         if (config.clickOutsideDismiss) {
             hidePanel(topPanel.token, false)
-            VELogger.i(TAG, "pop top panel by gesture single tap")
             return true
         }
         return false
@@ -192,8 +190,8 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
 
     override fun onStop() {
         mPanelContainer?.release()
-        mVEContainer.getLifeCycleService()?.addObserver(this)
-        mVEContainer.getGestureService()?.removeSingleTapListener(this)
+        mContainer.getLifeCycleService()?.addObserver(this)
+        mContainer.getGestureService()?.removeSingleTapListener(this)
     }
 }
 

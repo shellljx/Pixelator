@@ -9,22 +9,22 @@ import com.gmail.shellljx.wrapper.IService
 import com.gmail.shellljx.wrapper.widget.IWidget
 
 class ControlContainerService : IControlContainerService, LifecycleObserver {
-    private lateinit var mVEContainer: IContainer
+    private lateinit var mContainer: IContainer
     private var mControlContainer: ControlContainer? = null
     private var mWidgetMessageMap = hashMapOf<String, ArrayList<IWidget>>()
     private var isActive = false
     override fun onStart() {
-        mVEContainer.getLifeCycleService()?.addObserver(this)
+        mContainer.getLifeCycleService()?.addObserver(this)
     }
 
     override fun bindVEContainer(veContainer: IContainer) {
-        mVEContainer = veContainer
+        mContainer = veContainer
     }
 
     override fun createView(context: Context): IControlContainer {
         val controlContainer = ControlContainer(context)
         mControlContainer = controlContainer
-        controlContainer.bindVEContainer(mVEContainer)
+        controlContainer.bindVEContainer(mContainer)
         return controlContainer
     }
 
@@ -77,7 +77,7 @@ class ControlContainerService : IControlContainerService, LifecycleObserver {
 
     override fun onStop() {
         mWidgetMessageMap.clear()
-        mVEContainer.getLifeCycleService()?.removeObserver(this)
+        mContainer.getLifeCycleService()?.removeObserver(this)
     }
 }
 

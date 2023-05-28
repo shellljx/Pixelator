@@ -8,7 +8,7 @@ import com.gmail.shellljx.wrapper.IService
 import com.gmail.shellljx.wrapper.service.gesture.GesturePriorityProcessor.Companion.GESTURE_PRIORITY_NORMAL
 
 class GestureService : IGestureService {
-    private lateinit var mVEContainer: IContainer
+    private lateinit var mContainer: IContainer
     private var mGestureContaienr: GestureContaienr? = null
     private val mSingleTapProcessor = GesturePriorityProcessor<OnSingleTapListener>()
     private val mDoubleTapProcessor = GesturePriorityProcessor<OnDoubleTapListener>()
@@ -114,7 +114,7 @@ class GestureService : IGestureService {
     }
 
     override fun bindVEContainer(veContainer: IContainer) {
-        mVEContainer = veContainer
+        mContainer = veContainer
     }
 
     override fun onStop() {

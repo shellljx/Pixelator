@@ -15,7 +15,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         private const val TAG = "VELayerContainer"
     }
 
-    private lateinit var mVEContainer: IContainer
+    private lateinit var mContainer: IContainer
     private var mBuildInLayerMap = hashMapOf<BuildInLayer, AbsBuildInLayer>()
     private val mCustomLayers = arrayListOf<InnerCustomLayer>()
     private val mBuildInLayers = arrayListOf<AbsBuildInLayer>()
@@ -27,7 +27,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
     }
 
     override fun init(veContainer: IContainer) {
-        mVEContainer = veContainer
+        mContainer = veContainer
         //gesture layer
         val gestureLayer = GestureLayer(veContainer, BuildInLayer.LayerGesture.index)
         mBuildInLayerMap[BuildInLayer.LayerGesture] = gestureLayer
@@ -44,7 +44,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         controlLayer.attach(this)
         mBuildInLayers.add(controlLayer)
         //panel layer
-        val panelLayer = PanelLayer(mVEContainer, BuildInLayer.LayerPanel.index)
+        val panelLayer = PanelLayer(mContainer, BuildInLayer.LayerPanel.index)
         mBuildInLayerMap[BuildInLayer.LayerPanel] = panelLayer
         panelLayer.attach(this)
         mBuildInLayers.add(panelLayer)
@@ -118,7 +118,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         mCustomLayers.forEach {
             it.onViewportUpdate(offset)
         }
-        mVEContainer.getRenderService()?.updateViewPort(offset)
+        mContainer.getRenderService()?.updateViewPort(offset)
     }
 
     override fun dispatchWindowInsets(insets: Rect) {
@@ -136,7 +136,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         val customLayer = InnerCustomLayer(layer, overBuildInLayer)
         if (layer.alignType() == AlignType.ALIGN_RENDER_LAYER) {
             addView(customLayer.view(), insetIndex)
-            mVEContainer.getRenderService()?.addRenderLayer(customLayer, false)
+            mContainer.getRenderService()?.addRenderLayer(customLayer, false)
         } else {
             val layoutParams = customLayer.view().layoutParams
             if (layoutParams == null) {
@@ -156,7 +156,7 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         while (iterator.hasNext()) {
             val customLayer = iterator.next()
             if (customLayer.getInnerLayer() == layer) {
-                mVEContainer.getRenderService()?.removeRenderLayer(customLayer)
+                mContainer.getRenderService()?.removeRenderLayer(customLayer)
                 iterator.remove()
                 decreaseBuildInLayerIndex(customLayer.getOverBuildInLayer())
             }

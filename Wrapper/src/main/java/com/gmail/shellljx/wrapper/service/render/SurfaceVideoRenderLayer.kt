@@ -2,41 +2,24 @@ package com.gmail.shellljx.wrapper.service.render
 
 import android.content.Context
 import android.util.AttributeSet
+import android.view.SurfaceHolder
 import android.view.SurfaceView
 import android.view.View
+import com.gmail.shellljx.wrapper.IRenderContext
 
-class SurfaceVideoRenderLayer : SurfaceView, IVideoRenderLayer {
-    private val mAlignViews = arrayListOf<View>()
+class SurfaceVideoRenderLayer : SurfaceView, IRenderLayer, SurfaceHolder.Callback {
+    private var mRenderContext: IRenderContext? = null
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
     constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def)
 
-    override fun onMeasure(widthMeasureSpec: Int, heightMeasureSpec: Int) {
-        super.onMeasure(widthMeasureSpec, heightMeasureSpec)
-        mAlignViews.forEach {
-            it.measure(widthMeasureSpec, heightMeasureSpec)
-        }
+    init {
+        holder.addCallback(this)
     }
 
-    override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
-        super.onLayout(changed, left, top, right, bottom)
-        mAlignViews.forEach {
-            it.layout(left, top, right, bottom)
-        }
-    }
-
-    override fun addAlignLayer(layer: IRenderLayer) {
-        if (!mAlignViews.contains(layer.view())) {
-            mAlignViews.add(layer.view())
-        }
-    }
-
-    override fun removeAlignLayer(layer: IRenderLayer) {
-        val render = layer.view()
-        if (mAlignViews.contains(render)) {
-            mAlignViews.remove(render)
-        }
+    override fun bindRenderContext(renderContext: IRenderContext) {
+        mRenderContext = renderContext
     }
 
     override fun view(): View {
@@ -45,5 +28,17 @@ class SurfaceVideoRenderLayer : SurfaceView, IVideoRenderLayer {
 
     override fun level(): Int {
         return 0
+    }
+
+    override fun surfaceCreated(holder: SurfaceHolder) {
+        mRenderContext?.setDisplaySuerface(holder.surface)
+    }
+
+    override fun surfaceChanged(holder: SurfaceHolder, format: Int, width: Int, height: Int) {
+        mRenderContext?.updateSurfaceChanged(width, height)
+    }
+
+    override fun surfaceDestroyed(holder: SurfaceHolder) {
+        mRenderContext?.destroyDisplaySurface()
     }
 }
