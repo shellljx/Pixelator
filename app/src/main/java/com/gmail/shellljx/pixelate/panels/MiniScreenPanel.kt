@@ -61,6 +61,8 @@ class MiniScreenPanel(private val context: Activity) : IPanel, SurfaceHolder.Cal
             } else {
                 circleView?.translationX = spaceX - (bounds.right - x)
             }
+        } else {
+            circleView?.translationX = 0f
         }
         if (y - bounds.top < spaceY) {
             if (y - bounds.top < (circleRadius + 2.dp())) {
@@ -74,6 +76,8 @@ class MiniScreenPanel(private val context: Activity) : IPanel, SurfaceHolder.Cal
             } else {
                 circleView?.translationY = spaceY - (bounds.bottom - y)
             }
+        } else {
+            circleView?.translationY = 0f
         }
     }
 

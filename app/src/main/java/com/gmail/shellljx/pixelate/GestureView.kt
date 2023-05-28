@@ -1,5 +1,7 @@
 package com.gmail.shellljx.pixelate
 
+import android.animation.*
+import android.animation.Animator.AnimatorListener
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
@@ -15,10 +17,9 @@ class GestureView : View {
         private const val INVALID_POINTER_ID = -1
     }
 
-    var editEnable: Boolean = true
     private var mActivePointerId1 = INVALID_POINTER_ID
     private var mActivePointerId2 = INVALID_POINTER_ID
-    var transformMatrix = Matrix()
+    private var transformMatrix = Matrix()
 
     private var listener: GestureListener? = null
     private var mTouchSlop: Int
@@ -28,14 +29,10 @@ class GestureView : View {
     private var mFromPoint = PointF()
     private var mToPoint = PointF()
     private var mControlPoint = PointF()
-    private var mLastAngle = 0f
-    private var mRotation = 0f
-    private var mLastScale = 1f
-    private var mTranslateX = 0f
-    private var mTranslateY = 0f
     private var mInMove = false
     private val bounds = RectF()
     private val paint = Paint()
+    private val innerBounds = RectF(50f, 50f, 1000f, 1500f)
 
     init {
         paint.setColor(Color.BLUE)
@@ -68,7 +65,6 @@ class GestureView : View {
                 val x = event.getX(event.findPointerIndex(mActivePointerId2))
                 val y = event.getY(event.findPointerIndex(mActivePointerId2))
                 mLastPoint2.set(x, y)
-                mLastAngle = atan2((mLastPoint2.y - mLastPoint.y), (mLastPoint2.x - mLastPoint.x))
             }
 
             MotionEvent.ACTION_MOVE -> {
@@ -99,9 +95,43 @@ class GestureView : View {
             MotionEvent.ACTION_UP, MotionEvent.ACTION_CANCEL -> {
                 mActivePointerId1 = INVALID_POINTER_ID
                 mActivePointerId2 = INVALID_POINTER_ID
+                animationRect()
             }
         }
         return true
+    }
+
+    private fun animationRect() {
+        val from = RectF(bounds)
+        val to = generateToRect()
+        val animator = ObjectAnimator.ofObject(RectfEvaluator(), from, to)
+        animator.duration = 200
+        var lastRect: RectF = from
+        animator.addUpdateListener {
+            val rect = it.animatedValue as RectF
+            val matrix = Matrix()
+            matrix.setRectToRect(lastRect, rect, Matrix.ScaleToFit.CENTER)
+            matrix.preConcat(transformMatrix)
+            listener?.refresh(matrix)
+            transformMatrix.set(matrix)
+            lastRect.set(rect)
+        }
+        animator.start()
+    }
+
+    private fun generateToRect(): RectF {
+        val to = RectF(bounds)
+        if (bounds.height()>innerBounds.height()){
+            if (bounds.bottom < innerBounds.bottom) {
+                to.offset(0f, innerBounds.bottom - bounds.bottom)
+            } else if (bounds.top > innerBounds.top) {
+                to.offset(0f, innerBounds.top - bounds.top)
+            }
+        }else{
+            to.offsetTo(bounds.left, (innerBounds.height() - bounds.height())/2f)
+        }
+
+        return to
     }
 
     private fun scaleAndRotateByFlingers(event: MotionEvent) {
@@ -109,13 +139,11 @@ class GestureView : View {
         val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
         val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
         val y2 = event.getY(event.findPointerIndex(mActivePointerId2))
-        val angle = atan2((y2 - y1).toDouble(), (x2 - x1).toDouble())
         var scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
             ((mLastPoint2.x - mLastPoint.x) * (mLastPoint2.x - mLastPoint.x) + (mLastPoint2.y - mLastPoint.y) * (mLastPoint2.y - mLastPoint.y)).toDouble()
         ).toFloat()
 
 
-        mRotation += Math.toDegrees(mLastAngle - angle).toFloat()
         transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
         val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
         val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
@@ -123,8 +151,6 @@ class GestureView : View {
 
         listener?.refresh(transformMatrix)
 
-        mLastAngle = angle.toFloat()
-        mLastScale *= scale
         mLastPoint.set(x1, y1)
         mLastPoint2.set(x2, y2)
         invalidate()
