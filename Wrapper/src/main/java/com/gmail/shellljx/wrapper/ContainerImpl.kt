@@ -130,14 +130,6 @@ class ContainerImpl internal constructor(
         mLayerContainer?.updateViewPort(offset)
     }
 
-    override fun addCustomLayer(layer: ILayer, overBuildInLayer: BuildInLayer) {
-        mLayerContainer?.addCustomLayer(layer, overBuildInLayer)
-    }
-
-    override fun removeCustomLayer(layer: ILayer) {
-        mLayerContainer?.removeCustomLayer(layer)
-    }
-
     override fun onDestroyView() {
     }
 

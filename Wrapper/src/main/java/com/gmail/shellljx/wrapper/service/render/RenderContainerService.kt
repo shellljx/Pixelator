@@ -19,19 +19,29 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     override fun createView(context: Context): ViewGroup {
         val renderContainer = RenderContainer(context)
         mRenderContainer = renderContainer
-        val videoRenderLayer = SurfaceVideoRenderLayer(mContainer.getContext())
-        mVideoRenderLayer = videoRenderLayer
-        mRenderContainer?.bindVideoRenderLayer(videoRenderLayer, marginBottom)
+        val renderLayer = initRenderLayer()
+        mRenderContainer?.bindVideoRenderLayer(renderLayer, marginBottom)
         return renderContainer
     }
 
-    override fun bindVEContainer(veContainer: IContainer) {
-        mContainer = veContainer
+    override fun bindVEContainer(container: IContainer) {
+        mContainer = container
     }
 
     override fun bindRenderContext(renderContext: IRenderContext) {
         mRenderContext = renderContext
-        mVideoRenderLayer?.bindRenderContext(renderContext)
+        initRenderLayer()
+    }
+
+    private fun initRenderLayer(): IRenderLayer {
+        val renderLayer = mVideoRenderLayer ?: SurfaceVideoRenderLayer(mContainer.getContext())
+        if (mVideoRenderLayer == null) {
+            mVideoRenderLayer = renderLayer
+        }
+        mRenderContext?.let {
+            renderLayer.bindRenderContext(it)
+        }
+        return renderLayer
     }
 
     override fun getVideoHeight(): Int {
@@ -42,8 +52,8 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
         return mVideoRenderLayer?.view()?.width ?: 0
     }
 
-    override fun setMarginBootom(margin: Int) {
-        marginBottom = margin
+    override fun updateViewPort(offset: Int) {
+        marginBottom = offset
     }
 
     override fun onStop() {
@@ -72,8 +82,7 @@ interface IRenderContainerService : IService {
      * 返回视频渲染层高度
      */
     fun getVideoHeight(): Int
-
-    fun setMarginBootom(margin: Int)
+    fun updateViewPort(offset: Int)
 }
 
 interface IRenderLayer {

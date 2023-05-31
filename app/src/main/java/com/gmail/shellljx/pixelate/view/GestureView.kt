@@ -1,12 +1,10 @@
 package com.gmail.shellljx.pixelate.view
 
-import android.animation.*
 import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.*
 import com.gmail.shellljx.pixelate.PointUtils
-import com.gmail.shellljx.pixelate.RectfEvaluator
 import kotlin.math.sqrt
 
 class GestureView : View {
@@ -107,34 +105,34 @@ class GestureView : View {
     }
 
     private fun animationRect() {
-        val from = RectF(bounds)
-        val to = generateToRect() ?: return
-        val animator = ObjectAnimator.ofObject(RectfEvaluator(), from, to)
-        animator.duration = 200
-        val lastRect: RectF = from
-        animator.addUpdateListener {
-            val rect = it.animatedValue as RectF
-            val matrix = Matrix()
-            matrix.setRectToRect(lastRect, rect, Matrix.ScaleToFit.CENTER)
-            matrix.preConcat(transformMatrix)
-            listener?.refresh(matrix)
-            transformMatrix.set(matrix)
-            lastRect.set(rect)
-        }
-        animator.addListener(object : AnimatorListenerAdapter() {
-            override fun onAnimationStart(animation: Animator?) {
-                isAnimating = true
-            }
-
-            override fun onAnimationEnd(animation: Animator?) {
-                isAnimating = false
-            }
-
-            override fun onAnimationCancel(animation: Animator?) {
-                isAnimating = false
-            }
-        })
-        animator.start()
+//        val from = RectF(bounds)
+//        val to = generateToRect() ?: return
+//        val animator = ObjectAnimator.ofObject(RectfEvaluator(), from, to)
+//        animator.duration = 200
+//        val lastRect: RectF = from
+//        animator.addUpdateListener {
+//            val rect = it.animatedValue as RectF
+//            val matrix = Matrix()
+//            matrix.setRectToRect(lastRect, rect, Matrix.ScaleToFit.CENTER)
+//            matrix.preConcat(transformMatrix)
+//            listener?.refresh(matrix)
+//            transformMatrix.set(matrix)
+//            lastRect.set(rect)
+//        }
+//        animator.addListener(object : AnimatorListenerAdapter() {
+//            override fun onAnimationStart(animation: Animator?) {
+//                isAnimating = true
+//            }
+//
+//            override fun onAnimationEnd(animation: Animator?) {
+//                isAnimating = false
+//            }
+//
+//            override fun onAnimationCancel(animation: Animator?) {
+//                isAnimating = false
+//            }
+//        })
+//        animator.start()
     }
 
     private fun generateToRect(): RectF? {

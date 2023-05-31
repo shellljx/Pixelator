@@ -4,12 +4,10 @@ import android.graphics.Bitmap
 import android.view.Surface
 import android.view.SurfaceHolder
 
-class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
+class Pixelator private constructor() : IPixelator {
 
     private var mId = 0L
     private var mRenderListener: IRenderListener? = null
-    var width = 0
-    var height = 0
 
     init {
         mId = create()
@@ -35,10 +33,20 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         }
     }
 
-    override fun surfaceCreated(p0: SurfaceHolder) {
+    override fun setDisplaySurface(surface: Surface) {
         if (mId != 0L) {
-            onSurfaceCreate(mId, p0.surface)
+            onSurfaceCreate(mId, surface)
         }
+    }
+
+    override fun viewPortChanged(width: Int, height: Int) {
+        if (mId != 0L) {
+            onSurfaceChanged(mId, width, height)
+        }
+    }
+
+    override fun destroyDisplaySurface() {
+
     }
 
     override fun addImagePath(path: String, rotate: Int) {
@@ -80,17 +88,6 @@ class Pixelator private constructor() : IPixelator, SurfaceHolder.Callback {
         if (mId != 0L) {
             nativeSave(mId)
         }
-    }
-
-    override fun surfaceChanged(p0: SurfaceHolder, format: Int, width: Int, height: Int) {
-        if (mId != 0L) {
-            this.width = width
-            this.height = height
-            onSurfaceChanged(mId, width, height)
-        }
-    }
-
-    override fun surfaceDestroyed(p0: SurfaceHolder) {
     }
 
     /**

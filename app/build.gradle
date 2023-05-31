@@ -5,12 +5,12 @@ plugins {
 
 android {
     namespace 'com.gmail.shellljx.pixelate'
-    compileSdk 32
+    compileSdk 33
 
     defaultConfig {
         applicationId "com.gmail.shellljx.pixelate"
         minSdk 19
-        targetSdk 32
+        targetSdk 33
         versionCode 1
         versionName "1.0"
 
@@ -42,4 +42,5 @@ dependencies {
     androidTestImplementation 'androidx.test.ext:junit:1.1.3'
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation project(':Pixelator')
+    implementation project(':Wrapper')
 }

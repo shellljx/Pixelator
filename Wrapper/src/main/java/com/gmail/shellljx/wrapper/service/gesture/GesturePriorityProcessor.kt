@@ -56,6 +56,13 @@ class GesturePriorityProcessor<T> {
         return false
     }
 
+    fun clear() {
+        mProcessorMap.forEach {
+            it.value.clear()
+        }
+        mProcessorMap.clear()
+    }
+
     private fun isAvaliablePriority(priority: Int): Boolean {
         return priority == GESTURE_PRIORITY_LOW || priority == GESTURE_PRIORITY_NORMAL || priority == GESTURE_PRIORITY_HIGHT
     }

@@ -1,14 +1,21 @@
 package com.gmail.shellljx.pixelator
 
 import android.graphics.Bitmap
+import android.view.Surface
 
 interface IPixelator {
+
+    fun setDisplaySurface(surface: Surface)
+
+    fun viewPortChanged(width: Int, height: Int)
+
+    fun destroyDisplaySurface()
 
     fun addImagePath(path: String, rotate: Int)
 
     fun setBrush(bitmap: Bitmap)
 
-    fun pushTouchBuffer(buffer: FloatArray, cx:Float, cy:Float)
+    fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float)
 
     fun setMatrix(matrix: FloatArray)
 

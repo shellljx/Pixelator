@@ -1,4 +1,4 @@
-package com.gmail.shellljx.pixelate.services
+package com.gmail.shellljx.pixelate.service
 
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.ServiceManager

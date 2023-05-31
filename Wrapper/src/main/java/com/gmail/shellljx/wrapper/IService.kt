@@ -9,7 +9,7 @@ interface IService {
     /**
      * 初始化实例后马上被调用
      */
-    fun bindVEContainer(veContainer: IContainer)
+    fun bindVEContainer(container: IContainer)
 
     /**
      * service 被销毁的时候调用

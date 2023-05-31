@@ -28,8 +28,6 @@ interface IContainer {
     fun onBackPressed(): Boolean
     fun dispatchWindowInsets(insets: Rect)
     fun updateViewPort(offset: Int)
-    fun addCustomLayer(layer: ILayer, overBuildInLayer: BuildInLayer)
-    fun removeCustomLayer(layer: ILayer)
     fun getServiceManager(): IServiceManager
     fun getLifeCycleService(): ILifecycleService?
     fun getRenderService(): IRenderContainerService?

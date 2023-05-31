@@ -6,13 +6,12 @@ import android.view.View
 import androidx.annotation.AnimRes
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
-import com.gmail.shellljx.wrapper.service.gesture.GesturePriorityProcessor
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleTapListener
+import com.gmail.shellljx.wrapper.service.gesture.*
 import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.*
 
-class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
+class PanelService : IPanelService, LifecycleObserver, OnSingleTapObserver {
     companion object {
         private const val TAG = "PanelService"
     }
@@ -24,7 +23,7 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
     private val mPanelStack = Stack<PanelRecord>()
     override fun onStart() {
         mContainer.getLifeCycleService()?.addObserver(this)
-        mContainer.getGestureService()?.addSingleTapListener(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
+        mContainer.getGestureService()?.addSingleTapObserver(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
     }
 
     override fun bindVEContainer(veContainer: IContainer) {
@@ -168,7 +167,7 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
         }
     }
 
-    override fun onSingleTap(event: MotionEvent): Boolean {
+    override fun onSingleTap(): Boolean {
         val topPanel = getStackTopPanel() ?: return false
         val config = mPanelTokenMap[topPanel.token]?.config ?: return false
         if (config.clickOutsideDismiss) {
@@ -191,7 +190,6 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapListener {
     override fun onStop() {
         mPanelContainer?.release()
         mContainer.getLifeCycleService()?.addObserver(this)
-        mContainer.getGestureService()?.removeSingleTapListener(this)
     }
 }
 

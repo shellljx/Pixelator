@@ -8,7 +8,6 @@ import android.view.Gravity
 import android.view.View
 import android.widget.FrameLayout
 import com.gmail.shellljx.wrapper.IContainer
-import com.gmail.shellljx.wrapper.service.render.IRenderLayer
 
 class VELayerContainer : FrameLayout, ILayerContainer {
     companion object {
@@ -17,7 +16,6 @@ class VELayerContainer : FrameLayout, ILayerContainer {
 
     private lateinit var mContainer: IContainer
     private var mBuildInLayerMap = hashMapOf<BuildInLayer, AbsBuildInLayer>()
-    private val mCustomLayers = arrayListOf<InnerCustomLayer>()
     private val mBuildInLayers = arrayListOf<AbsBuildInLayer>()
 
     constructor(context: Context) : this(context, null)
@@ -55,21 +53,11 @@ class VELayerContainer : FrameLayout, ILayerContainer {
         mBuildInLayers.forEach {
             measureChildWithMargins(it.getView(), widthMeasureSpec, 0, heightMeasureSpec, 0)
         }
-        mCustomLayers.forEach {
-            if (it.alignType() == AlignType.ALIGN_LAYER_CONTAINER) {
-                measureChildWithMargins(it.view(), widthMeasureSpec, 0, heightMeasureSpec, 0)
-            }
-        }
     }
 
     override fun onLayout(changed: Boolean, left: Int, top: Int, right: Int, bottom: Int) {
         mBuildInLayers.forEach {
             layoutChildren(it.getView(), left, top, right, bottom)
-        }
-        mCustomLayers.forEach {
-            if (it.alignType() == AlignType.ALIGN_LAYER_CONTAINER) {
-                layoutChildren(it.view(), left, top, right, bottom)
-            }
         }
     }
 
@@ -115,102 +103,12 @@ class VELayerContainer : FrameLayout, ILayerContainer {
     }
 
     override fun updateViewPort(offset: Int) {
-        mCustomLayers.forEach {
-            it.onViewportUpdate(offset)
-        }
         mContainer.getRenderService()?.updateViewPort(offset)
     }
 
     override fun dispatchWindowInsets(insets: Rect) {
         mBuildInLayers.forEach {
             it.onWindowInsetsChanged(insets)
-        }
-        mCustomLayers.forEach {
-            it.onWindowInsetsChanged(insets)
-        }
-    }
-
-    override fun addCustomLayer(layer: ILayer, overBuildInLayer: BuildInLayer) {
-        val buildInLayer = mBuildInLayerMap[overBuildInLayer] ?: return
-        val insetIndex = buildInLayer.getIndex() + 1
-        val customLayer = InnerCustomLayer(layer, overBuildInLayer)
-        if (layer.alignType() == AlignType.ALIGN_RENDER_LAYER) {
-            addView(customLayer.view(), insetIndex)
-            mContainer.getRenderService()?.addRenderLayer(customLayer, false)
-        } else {
-            val layoutParams = customLayer.view().layoutParams
-            if (layoutParams == null) {
-                customLayer.view().layoutParams = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
-            }
-            addView(customLayer.view(), insetIndex)
-        }
-        mCustomLayers.add(customLayer)
-        for (index in mBuildInLayers.indexOf(buildInLayer) + 1 until mBuildInLayers.size) {
-            mBuildInLayers[index].increaseIndex()
-        }
-        dumpLayers()
-    }
-
-    override fun removeCustomLayer(layer: ILayer) {
-        val iterator = mCustomLayers.iterator()
-        while (iterator.hasNext()) {
-            val customLayer = iterator.next()
-            if (customLayer.getInnerLayer() == layer) {
-                mContainer.getRenderService()?.removeRenderLayer(customLayer)
-                iterator.remove()
-                decreaseBuildInLayerIndex(customLayer.getOverBuildInLayer())
-            }
-        }
-    }
-
-    private fun decreaseBuildInLayerIndex(buildInLayer: BuildInLayer) {
-        val layer = mBuildInLayerMap[buildInLayer] ?: return
-        for (index in mBuildInLayers.indexOf(layer) + 1 until mBuildInLayers.size) {
-            mBuildInLayers[index].decreaseIndex()
-        }
-    }
-
-    private fun dumpLayers() {
-        val dumpInfo = StringBuilder("\n")
-        mBuildInLayers.forEach {
-            dumpInfo.append(it.toString()).append("\n")
-        }
-        mCustomLayers.forEach {
-            dumpInfo.append(it.toString()).append("\n")
-        }
-    }
-
-    private class InnerCustomLayer(private val layer: ILayer, private val overBuildInLayer: BuildInLayer) : ILayer, IRenderLayer {
-        override fun view(): View {
-            return layer.view()
-        }
-
-        override fun level(): Int {
-            return 0
-        }
-
-        override fun alignType(): AlignType {
-            return layer.alignType()
-        }
-
-        override fun onViewportUpdate(offset: Int) {
-            layer.onViewportUpdate(offset)
-        }
-
-        override fun onWindowInsetsChanged(insets: Rect) {
-            layer.onWindowInsetsChanged(insets)
-        }
-
-        fun getInnerLayer(): ILayer {
-            return layer
-        }
-
-        fun getOverBuildInLayer(): BuildInLayer {
-            return overBuildInLayer
-        }
-
-        override fun toString(): String {
-            return "[CustomLayer] $layer over $overBuildInLayer alignType: ${alignType()}"
         }
     }
 }
@@ -220,7 +118,5 @@ interface ILayerContainer {
     fun getView(): View
     fun updateViewPort(offset: Int)
     fun dispatchWindowInsets(insets: Rect)
-    fun addCustomLayer(layer: ILayer, overBuildInLayer: BuildInLayer)
-    fun removeCustomLayer(layer: ILayer)
 }
 
