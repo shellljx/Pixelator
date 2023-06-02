@@ -1,9 +1,8 @@
-package com.gmail.shellljx.wrapper.service.core
+package com.gmail.shellljx.pixelate.service
 
 import android.graphics.*
 import android.media.ExifInterface
 import android.view.Surface
-import androidx.annotation.RawRes
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
@@ -13,13 +12,15 @@ import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.utils.PointUtils
 import java.util.LinkedList
 
-class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTransformObserver {
+class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null
 
     private lateinit var mImageSdk: IPixelator
     private val mPenddingTasks = LinkedList<Runnable>()
-    private val mContentBounds = RectF()
+    private val mInitBounds = RectF() //图片插入成功初始 bounds
+    private val mContentBounds = RectF() //图片变换后最新的bounds
+    private val mTransformMatrix = Matrix()
     private var mEglWindowCreated = false
 
     private val mRenderListener = object : IRenderListener {
@@ -32,17 +33,21 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             mPenddingTasks.forEach {
                 it.run()
             }
-            val path = "/data/data/com.gmail.shellljx.pixelate/deer-8008410_1280.jpeg"
-            mImageSdk.addImagePath(path, getRotate(path))
             mPenddingTasks.clear()
-            mImageSdk.refreshFrame()
         }
 
         override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+            if (mInitBounds.isEmpty) {
+                mInitBounds.set(left, top, right, bottom)
+            }
             mContentBounds.set(left, top, right, bottom)
         }
 
         override fun onFrameSaved(bitmap: Bitmap) {
+        }
+
+        override fun onRenderError(code: Int, msg: String) {
+
         }
 
     }
@@ -52,7 +57,6 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk = Pixelator.create()
         mImageSdk.setRenderListener(mRenderListener)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
-        mContainer.getGestureService()?.addTransformObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -76,7 +80,34 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     }
 
     override fun setBrushResource(id: Int) {
+        runTaskOrPendding {
+            val bitmap = BitmapFactory.decodeResource(mContainer.getContext().resources, id)
+            mImageSdk.setBrush(bitmap)
+        }
+    }
 
+    override fun loadImage(path: String) {
+        runTaskOrPendding {
+            mImageSdk.addImagePath(path, getRotate(path))
+            mImageSdk.refreshFrame()
+        }
+    }
+
+    override fun setTransformMatrix(matrix: Matrix) {
+        mTransformMatrix.set(matrix)
+        val v = FloatArray(9)
+        mTransformMatrix.getValues(v)
+        val glmArray = floatArrayOf(
+            v[0], v[3], 0f, 0f,
+            v[1], v[4], 0f, 0f,
+            0f, 0f, 1f, 0f,
+            v[2], v[5], 0f, 1f
+        )
+        mImageSdk.setMatrix(glmArray)
+    }
+
+    override fun getTransformMatrix(): Matrix {
+        return mTransformMatrix
     }
 
     override fun getMiniScreen(): IMiniScreen {
@@ -85,6 +116,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     override fun getContentBounds(): RectF {
         return mContentBounds
+    }
+
+    override fun getInitBounds(): RectF {
+        return mInitBounds
     }
 
     private fun getRotate(path: String): Int {
@@ -116,14 +151,22 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return false
     }
 
-    override fun onTransform(matrix: Matrix): Boolean {
-        return true
+    private fun runTaskOrPendding(task: Runnable) {
+        if (mEglWindowCreated) {
+            task.run()
+        } else {
+            mPenddingTasks.add(task)
+        }
     }
 }
 
 interface IPixelatorCoreService : IService {
 
-    fun setBrushResource(@RawRes id: Int)
+    fun setBrushResource(id: Int)
+    fun loadImage(path: String)
+    fun setTransformMatrix(matrix: Matrix)
+    fun getTransformMatrix(): Matrix
     fun getMiniScreen(): IMiniScreen
     fun getContentBounds(): RectF
+    fun getInitBounds(): RectF
 }

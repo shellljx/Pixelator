@@ -8,19 +8,26 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.gmail.shellljx.pixelate.*
+import com.gmail.shellljx.pixelate.view.CircleSeekbarView
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
+import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import java.util.ArrayList
 
-class EffectsPanel(context: Context) : AbsPanel(context) {
+class EffectsPanel(context: Context) : AbsPanel(context), OnSingleDownObserver, OnSingleUpObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
+    private lateinit var mContainer: IContainer
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
+    private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
+    private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
 
-    override fun onBindVEContainer(vecontainer: IContainer) {
+    override fun onBindVEContainer(container: IContainer) {
+        mContainer = container
     }
 
     override fun getLayoutId(): Int {
@@ -31,6 +38,8 @@ class EffectsPanel(context: Context) : AbsPanel(context) {
         mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView?.adapter = mEffectsAdapter
         mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
+        mContainer.getGestureService()?.addSingleUpObserver(this)
+        mContainer.getGestureService()?.addSingleDownObserver(this)
     }
 
     fun setEffectItems(effectList: ArrayList<EffectItem>) {
@@ -78,6 +87,18 @@ class EffectsPanel(context: Context) : AbsPanel(context) {
                 }
             }
         }
+    }
+
+    override fun onSingleDown(event: MotionEvent): Boolean {
+        mPointSeekbar?.visibility = View.INVISIBLE
+        mOperationArea?.visibility = View.INVISIBLE
+        return false
+    }
+
+    override fun onSingleUp(event: MotionEvent): Boolean {
+        mPointSeekbar?.visibility = View.VISIBLE
+        mOperationArea?.visibility = View.VISIBLE
+        return false
     }
 
 }

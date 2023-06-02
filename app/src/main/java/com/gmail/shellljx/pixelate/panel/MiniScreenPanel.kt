@@ -7,7 +7,8 @@ import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.view.CircleView
 import com.gmail.shellljx.wrapper.IContainer
-import com.gmail.shellljx.wrapper.service.core.IPixelatorCoreService
+import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
+import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 
@@ -22,7 +23,7 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
 
     override fun onBindVEContainer(container: IContainer) {
         mContainer = container
-        mCoreService = container.getServiceManager().getService(IPixelatorCoreService::class.java)
+        mCoreService = container.getServiceManager().getService(PixelatorCoreService::class.java)
     }
 
     override fun getLayoutId(): Int {

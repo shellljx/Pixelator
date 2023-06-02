@@ -37,7 +37,6 @@ abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
     override fun createView(container: ViewGroup): View? {
         if (mPanelView == null) {
             mPanelView = LayoutInflater.from(context).inflate(getLayoutId(), container, false)
-            mPanelView?.isClickable = true
             onViewCreated(mPanelView)
         }
         return mPanelView

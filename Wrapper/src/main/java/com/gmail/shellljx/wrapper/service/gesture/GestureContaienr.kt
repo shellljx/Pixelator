@@ -14,10 +14,8 @@ class GestureContaienr : View {
 
     private var mActivePointerId1 = INVALID_POINTER_ID
     private var mActivePointerId2 = INVALID_POINTER_ID
-    private var transformMatrix = Matrix()
-
-    private var listener: GestureListener? = null
-    private var mTouchSlop: Int
+    private var mListener: GestureListener? = null
+    private var mTouchSlop: Int = ViewConfiguration.get(context).scaledTouchSlop
     private var mLastPoint = PointF()
     private var mLastPoint2 = PointF()
     private var mCurrentPoint = PointF()
@@ -25,23 +23,11 @@ class GestureContaienr : View {
     private var mToPoint = PointF()
     private var mControlPoint = PointF()
     private var mInMove = false
-    private val bounds = RectF()
-    private val paint = Paint()
-    private val innerBounds = RectF(0f, 50f, 1080f, 1500f)
-    private val initBounds = RectF()
-    private var isAnimating = false
-
-    init {
-        paint.setColor(Color.BLUE)
-        paint.strokeWidth = 10f
-        paint.style = Paint.Style.STROKE
-        mTouchSlop = ViewConfiguration.get(context).scaledTouchSlop
-    }
+    private var mGestureEnable = true
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
-    constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def) {
-    }
+    constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def)
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
         when (event.actionMasked) {
@@ -55,6 +41,7 @@ class GestureContaienr : View {
                 mToPoint.set(x, y)
                 mControlPoint.set(x, y)
                 mInMove = false
+                mListener?.onSingleDown(event)
             }
 
             MotionEvent.ACTION_POINTER_DOWN -> {
@@ -65,12 +52,17 @@ class GestureContaienr : View {
             }
 
             MotionEvent.ACTION_MOVE -> {
-                if (isAnimating) {
-                    return true
-                }
+                if (!mGestureEnable) return false
                 if (mActivePointerId1 != INVALID_POINTER_ID && mActivePointerId2 != INVALID_POINTER_ID) {
+                    if (mActivePointerId1 == mActivePointerId2) return false
                     mInMove = true
-                    scaleAndRotateByFlingers(event)
+                    val x1 = event.getX(event.findPointerIndex(mActivePointerId1))
+                    val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
+                    val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
+                    val y2 = event.getY(event.findPointerIndex(mActivePointerId2))
+                    mListener?.onTransform(mLastPoint, mLastPoint2, PointF(x1, y1), PointF(x2, y2))
+                    mLastPoint.set(x1, y1)
+                    mLastPoint2.set(x2, y2)
                 } else if (mActivePointerId1 != INVALID_POINTER_ID) {
                     mCurrentPoint.set(event.x, event.y)
                     if (distanceTo(mFromPoint, mCurrentPoint) < mTouchSlop && !mInMove) {
@@ -82,7 +74,7 @@ class GestureContaienr : View {
                     }
                     mToPoint.set((mLastPoint.x + mCurrentPoint.x) / 2f, (mLastPoint.y + mCurrentPoint.y) / 2f)
                     mControlPoint.set(mLastPoint)
-                    listener?.onSingleMove(mFromPoint, mToPoint, mControlPoint, mCurrentPoint)
+                    mListener?.onSingleMove(mFromPoint, mToPoint, mControlPoint, mCurrentPoint)
                     mFromPoint.set(mToPoint)
                     mLastPoint.set(mCurrentPoint)
                 }
@@ -95,143 +87,32 @@ class GestureContaienr : View {
             MotionEvent.ACTION_UP -> {
                 mActivePointerId1 = INVALID_POINTER_ID
                 mActivePointerId2 = INVALID_POINTER_ID
+                mListener?.onSingleUp(event)
                 if (!mInMove) {
-                    listener?.onSingleTap()
-                }
-                if (!isAnimating) {
-                    animationRect()
+                    mListener?.onSingleTap()
                 }
             }
         }
         return true
     }
 
-    fun distanceTo(from: PointF, to: PointF): Float {
+    private fun distanceTo(from: PointF, to: PointF): Float {
         return sqrt((to.x - from.x).pow(2) + (to.y - from.y).pow(2))
     }
 
-    private fun animationRect() {
-//        val from = RectF(bounds)
-//        val to = generateToRect() ?: return
-//        val animator = ObjectAnimator.ofObject(RectfEvaluator(), from, to)
-//        animator.duration = 200
-//        val lastRect: RectF = from
-//        animator.addUpdateListener {
-//            val rect = it.animatedValue as RectF
-//            val matrix = Matrix()
-//            matrix.setRectToRect(lastRect, rect, Matrix.ScaleToFit.CENTER)
-//            matrix.preConcat(transformMatrix)
-//            listener?.onTransform(matrix)
-//            transformMatrix.set(matrix)
-//            lastRect.set(rect)
-//        }
-//        animator.addListener(object : AnimatorListenerAdapter() {
-//            override fun onAnimationStart(animation: Animator?) {
-//                isAnimating = true
-//            }
-//
-//            override fun onAnimationEnd(animation: Animator?) {
-//                isAnimating = false
-//            }
-//
-//            override fun onAnimationCancel(animation: Animator?) {
-//                isAnimating = false
-//            }
-//        })
-//        animator.start()
-    }
-
-    private fun generateToRect(): RectF? {
-        val to = RectF(bounds)
-        if (to.width() / initBounds.width() < 0.5) {
-            to.set(0f, 0f, initBounds.width() * 0.5f, initBounds.height() * 0.5f)
-        }
-        var offsetX = 0f
-        var offsetY = 0f
-        if (to.height() >= innerBounds.height()) {
-            if (to.bottom < innerBounds.bottom) {
-                offsetY = innerBounds.bottom - to.bottom
-            } else if (to.top > innerBounds.top) {
-                offsetY = innerBounds.top - to.top
-            }
-        } else {
-            val newTop = (innerBounds.height() - to.height()) / 2f
-            offsetY = newTop - to.top
-        }
-
-        if (to.width() >= innerBounds.width()) {
-            if (to.right < innerBounds.right) {
-                offsetX = innerBounds.right - to.right
-            } else if (to.left > innerBounds.left) {
-                offsetX = innerBounds.left - to.left
-            }
-        } else {
-            val newLeft = (innerBounds.width() - to.width()) / 2f
-            offsetX = newLeft - to.left
-        }
-
-        if (offsetX != 0f || offsetY != 0f) {
-            to.offset(offsetX, offsetY)
-            return to
-        }
-        return null
-    }
-
-    private fun scaleAndRotateByFlingers(event: MotionEvent) {
-        if (mActivePointerId1 == mActivePointerId2) return
-        val x1 = event.getX(event.findPointerIndex(mActivePointerId1))
-        val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
-        val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
-        val y2 = event.getY(event.findPointerIndex(mActivePointerId2))
-        val scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
-            ((mLastPoint2.x - mLastPoint.x) * (mLastPoint2.x - mLastPoint.x) + (mLastPoint2.y - mLastPoint.y) * (mLastPoint2.y - mLastPoint.y)).toDouble()
-        ).toFloat()
-
-        val matrixValues = FloatArray(9)
-        transformMatrix.getValues(matrixValues)
-        val scaleX = matrixValues[Matrix.MSCALE_X]
-        val scaleLimit = scaleX > 4f && scale > 1f
-        if (!scaleLimit) {
-            transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
-        }
-
-        val dx = (x1 + x2) / 2f - (mLastPoint.x + mLastPoint2.x) / 2f
-        val dy = (y1 + y2) / 2f - (mLastPoint.y + mLastPoint2.y) / 2f
-
-        transformMatrix.postTranslate(dx, dy)
-
-        listener?.onTransform(transformMatrix)
-
-        mLastPoint.set(x1, y1)
-        mLastPoint2.set(x2, y2)
-        invalidate()
-    }
-
-    override fun draw(canvas: Canvas) {
-        super.draw(canvas)
-        canvas.drawRect(bounds, paint)
-    }
-
     fun setGestureListener(listener: GestureListener) {
-        this.listener = listener
+        this.mListener = listener
     }
 
-    fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
-        bounds.set(left, top, right, bottom)
-        if (initBounds.isEmpty) {
-            initBounds.set(bounds)
-        }
-        invalidate()
+    fun setGestureEnable(enable: Boolean) {
+        mGestureEnable = enable
     }
 
     interface GestureListener {
-
         fun onSingleDown(event: MotionEvent)
-
         fun onSingleUp(event: MotionEvent)
-
         fun onSingleTap()
         fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF)
-        fun onTransform(matrix: Matrix)
+        fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF)
     }
 }

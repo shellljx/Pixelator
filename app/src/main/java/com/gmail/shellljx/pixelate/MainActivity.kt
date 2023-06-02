@@ -14,13 +14,6 @@ import com.gmail.shellljx.pixelate.view.*
 import java.io.*
 
 class MainActivity : AppCompatActivity() {
-    lateinit var surfaceView: SurfaceView
-    lateinit var gestureView: GestureView
-    lateinit var pointView: CircleView
-    lateinit var pointSeekBar: CircleSeekbarView
-    private var isWindowCreated = false
-    private val serviceManager = ServiceManager(this)
-    private val bounds = RectF()
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
@@ -44,98 +37,6 @@ class MainActivity : AppCompatActivity() {
                 requestPermissions(permissions, REQUEST_PERMISSION_CODE)
             }
         }
-//
-//        surfaceView = findViewById(R.id.surface_view)
-//        gestureView = findViewById(R.id.gesture_view)
-//        pointView = findViewById(R.id.point_view)
-//        pointSeekBar = findViewById(R.id.point_seekbar)
-//        pointSeekBar.setSeekPercentListener(object : CircleSeekbarView.OnSeekPercentListener {
-//            override fun onSeekStart() {
-//                pointView.visibility = View.VISIBLE
-//            }
-//
-//            override fun onSeekPercent(percent: Float) {
-//                val lp = pointView.layoutParams
-//                val size = (10.dp() + 40.dp().toFloat() * percent).toInt()
-//                lp.width = size
-//                lp.height = size
-//                pointView.layoutParams = lp
-//            }
-//
-//            override fun onSeekComplete() {
-//                pointView.visibility = View.GONE
-//            }
-//        })
-//
-//        surfaceView.holder.addCallback(pixelator as? SurfaceHolder.Callback)
-//        gestureView.setGestureListener(object : GestureView.GestureListener {
-//            override fun onMove(points: List<PointF>, current: PointF) {
-//                if (!isWindowCreated) return
-//                val buffer = arrayListOf<Float>()
-//                points.forEach {
-//                    val openglX = MathUtils.clamp(
-//                        it.x / (pixelator as Pixelator).width.toFloat() * 2f - 1,
-//                        -1f,
-//                        1f
-//                    )
-//                    val openglY = MathUtils.clamp(it.y / pixelator.height.toFloat() * 2f, -1f, 1f)
-//                    buffer.add(it.x)
-//                    buffer.add(it.y)
-//                }
-//                pixelator.pushTouchBuffer(buffer.toFloatArray(), current.x, current.y)
-//                pixelator.refreshFrame()
-//            }
-//
-//            override fun refresh(matrix: Matrix) {
-//                val v = FloatArray(9)
-//                matrix.getValues(v)
-//                val glmArray = floatArrayOf(
-//                    v[0], v[3], 0f, 0f,
-//                    v[1], v[4], 0f, 0f,
-//                    0f, 0f, 1f, 0f,
-//                    v[2], v[5], 0f, 1f
-//                )
-//                pixelator.setMatrix(glmArray)
-//            }
-//        })
-//        pixelator.setRenderListener(object : IRenderListener {
-//            override fun onEGLContextCreate() {
-//
-//            }
-//
-//            override fun onEGLWindowCreate() {
-//                val bitmap = BitmapFactory.decodeResource(resources, R.mipmap.ic_brush_blur)
-//                pixelator.setBrush(bitmap)
-//                bitmap.recycle()
-//                val path = "/sdcard/aftereffects/ae2/冬日最佳拍档/resource/assets/asset24.png"
-//                pixelator.addImagePath(path, getRotate(path))
-//                isWindowCreated = true
-//
-//                surfaceView.post {
-//                    serviceManager.miniScreenPanel.onCreateView(findViewById(R.id.layout_miniscreen))
-//                }
-//            }
-//
-//            override fun onFrameBoundsChanged(
-//                left: Float,
-//                top: Float,
-//                right: Float,
-//                bottom: Float
-//            ) {
-//                bounds.set(left, top, right, bottom)
-//                gestureView.onFrameBoundsChanged(left, top, right, bottom)
-//            }
-//
-//            override fun onFrameSaved(bitmap: Bitmap) {
-//                saveBitmap(bitmap)
-//            }
-//        })
-//        findViewById<TextView>(R.id.tv_save).setOnClickListener {
-//            pixelator.save()
-//        }
-//        serviceManager.miniScreenPanel.imageSdk = pixelator
-//        serviceManager.effectPanel.onViewCreated()
-//        serviceManager.start()
     }
 
     private fun saveBitmap(bitmap: Bitmap) {

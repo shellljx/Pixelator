@@ -29,6 +29,10 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
         return mGestureContaienr
     }
 
+    override fun gestureEnable(enable: Boolean) {
+        mGestureContaienr?.setGestureEnable(enable)
+    }
+
     override fun bindVEContainer(container: IContainer) {
         mContainer = container
     }
@@ -64,9 +68,9 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
         }
     }
 
-    override fun onTransform(matrix: Matrix) {
+    override fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF) {
         mTransformProcessor.process {
-            it.onTransform(matrix)
+            it.onTransform(lastPoint, lastPoint2, point, point2)
         }
     }
 
@@ -93,7 +97,7 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
 
 interface IGestureService : IService {
     fun createView(context: Context): View?
-
+    fun gestureEnable(enable: Boolean)
     fun addSingleMoveObserver(observer: OnSingleMoveObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
     fun addSingleUpObserver(observer: OnSingleUpObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
     fun addSingleTapObserver(observer: OnSingleTapObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
@@ -119,5 +123,5 @@ interface OnSingleMoveObserver {
 }
 
 interface OnTransformObserver {
-    fun onTransform(matrix: Matrix): Boolean
+    fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF): Boolean
 }

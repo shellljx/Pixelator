@@ -6,13 +6,14 @@ import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
 import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
-import com.gmail.shellljx.wrapper.service.core.PixelatorCoreService
+import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
 
 class PixelatorFragment : Fragment() {
 
     private lateinit var mContainer: IContainer
+    private var mCoreService: IPixelatorCoreService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -24,7 +25,7 @@ class PixelatorFragment : Fragment() {
             mContainer = IContainer.Builder().setContext(requireContext()).setVEConfig(config).build()
         }
         mContainer.onCreate()
-        mContainer.getServiceManager().registerBusinessService(listOf(PixelatorCoreService::class.java))
+        mContainer.getServiceManager().registerBusinessService(listOf(PixelatorCoreService::class.java, TransformService::class.java))
         mContainer.getRenderService()?.updateViewPort(200.dp())
     }
 
@@ -37,6 +38,10 @@ class PixelatorFragment : Fragment() {
         mContainer.onViewCreated(view, savedInstanceState)
         mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
         mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
+        mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
+
+        mCoreService?.setBrushResource(R.mipmap.ic_brush_blur)
+        mCoreService?.loadImage("/sdcard/aftereffect/ae/asset13.png")
     }
 
     override fun onResume() {

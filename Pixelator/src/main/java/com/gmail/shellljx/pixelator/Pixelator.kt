@@ -126,6 +126,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    private fun onRenderError(code: Int, msg: String) {
+        mainHandler.post {
+            mRenderListener?.onRenderError(code, msg)
+        }
+    }
+
     override fun setRenderListener(listener: IRenderListener) {
         mRenderListener = listener
     }

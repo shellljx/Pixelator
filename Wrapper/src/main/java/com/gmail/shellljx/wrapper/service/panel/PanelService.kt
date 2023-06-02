@@ -23,7 +23,6 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapObserver {
     private val mPanelStack = Stack<PanelRecord>()
     override fun onStart() {
         mContainer.getLifeCycleService()?.addObserver(this)
-        mContainer.getGestureService()?.addSingleTapObserver(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
     }
 
     override fun bindVEContainer(container: IContainer) {
