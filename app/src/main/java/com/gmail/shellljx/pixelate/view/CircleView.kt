@@ -6,7 +6,7 @@ import android.util.AttributeSet
 import android.view.View
 import com.gmail.shellljx.pixelate.extension.dp
 
-class CircleView @JvmOverloads constructor(
+open class CircleView @JvmOverloads constructor(
     context: Context,
     attrs: AttributeSet? = null,
     defStyleAttr: Int = 0

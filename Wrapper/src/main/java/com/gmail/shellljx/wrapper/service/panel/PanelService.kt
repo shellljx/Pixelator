@@ -26,8 +26,8 @@ class PanelService : IPanelService, LifecycleObserver, OnSingleTapObserver {
         mContainer.getGestureService()?.addSingleTapObserver(this, GesturePriorityProcessor.GESTURE_PRIORITY_HIGHT)
     }
 
-    override fun bindVEContainer(veContainer: IContainer) {
-        mContainer = veContainer
+    override fun bindVEContainer(container: IContainer) {
+        mContainer = container
     }
 
     override fun createView(context: Context): View {

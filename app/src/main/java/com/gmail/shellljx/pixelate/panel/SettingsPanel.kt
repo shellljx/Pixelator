@@ -1,4 +1,4 @@
-package com.gmail.shellljx.pixelate.panels
+package com.gmail.shellljx.pixelate.panel
 
 import android.content.Context
 

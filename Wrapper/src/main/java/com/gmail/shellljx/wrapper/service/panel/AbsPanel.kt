@@ -10,7 +10,7 @@ import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.IContainer
 
 @Keep
-abstract class AbsPanel(private val context: Context) : IPanel, LifecycleOwner {
+abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
     private val mLifecycleRegistry by lazy { LifecycleRegistry(this) }
     lateinit var mToken: PanelToken
     private var mPanelView: View? = null
@@ -21,8 +21,8 @@ abstract class AbsPanel(private val context: Context) : IPanel, LifecycleOwner {
             return PanelConfig()
         }
 
-    override fun bindVEContainer(vecontainer: IContainer) {
-        onBindVEContainer(vecontainer)
+    override fun bindVEContainer(container: IContainer) {
+        onBindVEContainer(container)
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
@@ -90,7 +90,7 @@ abstract class AbsPanel(private val context: Context) : IPanel, LifecycleOwner {
     open fun onDetach() {}
     open fun onEnterAnimationStart() {}
     open fun onExitAnimationStart() {}
-    abstract fun onBindVEContainer(vecontainer: IContainer)
+    abstract fun onBindVEContainer(container: IContainer)
 
     @LayoutRes
     abstract fun getLayoutId(): Int

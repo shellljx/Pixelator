@@ -51,7 +51,6 @@ class PanelContainer : FrameLayout {
     }
 
     private class PanelElement(private val container: IContainer, val panel: AbsPanel) {
-        private var backGround: View? = null
         private var isEnterAnimating = false
         private var isExitAnimating = false
 
@@ -59,14 +58,8 @@ class PanelContainer : FrameLayout {
             if (isEnterAnimating || isExitAnimating) return
             if (isAttached(parent)) {
                 parent.removeView(panel.getView())
-                backGround?.let {
-                    parent.removeView(backGround)
-                }
             }
             val view = panel.createView(parent)
-            backGround?.let {
-                parent.addView(it, LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT))
-            }
             parent.addView(view)
             panel.attach()
             panel.resume()
@@ -117,9 +110,6 @@ class PanelContainer : FrameLayout {
                 panel.pause()
                 panel.detach()
                 parent.removeView(panel.getView())
-                backGround?.let {
-                    parent.removeView(it)
-                }
                 return
             }
 
@@ -134,9 +124,6 @@ class PanelContainer : FrameLayout {
                     panel.pause()
                     panel.detach()
                     parent.removeView(panel.getView())
-                    backGround?.let {
-                        parent.removeView(it)
-                    }
                 }
 
                 override fun onAnimationRepeat(animation: Animation?) {

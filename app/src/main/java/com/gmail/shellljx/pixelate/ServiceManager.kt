@@ -2,8 +2,8 @@ package com.gmail.shellljx.pixelate
 
 import android.app.Activity
 import android.content.Context
-import com.gmail.shellljx.pixelate.panels.EffectsPanel
-import com.gmail.shellljx.pixelate.panels.MiniScreenPanel
+import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
 import com.gmail.shellljx.pixelate.service.EffectService
 
 class ServiceManager(val context: Context) {

@@ -1,6 +1,8 @@
 package com.gmail.shellljx.pixelator
 
 import android.graphics.Bitmap
+import android.os.Handler
+import android.os.Looper
 import android.view.Surface
 import android.view.SurfaceHolder
 
@@ -8,6 +10,7 @@ class Pixelator private constructor() : IPixelator {
 
     private var mId = 0L
     private var mRenderListener: IRenderListener? = null
+    private val mainHandler = Handler(Looper.getMainLooper())
 
     init {
         mId = create()
@@ -94,25 +97,33 @@ class Pixelator private constructor() : IPixelator {
      * jni callback method
      */
     private fun onEGLContextCreate() {
-        mRenderListener?.onEGLContextCreate()
+        mainHandler.post {
+            mRenderListener?.onEGLContextCreate()
+        }
     }
 
     /**
      * jni callback method
      */
     private fun onEGLWindowCreate() {
-        mRenderListener?.onEGLWindowCreate()
+        mainHandler.post {
+            mRenderListener?.onEGLWindowCreate()
+        }
     }
 
     /**
      * jni callback method
      */
     private fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
-        mRenderListener?.onFrameBoundsChanged(left, top, right, bottom)
+        mainHandler.post {
+            mRenderListener?.onFrameBoundsChanged(left, top, right, bottom)
+        }
     }
 
     private fun onFrameSaved(bitmap: Bitmap) {
-        mRenderListener?.onFrameSaved(bitmap)
+        mainHandler.post {
+            mRenderListener?.onFrameSaved(bitmap)
+        }
     }
 
     override fun setRenderListener(listener: IRenderListener) {

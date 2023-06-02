@@ -4,7 +4,7 @@ import android.content.Context
 import android.graphics.*
 import android.util.AttributeSet
 import android.view.*
-import com.gmail.shellljx.pixelate.PointUtils
+import com.gmail.shellljx.wrapper.utils.PointUtils
 import kotlin.math.sqrt
 
 class GestureView : View {

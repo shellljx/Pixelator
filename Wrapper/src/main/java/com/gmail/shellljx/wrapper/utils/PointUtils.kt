@@ -1,4 +1,4 @@
-package com.gmail.shellljx.pixelate
+package com.gmail.shellljx.wrapper.utils
 
 import android.graphics.PointF
 import kotlin.math.*

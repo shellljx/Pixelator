@@ -8,9 +8,9 @@ interface IPanel {
     val tag: String
 
     /**
-     * 绑定 VEContainer 在 panel 实例化之后就会注入
+     * 绑定 Container 在 panel 实例化之后就会注入
      */
-    fun bindVEContainer(vecontainer: IContainer)
+    fun bindVEContainer(container: IContainer)
 
     /**
      * 更新数据

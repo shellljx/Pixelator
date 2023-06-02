@@ -3,7 +3,10 @@ package com.gmail.shellljx.pixelate
 import android.os.Bundle
 import android.view.*
 import androidx.fragment.app.Fragment
-import com.gmail.shellljx.pixelate.service.PixelatorCoreService
+import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
+import com.gmail.shellljx.wrapper.service.core.PixelatorCoreService
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
 
@@ -16,12 +19,13 @@ class PixelatorFragment : Fragment() {
         if (!this::mContainer.isInitialized) {
             val config = Config()
             val controlConfig = Config.ControlContainerConfig()
-            controlConfig.layoutRes = R.layout.layout_edit_controller
+            controlConfig.layoutRes = R.layout.layout_control_pixelator
             config.controlContainerConfig = controlConfig
             mContainer = IContainer.Builder().setContext(requireContext()).setVEConfig(config).build()
         }
         mContainer.onCreate()
         mContainer.getServiceManager().registerBusinessService(listOf(PixelatorCoreService::class.java))
+        mContainer.getRenderService()?.updateViewPort(200.dp())
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -31,6 +35,8 @@ class PixelatorFragment : Fragment() {
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
         mContainer.onViewCreated(view, savedInstanceState)
+        mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
+        mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
     }
 
     override fun onResume() {

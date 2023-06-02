@@ -9,17 +9,11 @@ import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
 import android.view.*
-import android.widget.TextView
 import androidx.appcompat.app.AppCompatActivity
-import androidx.core.math.MathUtils
-import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.view.*
-import com.gmail.shellljx.pixelator.IRenderListener
-import com.gmail.shellljx.pixelator.Pixelator
 import java.io.*
 
 class MainActivity : AppCompatActivity() {
-    val pixelator = Pixelator.create()
     lateinit var surfaceView: SurfaceView
     lateinit var gestureView: GestureView
     lateinit var pointView: CircleView
@@ -31,25 +25,25 @@ class MainActivity : AppCompatActivity() {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         supportFragmentManager.beginTransaction().replace(R.id.content, PixelatorFragment()).commit()
-//        getwcreenheight()
-//        setTransparent()
-//        val REQUEST_PERMISSION_CODE = 1
-//        val permissions = arrayOf(
-//            Manifest.permission.READ_EXTERNAL_STORAGE,
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE
-//        )
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            // 检查权限是否已被授予
-//            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-//                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-//            ) {
-//                // 已经授予了读写权限
-//                // 可以进行读写操作
-//            } else {
-//                // 未授予读写权限，发起权限请求
-//                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
-//            }
-//        }
+        getwcreenheight()
+        setTransparent()
+        val REQUEST_PERMISSION_CODE = 1
+        val permissions = arrayOf(
+            Manifest.permission.READ_EXTERNAL_STORAGE,
+            Manifest.permission.WRITE_EXTERNAL_STORAGE
+        )
+        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+            // 检查权限是否已被授予
+            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+            ) {
+                // 已经授予了读写权限
+                // 可以进行读写操作
+            } else {
+                // 未授予读写权限，发起权限请求
+                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
+            }
+        }
 //
 //        surfaceView = findViewById(R.id.surface_view)
 //        gestureView = findViewById(R.id.gesture_view)
@@ -89,7 +83,6 @@ class MainActivity : AppCompatActivity() {
 //                    buffer.add(it.y)
 //                }
 //                pixelator.pushTouchBuffer(buffer.toFloatArray(), current.x, current.y)
-//                serviceManager.miniScreenPanel.translate(current.x, current.y, bounds)
 //                pixelator.refreshFrame()
 //            }
 //

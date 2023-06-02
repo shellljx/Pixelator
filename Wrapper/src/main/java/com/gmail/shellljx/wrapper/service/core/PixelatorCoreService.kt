@@ -1,27 +1,56 @@
-package com.gmail.shellljx.pixelate.service
+package com.gmail.shellljx.wrapper.service.core
 
 import android.graphics.*
 import android.media.ExifInterface
 import android.view.Surface
-import com.gmail.shellljx.pixelate.PointUtils
-import com.gmail.shellljx.pixelate.R
+import androidx.annotation.RawRes
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnTransformObserver
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
+import com.gmail.shellljx.wrapper.utils.PointUtils
+import java.util.LinkedList
 
-class PixelatorCoreService : IPixelatorCoreService, IRenderContext, IRenderListener, OnSingleMoveObserver, OnTransformObserver {
+class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTransformObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null
 
     private lateinit var mImageSdk: IPixelator
+    private val mPenddingTasks = LinkedList<Runnable>()
+    private val mContentBounds = RectF()
+    private var mEglWindowCreated = false
+
+    private val mRenderListener = object : IRenderListener {
+        override fun onEGLContextCreate() {
+
+        }
+
+        override fun onEGLWindowCreate() {
+            mEglWindowCreated = true
+            mPenddingTasks.forEach {
+                it.run()
+            }
+            val path = "/data/data/com.gmail.shellljx.pixelate/deer-8008410_1280.jpeg"
+            mImageSdk.addImagePath(path, getRotate(path))
+            mPenddingTasks.clear()
+            mImageSdk.refreshFrame()
+        }
+
+        override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+            mContentBounds.set(left, top, right, bottom)
+        }
+
+        override fun onFrameSaved(bitmap: Bitmap) {
+        }
+
+    }
 
     override fun onStart() {
         mRenderService?.bindRenderContext(this)
         mImageSdk = Pixelator.create()
-        mImageSdk.setRenderListener(this)
+        mImageSdk.setRenderListener(mRenderListener)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
         mContainer.getGestureService()?.addTransformObserver(this)
     }
@@ -46,27 +75,16 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, IRenderListe
         mImageSdk.destroyDisplaySurface()
     }
 
-    override fun onEGLContextCreate() {
+    override fun setBrushResource(id: Int) {
 
     }
 
-    override fun onEGLWindowCreate() {
-        val bitmap = BitmapFactory.decodeResource(mContainer.getContext().resources, R.mipmap.ic_brush_blur)
-        mImageSdk.setBrush(bitmap)
-        bitmap.recycle()
-        val path = "/sdcard/aftereffect/ae/asset11.png"
-        mImageSdk.addImagePath(path, getRotate(path))
-        mImageSdk.refreshFrame()
-
-//        surfaceView.post {
-//            serviceManager.miniScreenPanel.onCreateView(findViewById(R.id.layout_miniscreen))
-//        }
+    override fun getMiniScreen(): IMiniScreen {
+        return mImageSdk.getMiniScreen()
     }
 
-    override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
-    }
-
-    override fun onFrameSaved(bitmap: Bitmap) {
+    override fun getContentBounds(): RectF {
+        return mContentBounds
     }
 
     private fun getRotate(path: String): Int {
@@ -95,7 +113,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, IRenderListe
         }
         mImageSdk.pushTouchBuffer(buffer.toFloatArray(), current.x, current.y)
         mImageSdk.refreshFrame()
-        return true
+        return false
     }
 
     override fun onTransform(matrix: Matrix): Boolean {
@@ -105,4 +123,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, IRenderListe
 
 interface IPixelatorCoreService : IService {
 
+    fun setBrushResource(@RawRes id: Int)
+    fun getMiniScreen(): IMiniScreen
+    fun getContentBounds(): RectF
 }

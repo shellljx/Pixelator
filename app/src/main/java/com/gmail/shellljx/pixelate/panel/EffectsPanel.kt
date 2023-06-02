@@ -1,6 +1,6 @@
-package com.gmail.shellljx.pixelate.panels
+package com.gmail.shellljx.pixelate.panel
 
-import android.app.Activity
+import android.content.Context
 import android.graphics.Rect
 import android.view.*
 import androidx.recyclerview.widget.GridLayoutManager
@@ -8,22 +8,29 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.gmail.shellljx.pixelate.*
+import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import java.util.ArrayList
 
-class EffectsPanel(private val context: Activity) : IPanel {
+class EffectsPanel(context: Context) : AbsPanel(context) {
+    override val tag: String
+        get() = EffectsPanel::class.java.simpleName
 
-    private val mEffectsRecyclerView by lazy { context.findViewById<RecyclerView>(R.id.rv_effects) }
+    private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
 
-    override fun onCreateView(parent: ViewGroup) {
-        //do nothing
+    override fun onBindVEContainer(vecontainer: IContainer) {
     }
 
-    override fun onViewCreated() {
-        mEffectsRecyclerView.layoutManager = GridLayoutManager(context, 5)
-        mEffectsRecyclerView.adapter = mEffectsAdapter
-        mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
+    override fun getLayoutId(): Int {
+        return R.layout.panel_effects_layout
+    }
+
+    override fun onViewCreated(view: View?) {
+        mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
+        mEffectsRecyclerView?.adapter = mEffectsAdapter
+        mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
     }
 
     fun setEffectItems(effectList: ArrayList<EffectItem>) {

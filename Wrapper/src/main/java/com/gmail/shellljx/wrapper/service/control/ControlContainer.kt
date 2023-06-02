@@ -48,6 +48,11 @@ class ControlContainer : FrameLayout, IControlContainer {
         }
     }
 
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        notifyWidgetsInactive()
+    }
+
     override fun switch() {
         bindContextToWidget()
         notifyWidgetsActive()
