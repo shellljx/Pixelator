@@ -17,8 +17,8 @@ class ControlContainerService : IControlContainerService, LifecycleObserver {
         mContainer.getLifeCycleService()?.addObserver(this)
     }
 
-    override fun bindVEContainer(veContainer: IContainer) {
-        mContainer = veContainer
+    override fun bindVEContainer(container: IContainer) {
+        mContainer = container
     }
 
     override fun createView(context: Context): IControlContainer {

@@ -6,7 +6,6 @@ import android.view.Surface
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
-import com.gmail.shellljx.wrapper.service.gesture.OnTransformObserver
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.utils.PointUtils
@@ -20,8 +19,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private val mPenddingTasks = LinkedList<Runnable>()
     private val mInitBounds = RectF() //图片插入成功初始 bounds
     private val mContentBounds = RectF() //图片变换后最新的bounds
-    private val mTransformMatrix = Matrix()
+    private val mTransformMatrix = Matrix() //变换矩阵
+    private var mPaintSize = 0
     private var mEglWindowCreated = false
+    private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
 
     private val mRenderListener = object : IRenderListener {
         override fun onEGLContextCreate() {
@@ -57,6 +58,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk = Pixelator.create()
         mImageSdk.setRenderListener(mRenderListener)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mPaintSize = mContainer.getConfig().run { (minPaintSize + maxPaintSize) / 2 }
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -84,6 +86,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             val bitmap = BitmapFactory.decodeResource(mContainer.getContext().resources, id)
             mImageSdk.setBrush(bitmap)
         }
+    }
+
+    override fun setPaintSize(size: Int) {
+        mPaintSize = size
+        mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
     }
 
     override fun loadImage(path: String) {
@@ -120,6 +127,16 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     override fun getInitBounds(): RectF {
         return mInitBounds
+    }
+
+    override fun getPaintSize(): Int {
+        return mPaintSize
+    }
+
+    override fun addPaintSizeObserver(observer: PaintSizeObserver) {
+        if (!mPaintSizeObservers.contains(observer)) {
+            mPaintSizeObservers.add(observer)
+        }
     }
 
     private fun getRotate(path: String): Int {
@@ -163,10 +180,17 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 interface IPixelatorCoreService : IService {
 
     fun setBrushResource(id: Int)
+    fun setPaintSize(size: Int)
     fun loadImage(path: String)
     fun setTransformMatrix(matrix: Matrix)
     fun getTransformMatrix(): Matrix
     fun getMiniScreen(): IMiniScreen
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
+    fun getPaintSize(): Int
+    fun addPaintSizeObserver(observer: PaintSizeObserver)
+}
+
+interface PaintSizeObserver {
+    fun onPaintSizeChanged(size: Int)
 }

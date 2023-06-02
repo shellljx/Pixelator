@@ -8,18 +8,22 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.gmail.shellljx.pixelate.*
+import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
+import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
+import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import java.util.ArrayList
 
-class EffectsPanel(context: Context) : AbsPanel(context), OnSingleDownObserver, OnSingleUpObserver {
+class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnSingleDownObserver, OnSingleUpObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
     private lateinit var mContainer: IContainer
+    private var mCoreService: IPixelatorCoreService? = null
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
@@ -28,6 +32,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), OnSingleDownObserver, 
 
     override fun onBindVEContainer(container: IContainer) {
         mContainer = container
+        mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
     }
 
     override fun getLayoutId(): Int {
@@ -38,6 +43,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), OnSingleDownObserver, 
         mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView?.adapter = mEffectsAdapter
         mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
+        mPointSeekbar?.setSeekPercentListener(this)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
     }
@@ -99,6 +105,19 @@ class EffectsPanel(context: Context) : AbsPanel(context), OnSingleDownObserver, 
         mPointSeekbar?.visibility = View.VISIBLE
         mOperationArea?.visibility = View.VISIBLE
         return false
+    }
+
+    override fun onSeekStart() {
+        mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_SHOW_FINGER_POINT)
+    }
+
+    override fun onSeekPercent(percent: Float) {
+        val size = mContainer.getConfig().run { minPaintSize + (maxPaintSize - minPaintSize) * percent }.toInt()
+        mCoreService?.setPaintSize(size)
+    }
+
+    override fun onSeekComplete() {
+        mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_HIDE_FINGER_POINT)
     }
 
 }

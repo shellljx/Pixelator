@@ -5,14 +5,13 @@ import android.graphics.PointF
 import android.view.*
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.view.CircleView
 import com.gmail.shellljx.wrapper.IContainer
-import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
-import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 
-class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callback, OnSingleMoveObserver {
+class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callback, OnSingleMoveObserver, PaintSizeObserver {
     override val tag: String
         get() = "MiniScreenPanel"
 
@@ -35,6 +34,7 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
         pointView = view?.findViewById(R.id.point_view)
         miniScreen?.holder?.addCallback(this)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mCoreService?.addPaintSizeObserver(this)
     }
 
     override fun surfaceCreated(holder: SurfaceHolder) {
@@ -97,5 +97,13 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
         } else {
             pointView?.translationY = 0f
         }
+    }
+
+    override fun onPaintSizeChanged(size: Int) {
+        val lp = pointView?.layoutParams?.apply {
+            height = size
+            width = size
+        }
+        pointView?.layoutParams = lp
     }
 }

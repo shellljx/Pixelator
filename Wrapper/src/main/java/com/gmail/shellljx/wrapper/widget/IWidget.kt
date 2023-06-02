@@ -6,7 +6,7 @@ interface IWidget {
     /**
      * 绑定 vecontainer
      */
-    fun bindVEContainer(veContainer: IContainer)
+    fun bindVEContainer(container: IContainer)
 
     /**
      * 可能需要widget和widget之间直接通信更方便，后续看有没有更好的办法，有点违背了widget之间互相隔离的原则

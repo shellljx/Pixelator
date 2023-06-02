@@ -22,6 +22,8 @@ class PixelatorFragment : Fragment() {
             val controlConfig = Config.ControlContainerConfig()
             controlConfig.layoutRes = R.layout.layout_control_pixelator
             config.controlContainerConfig = controlConfig
+            config.minPaintSize = 10.dp()
+            config.maxPaintSize = 50.dp()
             mContainer = IContainer.Builder().setContext(requireContext()).setVEConfig(config).build()
         }
         mContainer.onCreate()

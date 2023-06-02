@@ -4,15 +4,17 @@ import android.animation.*
 import android.graphics.*
 import android.view.MotionEvent
 import com.gmail.shellljx.pixelate.RectfEvaluator
+import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
 import com.gmail.shellljx.wrapper.service.gesture.*
+import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import kotlin.math.sqrt
 
 class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObserver, OnTransformObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
-
+    private var mMiniToken: PanelToken? = null
     private val innerBounds = RectF(0f, 50f, 1080f, 1500f)
 
     override fun onStart() {
@@ -31,11 +33,15 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
 
     override fun onSingleDown(event: MotionEvent): Boolean {
         mContainer.getControlService()?.hide()
+        mMiniToken?.let { mContainer.getPanelService()?.showPanel(it) } ?: run {
+            mMiniToken = mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
+        }
         return false
     }
 
     override fun onSingleUp(event: MotionEvent): Boolean {
         mContainer.getControlService()?.show()
+        mMiniToken?.let { mContainer.getPanelService()?.hidePanel(it) }
         tryToKeepInInnerBounds()
         return false
     }
