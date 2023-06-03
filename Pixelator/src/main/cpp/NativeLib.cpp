@@ -53,6 +53,11 @@ jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bit
   return pixelator->setBrush(bitmap);
 }
 
+void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->setPaintSize(size);
+}
+
 void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jobject object,
                                  jlong id,

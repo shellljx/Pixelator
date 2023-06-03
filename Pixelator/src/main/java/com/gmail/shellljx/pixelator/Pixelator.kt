@@ -64,6 +64,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun setPaintSize(size: Int) {
+        if (mId != 0L) {
+            setPaintSize(mId, size)
+        }
+    }
+
     override fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float) {
         if (buffer.isEmpty()) return
         if (mId != 0L) {
@@ -81,6 +87,14 @@ class Pixelator private constructor() : IPixelator {
         if (mId != 0L) {
             refreshFrame(mId);
         }
+    }
+
+    override fun undo() {
+
+    }
+
+    override fun redo() {
+
     }
 
     override fun getMiniScreen(): IMiniScreen {
@@ -144,6 +158,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
+    private external fun setPaintSize(id: Long, size: Int)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)

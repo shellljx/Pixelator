@@ -39,11 +39,10 @@ class PixelatorFragment : Fragment() {
         super.onViewCreated(view, savedInstanceState)
         mContainer.onViewCreated(view, savedInstanceState)
         mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
-        mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
 
         mCoreService?.setBrushResource(R.mipmap.ic_brush_blur)
-        mCoreService?.loadImage("/sdcard/aftereffect/ae/asset13.png")
+        mCoreService?.loadImage("/sdcard/aftereffect/ae/tt/resource/assets/a3.png")
     }
 
     override fun onResume() {

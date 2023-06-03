@@ -100,7 +100,7 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidt
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
   auto pointSizeLocation = glGetUniformLocation(program_, "pointSize");
-  glUniform1f(pointSizeLocation, 150.f / scale_);
+  glUniform1f(pointSizeLocation, paintSize_ * 1.7f / scale_);
 
   auto textureSizeLocation = glGetUniformLocation(program_, "textureSize");
   float textureSize[] = {(float) width, (float) height};
@@ -128,11 +128,9 @@ GLuint PaintRender::getTexture() {
   return frame_buffer_->getTexture();
 }
 
-void PaintRender::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
+void PaintRender::translate(float scale) {
   scale_ = scale;
-  pivotX_ = pivotX;
-  pivotY_ = pivotY;
-  angle_ = angle;
-  translateX_ = translateX;
-  translateY_ = translateY;
+}
+void PaintRender::setPaintSize(int paintSize) {
+  paintSize_ = paintSize;
 }

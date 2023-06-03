@@ -90,6 +90,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     override fun setPaintSize(size: Int) {
         mPaintSize = size
+        mImageSdk.setPaintSize(size)
         mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
     }
 
@@ -157,7 +158,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     }
 
     override fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF): Boolean {
-        val points = PointUtils.pointsWith(from, to, control, 50f)
+        val points = PointUtils.pointsWith(from, to, control, mPaintSize.toFloat() / 5)
         val buffer = arrayListOf<Float>()
         points.forEach {
             buffer.add(it.x)

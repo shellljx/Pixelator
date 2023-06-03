@@ -32,11 +32,12 @@ class PaintRender {
 
   GLuint getTexture();
 
-  void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void translate(float scale);
   void setMatrix(glm::mat4 matrix) {
     matrix_ = matrix;
   }
 
+  void setPaintSize(int paintSize);
  private:
   FrameBuffer *frame_buffer_;
   GLuint brushTexture_ = 0;
@@ -45,11 +46,7 @@ class PaintRender {
   GLuint pointsVbo_ = 0;
   int points = 0;
   float scale_ = 1.f;
-  float pivotX_ = 0.f;
-  float pivotY_ = 0.f;
-  float angle_ = 0.f;
-  float translateX_ = 0.f;
-  float translateY_ = 0.f;
+  int paintSize_ = 0.f;
   glm::mat4 matrix_;
 };
 

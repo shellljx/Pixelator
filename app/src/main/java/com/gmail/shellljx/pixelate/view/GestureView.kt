@@ -82,7 +82,7 @@ class GestureView : View {
                     }
                     mToPoint.set((mLastPoint.x + mCurrentPoint.x) / 2f, (mLastPoint.y + mCurrentPoint.y) / 2f)
                     mControlPoint.set(mLastPoint)
-                    val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 50f)
+                    val list = PointUtils.pointsWith(mFromPoint, mToPoint, mControlPoint, 10f)
                     listener?.onMove(list, mCurrentPoint)
                     mFromPoint.set(mToPoint)
                     mLastPoint.set(mCurrentPoint)

@@ -5,30 +5,6 @@ import kotlin.math.*
 
 object PointUtils {
 
-    fun generatePoints(start: PointF, control: PointF, end: PointF, interval: Int): List<PointF> {
-        val points = arrayListOf<PointF>()
-        points.add(start)
-        var t = 0.0
-        while (t <= 1) {
-            val x = ((1 - t).pow(2.0) * start.x + 2 * t * (1 - t) * control.x + t.pow(2.0) * end.x).roundToInt()
-            val y = ((1 - t).pow(2.0) * start.y + 2 * t * (1 - t) * control.y + t.pow(2.0) * end.y).roundToInt()
-            points.add(PointF(x.toFloat(), y.toFloat()))
-            t += interval * 1.0 / calculateBezierLength(start, control, end)
-        }
-        points.add(end)
-        return points
-    }
-
-    private fun calculateBezierLength(start: PointF, control: PointF, end: PointF): Double {
-        return (calculatePointLength(start, control) + calculatePointLength(control, end)).toDouble()
-    }
-
-    private fun calculatePointLength(from: PointF, to: PointF): Int {
-        val dx = (to.x - from.x).toDouble()
-        val dy = (to.y - from.y).toDouble()
-        return sqrt(dx * dx + dy * dy).roundToInt()
-    }
-
     fun distanceTo(from: PointF, to: PointF): Float {
         return sqrt((to.x - from.x).pow(2) + (to.y - from.y).pow(2))
     }
@@ -56,7 +32,7 @@ object PointUtils {
         //整条曲线的长度
         val totalLength = lengthWithT(1.0, a.toDouble(), b.toDouble(), c.toDouble())
         //生成的点数
-        val count = max(1.0, ceil(totalLength / size * 5)).toInt()
+        val count = max(1.0, ceil(totalLength / size)).toInt()
         val list = arrayListOf<PointF>()
         for (i in 0 until count) {
             var t = i * 1.0 / count

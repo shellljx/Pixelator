@@ -141,6 +141,13 @@ bool ImageEngine::setBrush(jobject bitmap) {
   return true;
 }
 
+void ImageEngine::setPaintSize(jint size) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetPaintSize;
+  msg->arg1 = size;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::pushTouchBuffer(float *buffer, int length, float cx, float cy) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kTouchEvent;
@@ -201,6 +208,11 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
       paintRender_->setBrush(image);
       delete image;
+      break;
+    }
+    case PixelateMessage::kSetPaintSize: {
+      auto paintSize = msg->arg1;
+      paintRender_->setPaintSize(paintSize);
       break;
     }
     case PixelateMessage::kTouchEvent: {
@@ -374,7 +386,7 @@ int ImageEngine::refreshFrameInternal() {
 
 void ImageEngine::refreshTransform() {
   paintRender_->setMatrix(screenRender_->getModelMatrix());
-  paintRender_->translate(screenRender_->getModelMatrix()[0][0], 0.f, 0.f, 0.f, 0.f, 0.f);
+  paintRender_->translate(screenRender_->getModelMatrix()[0][0]);
   glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
   glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
   lt = screenRender_->getModelMatrix() * lt;

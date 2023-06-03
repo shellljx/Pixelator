@@ -46,7 +46,7 @@ class CircleSeekbarView @JvmOverloads constructor(
         rect.set(x.toFloat(), y, w - 10f, y + 20)
         leftLimit = 10 + minRadius
         rightLimit = width - maxRadius - 10
-        lastX = leftLimit
+        lastX = leftLimit + (rightLimit - leftLimit) * percent
     }
 
     override fun onDraw(canvas: Canvas) {
@@ -104,6 +104,10 @@ class CircleSeekbarView @JvmOverloads constructor(
 
     fun setSeekPercentListener(listener: OnSeekPercentListener) {
         this.listener = listener
+    }
+
+    fun setPercent(percent: Float) {
+        this.percent = percent
     }
 
     interface OnSeekPercentListener {

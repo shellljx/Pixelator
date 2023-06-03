@@ -42,6 +42,7 @@ class ImageEngine : public thread::HandlerCallback {
   void onMiniSurfaceDestroy();
   void addImagePath(const char *path, int rotate);
   bool setBrush(jobject bitmap);
+  void setPaintSize(jint size);
   void pushTouchBuffer(float *buffer, int length, float cx, float cy);
   void setMatrix(float *matrix);
   void refreshFrame();

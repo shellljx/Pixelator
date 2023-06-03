@@ -27,6 +27,8 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
+    private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
+    private val mRedoView by lazy { getView()?.findViewById<View>(R.id.iv_redo) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
 
@@ -44,8 +46,19 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mEffectsRecyclerView?.adapter = mEffectsAdapter
         mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 15, true))
         mPointSeekbar?.setSeekPercentListener(this)
+        val minSize = mContainer.getConfig().minPaintSize
+        val maxSize = mContainer.getConfig().maxPaintSize
+        val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) } ?: 0f
+        mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
+
+        mUndoView?.setOnClickListener {
+
+        }
+        mRedoView?.setOnClickListener {
+
+        }
     }
 
     fun setEffectItems(effectList: ArrayList<EffectItem>) {

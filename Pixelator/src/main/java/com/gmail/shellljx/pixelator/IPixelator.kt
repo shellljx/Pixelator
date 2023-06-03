@@ -15,11 +15,17 @@ interface IPixelator {
 
     fun setBrush(bitmap: Bitmap)
 
+    fun setPaintSize(size: Int)
+
     fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float)
 
     fun setMatrix(matrix: FloatArray)
 
     fun refreshFrame()
+
+    fun undo()
+
+    fun redo()
 
     fun getMiniScreen(): IMiniScreen
 

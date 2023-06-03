@@ -4,10 +4,10 @@
     android:layout_width="match_parent"
     android:layout_height="400dp"
     android:clickable="true"
+    android:focusable="true"
     android:orientation="vertical"
     app:behavior_peekHeight="260dp"
-    app:layout_behavior="@string/bottom_sheet_behavior"
-    android:focusable="true">
+    app:layout_behavior="@string/bottom_sheet_behavior">
 
     <LinearLayout
         android:id="@+id/operation_area"
@@ -68,6 +68,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginEnd="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_undo"
             app:layout_constraintBottom_toBottomOf="@id/iv_album"
             app:layout_constraintHorizontal_chainStyle="packed"
@@ -80,6 +81,7 @@
             android:layout_width="24dp"
             android:layout_height="24dp"
             android:layout_marginStart="16dp"
+            android:background="?attr/selectableItemBackgroundBorderless"
             android:src="@drawable/ic_redo"
             app:layout_constraintLeft_toRightOf="@id/iv_undo"
             app:layout_constraintRight_toRightOf="parent"
