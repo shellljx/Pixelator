@@ -6,11 +6,13 @@
 #define PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_
 
 #include <GLES3/gl3.h>
+#include <stack>
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "FrameBuffer.h"
 #include "ImageInfo.h"
+#include "Models.h"
 
 class PaintRender {
  public:
@@ -28,7 +30,7 @@ class PaintRender {
  * @param height 纹理高
  * @return 绘制之后的纹理
  */
-  GLuint draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight);
+  GLuint draw(GLuint textureId, int width, int height);
 
   GLuint getTexture();
 
@@ -38,6 +40,8 @@ class PaintRender {
   }
 
   void setPaintSize(int paintSize);
+  int getPaintSize();
+  void clear();
  private:
   FrameBuffer *frame_buffer_;
   GLuint brushTexture_ = 0;
@@ -47,7 +51,7 @@ class PaintRender {
   int points = 0;
   float scale_ = 1.f;
   int paintSize_ = 0.f;
-  glm::mat4 matrix_;
+  glm::mat4 matrix_ = glm::mat4(1);
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_

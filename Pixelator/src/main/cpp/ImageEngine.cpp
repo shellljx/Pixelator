@@ -177,6 +177,18 @@ void ImageEngine::save() {
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::redo() {
+  auto msg = new thread::Message();
+  msg->what = kRedo;
+  handler_->sendMessage(msg);
+}
+
+void ImageEngine::undo() {
+  auto msg = new thread::Message();
+  msg->what = kUndo;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::handleMessage(thread::Message *msg) {
   int what = msg->what;
   switch (what) {
@@ -225,11 +237,12 @@ void ImageEngine::handleMessage(thread::Message *msg) {
         miniScreenRender_->tranlate(cx, cy);
       }
       paintRender_->processPushBufferInternal(buffer, length);
+      for (int i = 0; i < length; ++i) {
+        touchData_.push_back(buffer[i]);
+      }
       paintRender_->draw(pixelationRender_->getTexture(),
                          sourceRender_->getTextureWidth(),
-                         sourceRender_->getTextureHeight(),
-                         surfaceWidth_,
-                         surfaceHeight_);
+                         sourceRender_->getTextureHeight());
       delete[] buffer;
       break;
     }
@@ -252,6 +265,14 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     }
     case PixelateMessage::kSave: {
       saveInternal();
+      break;
+    }
+    case PixelateMessage::kUndo: {
+      undoInternal();
+      break;
+    }
+    case PixelateMessage::kRedo: {
+      redoInternal();
       break;
     }
     case PixelateMessage::kCreateMiniSurface: {
@@ -351,9 +372,7 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
                           sourceRender_->getTextureHeight());
   paintRender_->draw(pixelationRender_->getTexture(),
                      sourceRender_->getTextureWidth(),
-                     sourceRender_->getTextureHeight(),
-                     surfaceWidth_,
-                     surfaceHeight_);
+                     sourceRender_->getTextureHeight());
   screenRender_->initMatrix(surfaceWidth_,
                             surfaceHeight_,
                             sourceRender_->getTextureWidth(),
@@ -473,5 +492,51 @@ void ImageEngine::callJavaFrameBoundsChanged(float left, float top, float right,
     if (frameAvaliableMethodId != nullptr) {
       env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, left, top, right, bottom);
     }
+  }
+}
+
+void ImageEngine::redoInternal() {
+  if (!redoStack_.empty()) {
+    auto data = redoStack_.back();
+    redoStack_.pop_back();
+    undoStack_.push_back(data);
+    paintRender_->setMatrix(data.matrix);
+    paintRender_->translate(data.matrix[0][0]);
+    paintRender_->setPaintSize(data.paintSize);
+    paintRender_->processPushBufferInternal(data.data, data.length);
+    paintRender_->draw(pixelationRender_->getTexture(),
+                       sourceRender_->getTextureWidth(),
+                       sourceRender_->getTextureHeight());
+    refreshFrameInternal();
+  }
+}
+
+void ImageEngine::undoInternal() {
+  if (!undoStack_.empty()) {
+    auto data = undoStack_.back();
+    undoStack_.pop_back();
+    redoStack_.push_back(data);
+
+    paintRender_->clear();
+    for (auto &element : undoStack_) {
+      paintRender_->processPushBufferInternal(element.data, element.length);
+      paintRender_->setMatrix(element.matrix);
+      paintRender_->setPaintSize(element.paintSize);
+      paintRender_->translate(element.matrix[0][0]);
+      paintRender_->draw(pixelationRender_->getTexture(),
+                         sourceRender_->getTextureWidth(),
+                         sourceRender_->getTextureHeight());
+    }
+    refreshFrameInternal();
+  }
+}
+void ImageEngine::stopTouch() {
+  if (touchData_.empty())return;
+  auto *data = new float[touchData_.size()];
+  memcpy(data, touchData_.data(), touchData_.size() * sizeof(float));
+  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(), paintRender_->getPaintSize()});
+  touchData_.clear();
+  if (!redoStack_.empty()) {
+    redoStack_.clear();
   }
 }

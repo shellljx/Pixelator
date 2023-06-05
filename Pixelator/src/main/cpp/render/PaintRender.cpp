@@ -72,7 +72,7 @@ int PaintRender::processPushBufferInternal(float *buffer, int length) {
   return 0;
 }
 
-GLuint PaintRender::draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight) {
+GLuint PaintRender::draw(GLuint textureId, int width, int height) {
   frame_buffer_->createFrameBuffer(width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
 
@@ -133,4 +133,15 @@ void PaintRender::translate(float scale) {
 }
 void PaintRender::setPaintSize(int paintSize) {
   paintSize_ = paintSize;
+}
+
+int PaintRender::getPaintSize() {
+  return paintSize_;
+}
+
+void PaintRender::clear() {
+  glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
+  glClearColor(0, 0, 0, 0);
+  glClear(GL_COLOR_BUFFER_BIT);
+  glBindFramebuffer(GL_FRAMEBUFFER, 0);
 }

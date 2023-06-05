@@ -2,16 +2,18 @@ package com.gmail.shellljx.pixelate.service
 
 import android.graphics.*
 import android.media.ExifInterface
+import android.view.MotionEvent
 import android.view.Surface
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
+import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.utils.PointUtils
 import java.util.LinkedList
 
-class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver {
+class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnSingleUpObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null
 
@@ -58,7 +60,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk = Pixelator.create()
         mImageSdk.setRenderListener(mRenderListener)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mContainer.getGestureService()?.addSingleUpObserver(this)
         mPaintSize = mContainer.getConfig().run { (minPaintSize + maxPaintSize) / 2 }
+        setPaintSize(mPaintSize)
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -90,7 +94,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     override fun setPaintSize(size: Int) {
         mPaintSize = size
-        mImageSdk.setPaintSize(size)
+        runTaskOrPendding {
+            mImageSdk.setPaintSize(size)
+        }
         mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
     }
 
@@ -99,6 +105,14 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             mImageSdk.addImagePath(path, getRotate(path))
             mImageSdk.refreshFrame()
         }
+    }
+
+    override fun undo() {
+        mImageSdk.undo()
+    }
+
+    override fun redo() {
+        mImageSdk.redo()
     }
 
     override fun setTransformMatrix(matrix: Matrix) {
@@ -169,6 +183,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return false
     }
 
+    override fun onSingleUp(event: MotionEvent): Boolean {
+        mImageSdk.stopTouch()
+        return false
+    }
+
     private fun runTaskOrPendding(task: Runnable) {
         if (mEglWindowCreated) {
             task.run()
@@ -183,6 +202,8 @@ interface IPixelatorCoreService : IService {
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
     fun loadImage(path: String)
+    fun undo()
+    fun redo()
     fun setTransformMatrix(matrix: Matrix)
     fun getTransformMatrix(): Matrix
     fun getMiniScreen(): IMiniScreen

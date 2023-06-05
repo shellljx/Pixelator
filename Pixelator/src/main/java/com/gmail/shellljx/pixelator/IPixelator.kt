@@ -19,6 +19,8 @@ interface IPixelator {
 
     fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float)
 
+    fun stopTouch()
+
     fun setMatrix(matrix: FloatArray)
 
     fun refreshFrame()

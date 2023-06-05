@@ -22,6 +22,8 @@ enum PixelateMessage {
   kSetMatrix,
   kRefreshFrame,
   kSave,
+  kUndo,
+  kRedo,
   kCreateMiniSurface,
   kMiniSurfaceChanged,
   kMiniSurfaceDestroy

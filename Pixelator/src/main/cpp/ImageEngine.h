@@ -47,8 +47,10 @@ class ImageEngine : public thread::HandlerCallback {
   void setMatrix(float *matrix);
   void refreshFrame();
   void save();
+  void redo();
+  void undo();
   void handleMessage(thread::Message *msg) override;
-
+  void stopTouch();
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
@@ -57,6 +59,8 @@ class ImageEngine : public thread::HandlerCallback {
   int refreshFrameInternal();
   void refreshTransform();
   void saveInternal();
+  void redoInternal();
+  void undoInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   void renderScreen(GLuint texture, int width, int height);
   void callJavaEGLContextCreate();
@@ -86,6 +90,9 @@ class ImageEngine : public thread::HandlerCallback {
   ScreenRender *screenRender_;
   BlendRender *blendRender_;
   MiniScreenRender *miniScreenRender_;
+  std::vector<LineData> undoStack_;
+  std::vector<LineData> redoStack_;
+  std::vector<float> touchData_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_

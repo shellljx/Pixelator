@@ -33,15 +33,15 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
 
     override fun onSingleDown(event: MotionEvent): Boolean {
         mContainer.getControlService()?.hide()
-        mMiniToken?.let { mContainer.getPanelService()?.showPanel(it) } ?: run {
-            mMiniToken = mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
-        }
+//        mMiniToken?.let { mContainer.getPanelService()?.showPanel(it) } ?: run {
+//            mMiniToken = mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
+//        }
         return false
     }
 
     override fun onSingleUp(event: MotionEvent): Boolean {
         mContainer.getControlService()?.show()
-        mMiniToken?.let { mContainer.getPanelService()?.hidePanel(it) }
+        //mMiniToken?.let { mContainer.getPanelService()?.hidePanel(it) }
         tryToKeepInInnerBounds()
         return false
     }

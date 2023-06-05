@@ -77,6 +77,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun stopTouch() {
+        if (mId != 0L) {
+            nativeStopTouch(mId)
+        }
+    }
+
     override fun setMatrix(matrix: FloatArray) {
         if (mId != 0L) {
             nativeSetMatrix(mId, matrix)
@@ -85,16 +91,20 @@ class Pixelator private constructor() : IPixelator {
 
     override fun refreshFrame() {
         if (mId != 0L) {
-            refreshFrame(mId);
+            refreshFrame(mId)
         }
     }
 
     override fun undo() {
-
+        if (mId != 0L) {
+            nativeUndo(mId)
+        }
     }
 
     override fun redo() {
-
+        if (mId != 0L) {
+            nativeRedo(mId)
+        }
     }
 
     override fun getMiniScreen(): IMiniScreen {
@@ -160,8 +170,11 @@ class Pixelator private constructor() : IPixelator {
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun setPaintSize(id: Long, size: Int)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
+    private external fun nativeStopTouch(id: Long)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun refreshFrame(id: Long)
+    private external fun nativeUndo(id: Long)
+    private external fun nativeRedo(id: Long)
     private external fun nativeSave(id: Long)
 
     companion object {

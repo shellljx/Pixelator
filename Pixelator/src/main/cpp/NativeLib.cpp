@@ -73,6 +73,11 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
   env->ReleaseFloatArrayElements(buffer, touchBuffer, 0);
 }
 
+void Android_Jni_nativeStopTouch(JNIEnv *env, jobject object, jlong id) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->stopTouch();
+}
+
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray) {
   auto engine = reinterpret_cast<ImageEngine *>(id);
   jfloat *matrix = env->GetFloatArrayElements(floatArray, nullptr);
@@ -87,6 +92,16 @@ void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray f
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   pixelator->refreshFrame();
+}
+
+void Android_Jni_undo(JNIEnv *env, jobject object, jlong id) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->undo();
+}
+
+void Android_Jni_redo(JNIEnv *env, jobject object, jlong id) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->redo();
 }
 
 void Android_Jni_save(JNIEnv *env, jobject object, jlong id) {

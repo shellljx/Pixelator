@@ -37,9 +37,15 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jfloat cx,
                                  jfloat cy);
 
+void Android_Jni_nativeStopTouch(JNIEnv *env, jobject object, jlong id);
+
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray);
 
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id);
+
+void Android_Jni_undo(JNIEnv *env, jobject object, jlong id);
+
+void Android_Jni_redo(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_save(JNIEnv *env, jobject object, jlong id);
 
@@ -55,7 +61,10 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
     {"setPaintSize", "(JI)V", (void **) Android_Jni_setPaintSize},
     {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},
+    {"nativeStopTouch", "(J)V", (void **) Android_Jni_nativeStopTouch},
     {"refreshFrame", "(J)V", (void **) Andriod_Jni_refresh_frame},
+    {"nativeUndo", "(J)V", (void **) Android_Jni_undo},
+    {"nativeRedo", "(J)V", (void **) Android_Jni_redo},
     {"nativeSetMatrix", "(J[F)V", (void **) Android_Jni_set_matrix},
     {"nativeSave", "(J)V", (void **) Android_Jni_save}
 };

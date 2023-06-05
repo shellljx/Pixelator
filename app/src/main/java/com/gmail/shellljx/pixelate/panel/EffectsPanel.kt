@@ -54,10 +54,10 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleDownObserver(this)
 
         mUndoView?.setOnClickListener {
-
+            mCoreService?.undo()
         }
         mRedoView?.setOnClickListener {
-
+            mCoreService?.redo()
         }
     }
 
