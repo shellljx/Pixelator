@@ -64,6 +64,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun setPaintType(paintType: Int) {
+        if (mId != 0L) {
+            nativeSetPaintType(mId, paintType)
+        }
+    }
+
     override fun setPaintSize(size: Int) {
         if (mId != 0L) {
             setPaintSize(mId, size)
@@ -168,6 +174,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
+    private external fun nativeSetPaintType(id: Long, type: Int)
     private external fun setPaintSize(id: Long, size: Int)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
     private external fun nativeStopTouch(id: Long)

@@ -23,6 +23,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private val mContentBounds = RectF() //图片变换后最新的bounds
     private val mTransformMatrix = Matrix() //变换矩阵
     private var mPaintSize = 0
+    @PaintType
+    private var mPaintType = PAINT
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
 
@@ -98,6 +100,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             mImageSdk.setPaintSize(size)
         }
         mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
+    }
+
+    override fun setPaintType(paintType: Int) {
+        mPaintType = paintType
+        mImageSdk.setPaintType(paintType)
     }
 
     override fun loadImage(path: String) {
@@ -201,6 +208,7 @@ interface IPixelatorCoreService : IService {
 
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
+    fun setPaintType(@PaintType paintType: Int)
     fun loadImage(path: String)
     fun undo()
     fun redo()

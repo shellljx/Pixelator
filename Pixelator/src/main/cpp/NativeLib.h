@@ -28,6 +28,8 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
 
 jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap);
 
+void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintType);
+
 void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size);
 
 void Android_Jni_pushTouchBuffer(JNIEnv *env,
@@ -59,6 +61,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
     {"nativeAddImagePath", "(JLjava/lang/String;I)V", (void **) Android_Jni_add_image_path},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
+    {"nativeSetPaintType", "(JI)V", (void **) Android_Jni_setPaintType},
     {"setPaintSize", "(JI)V", (void **) Android_Jni_setPaintSize},
     {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},
     {"nativeStopTouch", "(J)V", (void **) Android_Jni_nativeStopTouch},

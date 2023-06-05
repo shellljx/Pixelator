@@ -51,6 +51,7 @@ class ImageEngine : public thread::HandlerCallback {
   void undo();
   void handleMessage(thread::Message *msg) override;
   void stopTouch();
+  void setPaintType(int paintType);
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();

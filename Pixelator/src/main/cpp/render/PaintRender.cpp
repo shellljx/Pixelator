@@ -92,7 +92,11 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height) {
 //  matrix = glm::translate(matrix, glm::vec3(-width / 2.f, -height / 2.f, 0.f));
   glViewport(0, 0, width, height);
   glEnable(GL_BLEND);
-  glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  if (paintType_ == 1) {
+    glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
+  } else {
+    glBlendFunc(GL_ZERO, GL_ONE_MINUS_SRC_ALPHA);
+  }
   glBlendEquation(GL_FUNC_ADD);
   glUseProgram(program_);
   auto matrix = projection * viewMatrix * glm::inverse(matrix_);
@@ -139,9 +143,16 @@ int PaintRender::getPaintSize() {
   return paintSize_;
 }
 
+int PaintRender::getPaintType() {
+  return paintType_;
+}
+
 void PaintRender::clear() {
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
   glClearColor(0, 0, 0, 0);
   glClear(GL_COLOR_BUFFER_BIT);
   glBindFramebuffer(GL_FRAMEBUFFER, 0);
+}
+void PaintRender::setPaintType(int paintType) {
+  paintType_ = paintType;
 }

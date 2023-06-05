@@ -42,6 +42,8 @@ class PaintRender {
   void setPaintSize(int paintSize);
   int getPaintSize();
   void clear();
+  void setPaintType(int paintType);
+  int getPaintType();
  private:
   FrameBuffer *frame_buffer_;
   GLuint brushTexture_ = 0;
@@ -51,6 +53,7 @@ class PaintRender {
   int points = 0;
   float scale_ = 1.f;
   int paintSize_ = 0.f;
+  int paintType_ = 1;
   glm::mat4 matrix_ = glm::mat4(1);
 };
 

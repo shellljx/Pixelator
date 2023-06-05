@@ -12,6 +12,8 @@ import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
 import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
+import com.gmail.shellljx.pixelator.ERASER
+import com.gmail.shellljx.pixelator.PAINT
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
@@ -27,6 +29,8 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
+    private val mPaintView by lazy { getView()?.findViewById<View>(R.id.iv_paint) }
+    private val mEraserView by lazy { getView()?.findViewById<View>(R.id.iv_eraser) }
     private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
     private val mRedoView by lazy { getView()?.findViewById<View>(R.id.iv_redo) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
@@ -53,6 +57,12 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
 
+        mPaintView?.setOnClickListener {
+            mCoreService?.setPaintType(PAINT)
+        }
+        mEraserView?.setOnClickListener {
+            mCoreService?.setPaintType(ERASER)
+        }
         mUndoView?.setOnClickListener {
             mCoreService?.undo()
         }

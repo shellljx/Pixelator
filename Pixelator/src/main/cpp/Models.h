@@ -13,5 +13,6 @@ typedef struct LineData {
   int length = 0;
   glm::mat4 matrix = glm::mat4(1);
   int paintSize = 0;
+  int paintType = 1;
 } LineModel;
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_MODELS_H_

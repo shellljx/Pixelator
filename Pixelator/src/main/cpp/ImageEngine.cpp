@@ -503,6 +503,7 @@ void ImageEngine::redoInternal() {
     paintRender_->setMatrix(data.matrix);
     paintRender_->translate(data.matrix[0][0]);
     paintRender_->setPaintSize(data.paintSize);
+    paintRender_->setPaintType(data.paintType);
     paintRender_->processPushBufferInternal(data.data, data.length);
     paintRender_->draw(pixelationRender_->getTexture(),
                        sourceRender_->getTextureWidth(),
@@ -523,6 +524,7 @@ void ImageEngine::undoInternal() {
       paintRender_->setMatrix(element.matrix);
       paintRender_->setPaintSize(element.paintSize);
       paintRender_->translate(element.matrix[0][0]);
+      paintRender_->setPaintType(element.paintType);
       paintRender_->draw(pixelationRender_->getTexture(),
                          sourceRender_->getTextureWidth(),
                          sourceRender_->getTextureHeight());
@@ -534,9 +536,12 @@ void ImageEngine::stopTouch() {
   if (touchData_.empty())return;
   auto *data = new float[touchData_.size()];
   memcpy(data, touchData_.data(), touchData_.size() * sizeof(float));
-  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(), paintRender_->getPaintSize()});
+  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(), paintRender_->getPaintSize(), paintRender_->getPaintType()});
   touchData_.clear();
   if (!redoStack_.empty()) {
     redoStack_.clear();
   }
+}
+void ImageEngine::setPaintType(int paintType) {
+  paintRender_->setPaintType(paintType);
 }
