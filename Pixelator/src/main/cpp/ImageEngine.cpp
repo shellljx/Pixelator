@@ -538,9 +538,11 @@ void ImageEngine::stopTouch() {
   memcpy(data, touchData_.data(), touchData_.size() * sizeof(float));
   undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(), paintRender_->getPaintSize(), paintRender_->getPaintType()});
   touchData_.clear();
-  if (!redoStack_.empty()) {
-    redoStack_.clear();
+
+  for (auto &element : redoStack_) {
+    delete[] element.data;
   }
+  redoStack_.clear();
 }
 void ImageEngine::setPaintType(int paintType) {
   paintRender_->setPaintType(paintType);
