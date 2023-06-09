@@ -29,6 +29,7 @@ add_library( # Sets the name of the library.
         gl/FrameBuffer.cpp
         gl/Program.cpp
         render/BlendRender.cpp
+        render/DeeplabMaskRender.cpp
         render/ImageFrameBuffer.cpp
         render/MiniScreenRender.cpp
         render/PaintRender.cpp

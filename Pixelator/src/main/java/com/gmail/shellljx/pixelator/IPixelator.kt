@@ -15,6 +15,10 @@ interface IPixelator {
 
     fun setBrush(bitmap: Bitmap)
 
+    fun setDeeplabMask(bitmap: Bitmap)
+
+    fun setDeeplabMaskMode(@MaskMode mode: Int)
+
     fun setPaintType(@PaintType paintType: Int)
 
     fun setPaintSize(size: Int)

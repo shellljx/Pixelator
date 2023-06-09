@@ -17,6 +17,8 @@ enum EGLMessage {
 enum PixelateMessage {
   kInsertImage = 100,
   kSetBrush,
+  kSetDeeplabMask,
+  ksetDeeplabMaskMode,
   kSetPaintSize,
   kTouchEvent,
   kSetMatrix,

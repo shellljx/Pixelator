@@ -22,6 +22,6 @@ public class Deeplabv3plusNcnn {
     public native void Detect(Bitmap bitmap, Bitmap output, boolean use_gpu);
 
     static {
-        System.loadLibrary("deeplabv3plusncnn");
+        System.loadLibrary("deeplabv3plus");
     }
 }

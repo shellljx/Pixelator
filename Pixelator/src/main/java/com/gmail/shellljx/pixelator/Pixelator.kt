@@ -4,7 +4,6 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.view.Surface
-import android.view.SurfaceHolder
 
 class Pixelator private constructor() : IPixelator {
 
@@ -61,6 +60,18 @@ class Pixelator private constructor() : IPixelator {
     override fun setBrush(bitmap: Bitmap) {
         if (mId != 0L) {
             setBrush(mId, bitmap)
+        }
+    }
+
+    override fun setDeeplabMask(bitmap: Bitmap) {
+        if (mId != 0L) {
+            nativeSetDeeplabMask(mId, bitmap)
+        }
+    }
+
+    override fun setDeeplabMaskMode(mode: Int) {
+        if (mId != 0L) {
+            nativeSetDeeplabMaskMode(mId, mode)
         }
     }
 
@@ -156,6 +167,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    private fun onDeeplabMaskCreated(bitmap: Bitmap) {
+        mainHandler.post {
+            mRenderListener?.onDeeplabMaskCreated(bitmap)
+        }
+    }
+
     private fun onRenderError(code: Int, msg: String) {
         mainHandler.post {
             mRenderListener?.onRenderError(code, msg)
@@ -174,6 +191,8 @@ class Pixelator private constructor() : IPixelator {
     private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
+    private external fun nativeSetDeeplabMask(id: Long, bitmap: Bitmap)
+    private external fun nativeSetDeeplabMaskMode(id: Long, mode: Int)
     private external fun nativeSetPaintType(id: Long, type: Int)
     private external fun setPaintSize(id: Long, size: Int)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)

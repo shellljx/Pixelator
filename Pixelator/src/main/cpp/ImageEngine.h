@@ -27,6 +27,7 @@
 #include "render/ScreenRender.h"
 #include "render/BlendRender.h"
 #include "render/MiniScreenRender.h"
+#include "render/DeeplabMaskRender.h"
 
 using namespace glm;
 
@@ -42,7 +43,7 @@ class ImageEngine : public thread::HandlerCallback {
   void onMiniSurfaceDestroy();
   void addImagePath(const char *path, int rotate);
   bool setBrush(jobject bitmap);
-  void setPaintSize(jint size);
+  void setPaintSize(int size);
   void pushTouchBuffer(float *buffer, int length, float cx, float cy);
   void setMatrix(float *matrix);
   void refreshFrame();
@@ -52,6 +53,8 @@ class ImageEngine : public thread::HandlerCallback {
   void handleMessage(thread::Message *msg) override;
   void stopTouch();
   void setPaintType(int paintType);
+  void setDeeplabMask(jobject bitmap);
+  void setDeeplabMaskMode(int mode);
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
@@ -63,7 +66,6 @@ class ImageEngine : public thread::HandlerCallback {
   void redoInternal();
   void undoInternal();
   int decodeImage(GLuint &texture, const char *path, int *width, int *height);
-  void renderScreen(GLuint texture, int width, int height);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
   void callJavaFrameBoundsChanged(float left, float top, float right, float bottom);
@@ -91,6 +93,7 @@ class ImageEngine : public thread::HandlerCallback {
   ScreenRender *screenRender_;
   BlendRender *blendRender_;
   MiniScreenRender *miniScreenRender_;
+  DeeplabMaskRender *deeplabMaskRender_;
   std::vector<LineData> undoStack_;
   std::vector<LineData> redoStack_;
   std::vector<float> touchData_;

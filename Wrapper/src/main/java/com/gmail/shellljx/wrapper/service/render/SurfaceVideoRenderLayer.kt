@@ -7,7 +7,7 @@ import android.view.SurfaceView
 import android.view.View
 import com.gmail.shellljx.wrapper.IRenderContext
 
-class SurfaceVideoRenderLayer : SurfaceView, IRenderLayer, SurfaceHolder.Callback {
+class SurfaceVideoRenderLayer : SurfaceView, IVideoRenderLayer, SurfaceHolder.Callback {
     private var mRenderContext: IRenderContext? = null
 
     constructor(context: Context) : this(context, null)

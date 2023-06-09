@@ -17,4 +17,10 @@ class RenderContainer : FrameLayout {
         lp.bottomMargin = marginBottom
         addView(layer.view(), 0, lp)
     }
+
+    internal fun bindCustomRenderLayer(layer: IRenderLayer, marginBottom: Int) {
+        val lp = LayoutParams(LayoutParams.MATCH_PARENT, LayoutParams.MATCH_PARENT)
+        lp.bottomMargin = marginBottom
+        addView(layer.view(), lp)
+    }
 }

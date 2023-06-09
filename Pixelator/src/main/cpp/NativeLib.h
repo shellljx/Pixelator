@@ -28,6 +28,10 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
 
 jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap);
 
+void Android_Jni_setDeeplabMask(JNIEnv *env, jobject object, jlong id, jobject bitmap);
+
+void Android_Jni_setDeeplabMaskMode(JNIEnv *env, jobject object, jlong id, jint mode);
+
 void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintType);
 
 void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size);
@@ -61,6 +65,8 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
     {"nativeAddImagePath", "(JLjava/lang/String;I)V", (void **) Android_Jni_add_image_path},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
+    {"nativeSetDeeplabMask", "(JLandroid/graphics/Bitmap;)V", (void **) Android_Jni_setDeeplabMask},
+    {"nativeSetDeeplabMaskMode", "(JI)V", (void **) Android_Jni_setDeeplabMaskMode},
     {"nativeSetPaintType", "(JI)V", (void **) Android_Jni_setPaintType},
     {"setPaintSize", "(JI)V", (void **) Android_Jni_setPaintSize},
     {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},

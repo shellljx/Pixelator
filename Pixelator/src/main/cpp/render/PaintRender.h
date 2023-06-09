@@ -21,6 +21,8 @@ class PaintRender {
 
   void setBrush(const ImageInfo *image);
 
+  void setDeeplabMask(const ImageInfo *image);
+
   int processPushBufferInternal(float *buffer, int length);
 
   /**
@@ -34,6 +36,8 @@ class PaintRender {
 
   GLuint getTexture();
 
+  GLuint getMaskTexture();
+
   void translate(float scale);
   void setMatrix(glm::mat4 matrix) {
     matrix_ = matrix;
@@ -41,19 +45,26 @@ class PaintRender {
 
   void setPaintSize(int paintSize);
   int getPaintSize();
+  int getMaskWidth();
+  int getMaskHeight();
   void clear();
   void setPaintType(int paintType);
   int getPaintType();
+  void setDeeplabMaskMode(int mode);
  private:
   FrameBuffer *frame_buffer_;
   GLuint brushTexture_ = 0;
+  GLuint maskTexture_ = 0;
   GLuint program_ = 0;
   GLuint vao_ = 0;
   GLuint pointsVbo_ = 0;
+  int maskMode_ = 0;
   int points = 0;
   float scale_ = 1.f;
   int paintSize_ = 0.f;
   int paintType_ = 1;
+  int maskWidth_ = 0;
+  int maskHeight_ = 0;
   glm::mat4 matrix_ = glm::mat4(1);
 };
 

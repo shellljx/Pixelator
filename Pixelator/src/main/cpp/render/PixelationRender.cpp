@@ -44,7 +44,7 @@ GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
   glUniform2fv(textureSizeLoc, 1, textureSize);
   //更新马赛克方块长宽
   auto rectSizeLoc = glGetUniformLocation(program_, "rectSize");
-  float rectSize[] = {(float) 20, (float) 20};
+  float rectSize[] = {(float) 50, (float) 50};
   glUniform2fv(rectSizeLoc, 1, rectSize);
   //更新纹理单元0的纹理
   glActiveTexture(GL_TEXTURE0);

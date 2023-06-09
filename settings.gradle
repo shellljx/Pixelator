@@ -16,3 +16,4 @@ rootProject.name = "Pixelate"
 include ':app'
 include ':Pixelator'
 include ':Wrapper'
+include ':deeplabv3'

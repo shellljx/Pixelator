@@ -9,7 +9,8 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     private lateinit var mContainer: IContainer
     private var mRenderContext: IRenderContext? = null
     private var mRenderContainer: RenderContainer? = null
-    private var mVideoRenderLayer: IRenderLayer? = null
+    private var mVideoRenderLayer: IVideoRenderLayer? = null
+    private val mCustomRenderLayers = arrayListOf<IRenderLayer>()
     private var marginBottom = 0
 
     override fun onStart() {
@@ -31,6 +32,14 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     override fun bindRenderContext(renderContext: IRenderContext) {
         mRenderContext = renderContext
         initRenderLayer()
+    }
+
+    override fun addRenderLayer(layer: IRenderLayer) {
+        mRenderContainer?.bindCustomRenderLayer(layer, marginBottom)
+    }
+
+    override fun removeRenderLayer(layer: IRenderLayer) {
+        mRenderContainer?.removeView(layer.view())
     }
 
     private fun initRenderLayer(): IRenderLayer {
@@ -73,6 +82,10 @@ interface IRenderContainerService : IService {
      */
     fun bindRenderContext(renderContext: IRenderContext)
 
+    fun addRenderLayer(layer: IRenderLayer)
+
+    fun removeRenderLayer(layer: IRenderLayer)
+
     /**
      * 返回视频渲染层宽度
      */
@@ -96,6 +109,8 @@ interface IRenderLayer {
      * level可以不是连续的，会根据相对大小顺序添加层级
      */
     fun level(): Int
+}
 
+interface IVideoRenderLayer : IRenderLayer {
     fun bindRenderContext(renderContext: IRenderContext)
 }

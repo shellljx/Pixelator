@@ -22,6 +22,10 @@ PaintRender::~PaintRender() {
     glDeleteTextures(1, &brushTexture_);
     brushTexture_ = 0;
   }
+  if (maskTexture_ > 0) {
+    glDeleteTextures(1, &maskTexture_);
+    maskTexture_ = 0;
+  }
 }
 
 void PaintRender::setBrush(const ImageInfo *image) {
@@ -47,6 +51,34 @@ void PaintRender::setBrush(const ImageInfo *image) {
                       GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
     }
     glBindTexture(GL_TEXTURE_2D, 0);
+  }
+}
+
+void PaintRender::setDeeplabMask(const ImageInfo *image) {
+  if (image == nullptr) {
+    return;
+  }
+  if (image->pixels_ != nullptr) {
+    if (maskTexture_ == 0) {
+      glGenTextures(1, &maskTexture_);
+      glBindTexture(GL_TEXTURE_2D, maskTexture_);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width_, image->height_, 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE,
+                   image->pixels_);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, maskTexture_);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width_, image->height_,
+                      GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+    maskWidth_ = image->width_;
+    maskHeight_ = image->height_;
   }
 }
 
@@ -114,6 +146,14 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height) {
   glBindTexture(GL_TEXTURE_2D, brushTexture_);
   auto brushTextureLoc = glGetUniformLocation(program_, "brushTexture");
   glUniform1i(brushTextureLoc, 1);
+  //绑定deeplab mask 纹理到纹理单元2
+  glActiveTexture(GL_TEXTURE2);
+  glBindTexture(GL_TEXTURE_2D, maskTexture_);
+  auto maskTextureLoc = glGetUniformLocation(program_, "deeplabMask");
+  glUniform1i(maskTextureLoc, 2);
+  //设置mask mode
+  auto maskModeLocation = glGetUniformLocation(program_, "deeplabMode");
+  glUniform1i(maskModeLocation, maskMode_);
   //绑定输入纹理到纹理单元0
   glActiveTexture(GL_TEXTURE0);
   glBindTexture(GL_TEXTURE_2D, textureId);
@@ -132,6 +172,10 @@ GLuint PaintRender::getTexture() {
   return frame_buffer_->getTexture();
 }
 
+GLuint PaintRender::getMaskTexture() {
+  return maskTexture_;
+}
+
 void PaintRender::translate(float scale) {
   scale_ = scale;
 }
@@ -147,6 +191,14 @@ int PaintRender::getPaintType() {
   return paintType_;
 }
 
+int PaintRender::getMaskWidth() {
+  return maskWidth_;
+}
+
+int PaintRender::getMaskHeight() {
+  return maskHeight_;
+}
+
 void PaintRender::clear() {
   glBindFramebuffer(GL_FRAMEBUFFER, frame_buffer_->getFrameBuffer());
   glClearColor(0, 0, 0, 0);
@@ -155,4 +207,8 @@ void PaintRender::clear() {
 }
 void PaintRender::setPaintType(int paintType) {
   paintType_ = paintType;
+}
+
+void PaintRender::setDeeplabMaskMode(int mode) {
+  maskMode_ = mode;
 }

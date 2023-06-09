@@ -53,6 +53,16 @@ jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bit
   return pixelator->setBrush(bitmap);
 }
 
+void Android_Jni_setDeeplabMask(JNIEnv *env, jobject object, jlong id, jobject bitmap) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->setDeeplabMask(bitmap);
+}
+
+void Android_Jni_setDeeplabMaskMode(JNIEnv *env, jobject object, jlong id, jint mode) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->setDeeplabMaskMode(mode);
+}
+
 void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintType) {
   auto engine = reinterpret_cast<ImageEngine *>(id);
   engine->setPaintType(paintType);

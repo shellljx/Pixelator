@@ -20,7 +20,8 @@ ImageEngine::ImageEngine(jobject object)
       paintRender_(nullptr),
       screenRender_(nullptr),
       blendRender_(nullptr),
-      miniScreenRender_(nullptr) {
+      miniScreenRender_(nullptr),
+      deeplabMaskRender_(nullptr) {
   std::string name("pixelator thread");
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
@@ -56,6 +57,8 @@ ImageEngine::~ImageEngine() {
   blendRender_ = nullptr;
   delete miniScreenRender_;
   miniScreenRender_ = nullptr;
+  delete deeplabMaskRender_;
+  deeplabMaskRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -141,7 +144,7 @@ bool ImageEngine::setBrush(jobject bitmap) {
   return true;
 }
 
-void ImageEngine::setPaintSize(jint size) {
+void ImageEngine::setPaintSize(int size) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kSetPaintSize;
   msg->arg1 = size;
@@ -220,6 +223,22 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
       paintRender_->setBrush(image);
       delete image;
+      break;
+    }
+    case PixelateMessage::kSetDeeplabMask: {
+      auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
+      paintRender_->setDeeplabMask(image);
+      delete image;
+      break;
+    }
+    case PixelateMessage::ksetDeeplabMaskMode: {
+      auto mode = msg->arg1;
+      paintRender_->setDeeplabMaskMode(mode);
+      if (mode != 0) {
+        deeplabMaskRender_->setMaskMode(mode);
+        deeplabMaskRender_->draw(paintRender_->getMaskTexture(), paintRender_->getMaskWidth(), paintRender_->getMaskHeight());
+        deeplabMaskRender_->download();
+      }
       break;
     }
     case PixelateMessage::kSetPaintSize: {
@@ -348,6 +367,9 @@ int ImageEngine::createEGLSurfaceInternal() {
   if (blendRender_ == nullptr) {
     blendRender_ = new BlendRender(pixelator_.get());
   }
+  if (deeplabMaskRender_ == nullptr) {
+    deeplabMaskRender_ = new DeeplabMaskRender(pixelator_.get());
+  }
   callJavaEGLWindowCreate();
   LOGI("leave %s", __func__);
   return 0;
@@ -446,10 +468,6 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
   return 0;
 }
 
-void ImageEngine::renderScreen(GLuint texture, int width, int height) {
-
-}
-
 void ImageEngine::callJavaEGLContextCreate() {
   if (pixelator_.empty()) {
     return;
@@ -546,4 +564,23 @@ void ImageEngine::stopTouch() {
 }
 void ImageEngine::setPaintType(int paintType) {
   paintRender_->setPaintType(paintType);
+}
+
+void ImageEngine::setDeeplabMask(jobject bitmap) {
+  ImageInfo *image = nullptr;
+  auto ret = createBitmapInfo(bitmap, &image);
+  if (ret != 0 || image == nullptr) {
+    LOGE("create bitmap info error %d", ret);
+    return;
+  }
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetDeeplabMask;
+  msg->obj1 = image;
+  handler_->sendMessage(msg);
+}
+void ImageEngine::setDeeplabMaskMode(int mode) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::ksetDeeplabMaskMode;
+  msg->arg1 = mode;
+  handler_->sendMessage(msg);
 }
