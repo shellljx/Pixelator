@@ -8,7 +8,7 @@ class DelegateService : IDelegateService {
     override fun onStart() {
     }
 
-    override fun bindVEContainer(veContainer: IContainer) {
+    override fun bindVEContainer(container: IContainer) {
     }
 
     override fun putDelegate(key: String, delegate: AbsDelegate) {

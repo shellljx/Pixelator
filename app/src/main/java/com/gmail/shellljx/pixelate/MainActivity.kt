@@ -2,6 +2,7 @@ package com.gmail.shellljx.pixelate
 
 import android.Manifest
 import android.app.Activity
+import android.content.Intent
 import android.content.pm.PackageManager
 import android.graphics.*
 import android.media.ExifInterface
@@ -14,10 +15,12 @@ import com.gmail.shellljx.pixelate.view.*
 import java.io.*
 
 class MainActivity : AppCompatActivity() {
+    private var fragment: PixelatorFragment? = null
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
-        supportFragmentManager.beginTransaction().replace(R.id.content, PixelatorFragment()).commit()
+        fragment = PixelatorFragment()
+        supportFragmentManager.beginTransaction().replace(R.id.content, fragment!!).commit()
         getwcreenheight()
         setTransparent()
         val REQUEST_PERMISSION_CODE = 1
@@ -93,6 +96,11 @@ class MainActivity : AppCompatActivity() {
     fun setTransparent() {
         transparentStatusBar(this)
         hintNavigationBar(this)
+    }
+
+    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
+        super.onActivityResult(requestCode, resultCode, data)
+        fragment?.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun transparentStatusBar(activity: Activity) {

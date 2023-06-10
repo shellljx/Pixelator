@@ -8,6 +8,7 @@ import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.gmail.shellljx.pixelate.*
+import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
 import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
 import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
@@ -33,6 +34,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mEraserView by lazy { getView()?.findViewById<View>(R.id.iv_eraser) }
     private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
     private val mRedoView by lazy { getView()?.findViewById<View>(R.id.iv_redo) }
+    private val mAlbumView by lazy { getView()?.findViewById<View>(R.id.iv_album) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
 
@@ -68,6 +70,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
         mRedoView?.setOnClickListener {
             mCoreService?.redo()
+        }
+        mAlbumView?.setOnClickListener {
+            mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)?.openAlbum()
         }
     }
 
