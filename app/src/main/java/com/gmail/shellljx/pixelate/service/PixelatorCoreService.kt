@@ -4,6 +4,7 @@ import android.graphics.*
 import android.media.ExifInterface
 import android.view.MotionEvent
 import android.view.Surface
+import androidx.core.graphics.toRect
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
@@ -27,6 +28,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private var mPaintType = PAINT
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
+    private val mDeeplabMaskObservers = arrayListOf<OnDeeplabMaskObserver>()
+    private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
+    private val mImageLoadedObservers = arrayListOf<OnImageLoadedObserver>()
 
     private val mRenderListener = object : IRenderListener {
         override fun onEGLContextCreate() {
@@ -46,15 +50,19 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
                 mInitBounds.set(left, top, right, bottom)
             }
             mContentBounds.set(left, top, right, bottom)
+            mContentBoundsObservers.forEach { it.onContentBoundsChanged(mContentBounds.toRect()) }
         }
 
         override fun onFrameSaved(bitmap: Bitmap) {
         }
 
+        override fun onDeeplabMaskCreated(bitmap: Bitmap) {
+            mDeeplabMaskObservers.forEach { it.onDeeplabMaskChanged(bitmap) }
+        }
+
         override fun onRenderError(code: Int, msg: String) {
 
         }
-
     }
 
     override fun onStart() {
@@ -107,10 +115,19 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk.setPaintType(paintType)
     }
 
+    override fun setDeeplabMask(bitmap: Bitmap) {
+        mImageSdk.setDeeplabMask(bitmap)
+    }
+
+    override fun setDeeplabMode(mode: Int) {
+        mImageSdk.setDeeplabMaskMode(mode)
+    }
+
     override fun loadImage(path: String) {
         runTaskOrPendding {
             mImageSdk.addImagePath(path, getRotate(path))
             mImageSdk.refreshFrame()
+            mImageLoadedObservers.forEach { it.onImageLoaded(path) }
         }
     }
 
@@ -158,6 +175,24 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     override fun addPaintSizeObserver(observer: PaintSizeObserver) {
         if (!mPaintSizeObservers.contains(observer)) {
             mPaintSizeObservers.add(observer)
+        }
+    }
+
+    override fun addDeeplabMaskObserver(observer: OnDeeplabMaskObserver) {
+        if (!mDeeplabMaskObservers.contains(observer)) {
+            mDeeplabMaskObservers.add(observer)
+        }
+    }
+
+    override fun addContentBoundsObserver(observer: OnContentBoundsObserver) {
+        if (!mContentBoundsObservers.contains(observer)) {
+            mContentBoundsObservers.add(observer)
+        }
+    }
+
+    override fun addImageLoadedObserver(observer: OnImageLoadedObserver) {
+        if (!mImageLoadedObservers.contains(observer)) {
+            mImageLoadedObservers.add(observer)
         }
     }
 
@@ -209,6 +244,8 @@ interface IPixelatorCoreService : IService {
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
     fun setPaintType(@PaintType paintType: Int)
+    fun setDeeplabMask(bitmap: Bitmap)
+    fun setDeeplabMode(@MaskMode mode: Int)
     fun loadImage(path: String)
     fun undo()
     fun redo()
@@ -219,8 +256,23 @@ interface IPixelatorCoreService : IService {
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
     fun addPaintSizeObserver(observer: PaintSizeObserver)
+    fun addDeeplabMaskObserver(observer: OnDeeplabMaskObserver)
+    fun addContentBoundsObserver(observer: OnContentBoundsObserver)
+    fun addImageLoadedObserver(observer: OnImageLoadedObserver)
 }
 
 interface PaintSizeObserver {
     fun onPaintSizeChanged(size: Int)
+}
+
+interface OnDeeplabMaskObserver {
+    fun onDeeplabMaskChanged(mask: Bitmap)
+}
+
+interface OnContentBoundsObserver {
+    fun onContentBoundsChanged(bound: Rect)
+}
+
+interface OnImageLoadedObserver {
+    fun onImageLoaded(path: String)
 }

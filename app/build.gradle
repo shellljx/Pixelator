@@ -30,12 +30,6 @@ android {
     kotlinOptions {
         jvmTarget = '1.8'
     }
-    externalNativeBuild {
-        cmake {
-            path file('src/main/cpp/CMakeLists.txt')
-            version '3.22.1'
-        }
-    }
 }
 
 dependencies {
@@ -49,4 +43,5 @@ dependencies {
     androidTestImplementation 'androidx.test.espresso:espresso-core:3.4.0'
     implementation project(':Pixelator')
     implementation project(':Wrapper')
+    implementation project(':deeplabv3')
 }

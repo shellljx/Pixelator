@@ -5,7 +5,6 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
-import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
@@ -27,7 +26,13 @@ class PixelatorFragment : Fragment() {
             mContainer = IContainer.Builder().setContext(requireContext()).setVEConfig(config).build()
         }
         mContainer.onCreate()
-        mContainer.getServiceManager().registerBusinessService(listOf(PixelatorCoreService::class.java, TransformService::class.java))
+        mContainer.getServiceManager().registerBusinessService(
+            listOf(
+                PixelatorCoreService::class.java,
+                TransformService::class.java,
+                Deeplabv3Service::class.java
+            )
+        )
         mContainer.getRenderService()?.updateViewPort(200.dp())
     }
 
@@ -42,7 +47,7 @@ class PixelatorFragment : Fragment() {
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
 
         mCoreService?.setBrushResource(R.mipmap.ic_brush_blur)
-        mCoreService?.loadImage("/sdcard/aftereffect/ae/tt/resource/assets/a3.png")
+        mCoreService?.loadImage("/sdcard/Pictures/du/Du_230609151031-1242822577.png")
     }
 
     override fun onResume() {
