@@ -13,6 +13,8 @@ set(PIXELATOR_DIR ${CMAKE_SOURCE_DIR})
 set(STB_HEADER ${CMAKE_SOURCE_DIR}/stb)
 set(OPENGL_DIR ${CMAKE_SOURCE_DIR}/gl)
 set(GLM_DIR ${CMAKE_SOURCE_DIR}/glm)
+# include jsoncpp
+set(JSON_HEADER ${CMAKE_SOURCE_DIR}/json)
 
 include_directories(${PIXELATOR_DIR})
 include_directories(${PIXELATOR_DIR}/thread)
@@ -20,6 +22,7 @@ include_directories(${PIXELATOR_DIR}/utils)
 include_directories(${STB_HEADER})
 include_directories(${OPENGL_DIR})
 include_directories(${GLM_DIR})
+include_directories(${JSON_HEADER}/include)
 
 add_library( # Sets the name of the library.
         pixelator
@@ -28,6 +31,9 @@ add_library( # Sets the name of the library.
         SHARED
         gl/FrameBuffer.cpp
         gl/Program.cpp
+        json/json_reader.cpp
+        json/json_value.cpp
+        json/json_writer.cpp
         render/BlendRender.cpp
         render/DeeplabMaskRender.cpp
         render/ImageFrameBuffer.cpp

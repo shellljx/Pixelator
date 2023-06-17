@@ -13,6 +13,8 @@
 
 #include "stb_image.h"
 #include "OpenGL.h"
+#include "json/json.h"
+#include <fstream>
 
 ImageEngine::ImageEngine(jobject object)
     : sourceRender_(nullptr),
@@ -130,6 +132,31 @@ void ImageEngine::addImagePath(const char *path, int rotate) {
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::setEffect(const char *config) {
+  if (config == nullptr) {
+    return;
+  }
+  auto length = strlen(config) + 1;
+  auto tempConfig = new char[length];
+  snprintf(tempConfig, length, "%s%c", config, 0);
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetEffect;
+  msg->obj1 = tempConfig;
+  handler_->sendMessage(msg);
+}
+void ImageEngine::updateEffect(const char *config) {
+  if (config == nullptr) {
+    return;
+  }
+  auto length = strlen(config) + 1;
+  auto tempConfig = new char[length];
+  snprintf(tempConfig, length, "%s%c", config, 0);
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kUpdateEffect;
+  msg->obj1 = tempConfig;
+  handler_->sendMessage(msg);
+}
+
 bool ImageEngine::setBrush(jobject bitmap) {
   ImageInfo *image = nullptr;
   auto ret = createBitmapInfo(bitmap, &image);
@@ -217,6 +244,18 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       auto rotate = msg->arg1;
       insertImageInternal(path, rotate);
       delete[] path;
+      break;
+    }
+    case PixelateMessage::kSetEffect: {
+      auto config = reinterpret_cast<char *>(msg->obj1);
+      setEffectInternal(config);
+      delete[] config;
+      break;
+    }
+    case PixelateMessage::kUpdateEffect: {
+      auto config = reinterpret_cast<char *>(msg->obj1);
+      updateEffectInternal(config);
+      delete[] config;
       break;
     }
     case PixelateMessage::kSetBrush: {
@@ -402,6 +441,13 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
   refreshTransform();
   refreshFrameInternal();
   return 0;
+}
+
+void ImageEngine::setEffectInternal(char *config) {
+
+}
+void ImageEngine::updateEffectInternal(char *config) {
+
 }
 
 int ImageEngine::refreshFrameInternal() {

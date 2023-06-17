@@ -55,11 +55,15 @@ class ImageEngine : public thread::HandlerCallback {
   void setPaintType(int paintType);
   void setDeeplabMask(jobject bitmap);
   void setDeeplabMaskMode(int mode);
+  void setEffect(const char *config);
+  void updateEffect(const char *config);
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path, int rotate);
+  void setEffectInternal(char *config);
+  void updateEffectInternal(char *config);
   int refreshFrameInternal();
   void refreshTransform();
   void saveInternal();

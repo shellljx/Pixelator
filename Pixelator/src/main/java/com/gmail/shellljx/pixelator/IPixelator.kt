@@ -13,6 +13,10 @@ interface IPixelator {
 
     fun addImagePath(path: String, rotate: Int)
 
+    fun setEffect(config: String)
+
+    fun updateEffect(config: String)
+
     fun setBrush(bitmap: Bitmap)
 
     fun setDeeplabMask(bitmap: Bitmap)

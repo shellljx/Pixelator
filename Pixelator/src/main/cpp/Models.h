@@ -15,4 +15,9 @@ typedef struct LineData {
   int paintSize = 0;
   int paintType = 1;
 } LineModel;
+
+typedef enum {
+  TypeMosaic = 0,
+  TypeImage
+} EffectType;
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_MODELS_H_

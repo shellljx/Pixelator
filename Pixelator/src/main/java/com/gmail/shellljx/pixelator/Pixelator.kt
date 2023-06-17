@@ -57,6 +57,14 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun setEffect(config: String) {
+
+    }
+
+    override fun updateEffect(config: String) {
+
+    }
+
     override fun setBrush(bitmap: Bitmap) {
         if (mId != 0L) {
             setBrush(mId, bitmap)
@@ -190,6 +198,8 @@ class Pixelator private constructor() : IPixelator {
     private external fun onMiniScreenSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
+    private external fun nativeSetEffect(id: Long, config: String)
+    private external fun nativeUpdateEffect(id: Long, config: String)
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun nativeSetDeeplabMask(id: Long, bitmap: Bitmap)
     private external fun nativeSetDeeplabMaskMode(id: Long, mode: Int)

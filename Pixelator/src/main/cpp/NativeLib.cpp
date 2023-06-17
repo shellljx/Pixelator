@@ -48,6 +48,20 @@ void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring j
   env->ReleaseStringUTFChars(jpath, path);
 }
 
+void Android_Jni_set_effect(JNIEnv *env, jobject object, jlong id, jstring config) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  auto configStr = env->GetStringUTFChars(config, JNI_FALSE);
+  engine->setEffect(configStr);
+  env->ReleaseStringUTFChars(config, configStr);
+}
+
+void Android_Jni_update_effect(JNIEnv *env, jobject object, jlong id, jstring config) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  auto configStr = env->GetStringUTFChars(config, JNI_FALSE);
+  engine->updateEffect(configStr);
+  env->ReleaseStringUTFChars(config, configStr);
+}
+
 jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   return pixelator->setBrush(bitmap);

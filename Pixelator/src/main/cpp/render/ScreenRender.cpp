@@ -28,7 +28,7 @@ ScreenRender::~ScreenRender() {
 void ScreenRender::initMatrix(int screenWidth, int screenHeight, int textureWidth, int textureHeight) {
   //这个投影矩阵反转是因为双指手势和view坐标系一致
   projectionMatrix_ = glm::ortho(0.f, static_cast<float>(screenWidth),
-                                    static_cast<float>(screenHeight), 0.f, 1.f, 100.f);
+                                 static_cast<float>(screenHeight), 0.f, 1.f, 100.f);
   glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
@@ -94,7 +94,7 @@ void ScreenRender::drawTexture(GLuint textureId, int width, int height, int scre
   GL_CHECK(glEnableVertexAttribArray(textureLocation))
   GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
                                  DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP))
-  auto matrix = projectionMatrix_ * viewMatrix_ * transformMatrix_  * modelMatrix_;
+  auto matrix = projectionMatrix_ * viewMatrix_ * transformMatrix_ * modelMatrix_;
   auto mvpLoc = glGetUniformLocation(program_, "mvp");
   glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 

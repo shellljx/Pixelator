@@ -26,6 +26,10 @@ void Android_Jni_mini_surface_destroy(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_add_image_path(JNIEnv *env, jobject object, jlong id, jstring jpath, jint rotate);
 
+void Android_Jni_set_effect(JNIEnv *env, jobject object, jlong id, jstring config);
+
+void Android_Jni_update_effect(JNIEnv *env, jobject object, jlong id, jstring config);
+
 jboolean Android_Jni_setBrush(JNIEnv *env, jobject object, jlong id, jobject bitmap);
 
 void Android_Jni_setDeeplabMask(JNIEnv *env, jobject object, jlong id, jobject bitmap);
@@ -64,6 +68,8 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onMiniScreenSurfaceChanged", "(JII)V", (void **) Android_Jni_mini_surface_changed},
     {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
     {"nativeAddImagePath", "(JLjava/lang/String;I)V", (void **) Android_Jni_add_image_path},
+    {"nativeSetEffect", "(JLjava/lang/String;)V", (void **) Android_Jni_set_effect},
+    {"nativeUpdateEffect", "(JLjava/lang/String;)V", (void **) Android_Jni_update_effect},
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
     {"nativeSetDeeplabMask", "(JLandroid/graphics/Bitmap;)V", (void **) Android_Jni_setDeeplabMask},
     {"nativeSetDeeplabMaskMode", "(JI)V", (void **) Android_Jni_setDeeplabMaskMode},

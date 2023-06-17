@@ -2,22 +2,26 @@ package com.gmail.shellljx.pixelate.service
 
 import android.content.Context
 import android.graphics.*
-import android.media.ExifInterface
 import android.os.*
-import android.util.Log
 import android.view.MotionEvent
 import android.view.View
 import androidx.core.graphics.toRect
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
+import com.gmail.shellljx.pixelate.BasicAuthInterceptor
 import com.gmail.shellljx.pixelate.view.DeeplabMaskView
 import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
-import com.tencent.deeplabv3plus.Deeplabv3plusNcnn
-import java.io.IOException
+import okhttp3.MediaType.Companion.toMediaTypeOrNull
+import okhttp3.MultipartBody
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import okhttp3.RequestBody
+import java.io.File
+import java.io.FileOutputStream
 import java.lang.ref.WeakReference
 
 /**
@@ -137,76 +141,70 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
         private val service: WeakReference<Deeplabv3Service>,
         private val context: WeakReference<Context>, worker: Looper
     ) : Handler(worker) {
+        private var client: OkHttpClient? = null
+
         companion object {
             const val REQUEST_INIT = 0
             const val REQUEST_DETECT = 1
         }
 
-        private var deeplabv3: Deeplabv3plusNcnn? = null
-
         override fun handleMessage(msg: Message) {
             when (msg.what) {
                 REQUEST_INIT -> {
-                    if (deeplabv3 == null) {
-                        deeplabv3 = Deeplabv3plusNcnn()
-                        deeplabv3?.Init(context.get()?.assets)
-                    }
+                    client = OkHttpClient.Builder()
+                        .addInterceptor(BasicAuthInterceptor()).build()
                 }
 
                 REQUEST_DETECT -> {
-                    val bitmap = decodeUri(msg.obj as String) ?: return
-                    val output: Bitmap = bitmap.copy(Bitmap.Config.ARGB_8888, true)
-                    deeplabv3?.Detect(bitmap, output, false)
-                    service.get()?.dispatchRunModeSuccess(output)
+                    val bitmap = removeBackground(msg.obj as String) ?: return
+                    service.get()?.dispatchRunModeSuccess(bitmap)
                 }
             }
         }
 
-        private fun decodeUri(selectedImage: String?): Bitmap? {
-            selectedImage ?: return null
-            // Decode image size
-            val o = BitmapFactory.Options()
-            o.inJustDecodeBounds = true
-            BitmapFactory.decodeFile(selectedImage, o)
+        private fun removeBackground(path: String?): Bitmap? {
+            path ?: return null
+            val smallpath = getminiPath(path) ?: return null
+            val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
+                .addFormDataPart("image", "origin_image.png", RequestBody.create("image/png".toMediaTypeOrNull(), File(smallpath)))
+                .build()
+            val request: Request = Request.Builder()
+                .url("https://api.pixian.ai/api/v2/remove-background")
+                .post(requestBody)
+                .build()
+            val response = client?.newCall(request)?.execute()
+            val out = FileOutputStream(
+                (context.get()?.filesDir?.absolutePath
+                    ?: "") + "/" + "removed.png"
+            )
+            val buff = response?.body?.bytes()
+            out.write(buff)
+            out.close()
+            val bitmap = BitmapFactory.decodeFile(
+                (context.get()?.filesDir?.absolutePath
+                    ?: "") + "/" + "removed.png"
+            )
+            return bitmap
+        }
 
-            // The new size we want to scale to
-            val REQUIRED_SIZE = 640
-
-            // Find the correct scale value. It should be the power of 2.
-            var width_tmp = o.outWidth
-            var height_tmp = o.outHeight
-            var scale = 1
-            while (true) {
-                if (width_tmp / 2 < REQUIRED_SIZE
-                    || height_tmp / 2 < REQUIRED_SIZE) {
-                    break
-                }
-                width_tmp /= 2
-                height_tmp /= 2
-                scale *= 2
-            }
-
-            // Decode with inSampleSize
-            val o2 = BitmapFactory.Options()
-            o2.inSampleSize = scale
-            val bitmap = BitmapFactory.decodeFile(selectedImage, o2)
-
-            // Rotate according to EXIF
-            var rotate = 0
-            try {
-                val exif: ExifInterface = ExifInterface(selectedImage)
-                val orientation = exif.getAttributeInt(ExifInterface.TAG_ORIENTATION, ExifInterface.ORIENTATION_NORMAL)
-                when (orientation) {
-                    ExifInterface.ORIENTATION_ROTATE_270 -> rotate = 270
-                    ExifInterface.ORIENTATION_ROTATE_180 -> rotate = 180
-                    ExifInterface.ORIENTATION_ROTATE_90 -> rotate = 90
-                }
-            } catch (e: IOException) {
-                Log.e("MainActivity", "ExifInterface IOException")
-            }
-            val matrix = Matrix()
-            matrix.postRotate(rotate.toFloat())
-            return Bitmap.createBitmap(bitmap!!, 0, 0, bitmap.width, bitmap.height, matrix, true)
+        private fun getminiPath(path: String?): String? {
+            path ?: return null
+            val options = BitmapFactory.Options()
+            options.inJustDecodeBounds = true
+            BitmapFactory.decodeFile(path, options)
+            val originalWidth = options.outWidth
+            val originalHeight = options.outHeight
+            val scaleFactor = Math.max(originalWidth / 720, originalHeight / 720)
+            options.inJustDecodeBounds = false
+            options.inSampleSize = scaleFactor
+            val scaledBitmap = BitmapFactory.decodeFile(path, options)
+            val small = File(
+                (context.get()?.filesDir?.absolutePath
+                    ?: "") + "/" + "small.jpg"
+            )
+            val stream = FileOutputStream(small)
+            scaledBitmap.compress(Bitmap.CompressFormat.JPEG, 50, stream)
+            return small.absolutePath
         }
     }
 }

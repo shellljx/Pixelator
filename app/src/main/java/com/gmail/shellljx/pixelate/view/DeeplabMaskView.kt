@@ -23,7 +23,7 @@ class DeeplabMaskView @JvmOverloads constructor(
     private val mDstBounds = Rect()
 
     init {
-        mMaskPaint.alpha = 50
+        mMaskPaint.alpha = 100
     }
 
     override fun onDraw(canvas: Canvas) {
