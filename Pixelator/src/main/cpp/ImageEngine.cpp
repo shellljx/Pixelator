@@ -490,11 +490,20 @@ void ImageEngine::saveInternal() {
 
 int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int *height) {
 
-  int channel = 0;
-  auto data = stbi_load(path, width, height, &channel, STBI_rgb_alpha);
-  if (*width == 0 || *height == 0 || data == nullptr) {
-    LOGE("decode image error");
-    return -1;
+  ImageInfo *info = nullptr;
+  auto ret = loadImageFromPath(path, &info);
+  if (ret == 0 && info != nullptr) {
+    *width = info->width_;
+    *height = info->height_;
+  } else {
+    int channel = 0;
+    auto data = stbi_load(path, width, height, &channel, STBI_rgb_alpha);
+    if (*width == 0 || *height == 0 || data == nullptr) {
+      LOGE("decode image error");
+      delete[] data;
+      return -1;
+    }
+    info = new ImageInfo(*width, *height, data);
   }
   if (texture == 0) {
     glGenTextures(1, &texture);
@@ -508,9 +517,9 @@ int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int 
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, data);
+  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, info->pixels_);
   glBindTexture(GL_TEXTURE_2D, 0);
-  delete[] data;
+  delete info;
   return 0;
 }
 

@@ -7,6 +7,7 @@
 
 #include <android/bitmap.h>
 #include "ImageInfo.h"
+#include "Local.h"
 #include "Log.h"
 
 static int createBitmapInfo(jobject &bitmap, ImageInfo **image) {
@@ -39,5 +40,18 @@ static int createBitmapInfo(jobject &bitmap, ImageInfo **image) {
   }
   *image = new ImageInfo(info.width, info.height, resultData);
   return 0;
+}
+
+static int loadImageFromPath(const char *path, ImageInfo **info) {
+  auto env = JNIEnvironment::Current();
+  if (env == nullptr) {
+    return -1;
+  }
+  Local<jclass> bitmapFactoryClass = {env, env->FindClass("android/graphics/BitmapFactory")};
+  jmethodID decodeMethodId = env->GetStaticMethodID(bitmapFactoryClass.get(), "decodeFile", "(Ljava/lang/String;)Landroid/graphics/Bitmap;");
+  jobject bitmapObj = env->CallStaticObjectMethod(bitmapFactoryClass.get(), decodeMethodId, env->NewStringUTF(path));
+  auto ret = createBitmapInfo(bitmapObj, info);
+  env->DeleteLocalRef(bitmapObj);
+  return ret;
 }
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_BITMAPUTILS_H_
