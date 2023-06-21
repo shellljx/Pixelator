@@ -38,6 +38,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
     private val mPaintView by lazy { getView()?.findViewById<View>(R.id.iv_paint) }
+    private val mLockView by lazy { getView()?.findViewById<View>(R.id.iv_lock) }
     private val mEraserView by lazy { getView()?.findViewById<View>(R.id.iv_eraser) }
     private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
     private val mRedoView by lazy { getView()?.findViewById<View>(R.id.iv_redo) }
@@ -70,7 +71,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mPaintView?.setOnClickListener {
             mCoreService?.setPaintType(PAINT)
         }
+        mLockView?.setOnClickListener {
+            it.isSelected = !it.isSelected
+        }
         mEraserView?.setOnClickListener {
+            it.isSelected = !it.isSelected
             mCoreService?.setPaintType(ERASER)
         }
         mUndoView?.setOnClickListener {

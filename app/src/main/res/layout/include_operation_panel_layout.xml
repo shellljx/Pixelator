@@ -16,24 +16,42 @@
         android:layout_margin="12dp"
         android:background="@drawable/bg_gray_round_rect"
         android:orientation="horizontal"
-        android:padding="6dp"
+        android:paddingStart="6dp"
+        android:paddingTop="4dp"
+        android:paddingEnd="6dp"
+        android:paddingBottom="4dp"
         app:layout_constraintLeft_toLeftOf="parent"
         app:layout_constraintTop_toTopOf="parent">
 
         <ImageView
             android:id="@+id/iv_paint"
-            android:layout_width="16dp"
-            android:layout_height="16dp"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
             android:layout_gravity="center_vertical"
-            android:layout_marginEnd="20dp"
-            android:src="@drawable/ic_curve" />
+            android:layout_marginEnd="14dp"
+            android:padding="1.5dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_graffiti"
+            app:tint="#515151" />
+
+        <ImageView
+            android:id="@+id/iv_lock"
+            android:layout_width="18dp"
+            android:layout_height="18dp"
+            android:layout_gravity="center_vertical"
+            android:layout_marginEnd="14dp"
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_lock"
+            app:tint="@drawable/selector_button_selecte_bg" />
 
         <ImageView
             android:id="@+id/iv_eraser"
-            android:layout_width="20dp"
-            android:layout_height="20dp"
+            android:layout_width="21dp"
+            android:layout_height="21dp"
             android:layout_gravity="center_vertical"
-            android:src="@drawable/ic_eraser" />
+            android:scaleType="centerCrop"
+            android:src="@drawable/ic_eraser"
+            app:tint="@drawable/selector_button_selecte_bg" />
     </LinearLayout>
 
     <com.gmail.shellljx.pixelate.view.CircleSeekbarView

@@ -9,7 +9,7 @@ android {
 
     defaultConfig {
         applicationId "com.gmail.shellljx.pixelate"
-        minSdk 24
+        minSdk 19
         targetSdk 33
         versionCode 1
         versionName "1.0"
@@ -45,5 +45,4 @@ dependencies {
     implementation 'com.facebook.fresco:fresco:2.6.0'
     implementation project(':Pixelator')
     implementation project(':Wrapper')
-    implementation project(':deeplabv3')
 }
