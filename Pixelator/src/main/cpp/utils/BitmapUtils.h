@@ -5,6 +5,8 @@
 #ifndef PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_BITMAPUTILS_H_
 #define PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_BITMAPUTILS_H_
 
+#include "JNIEnvironment.h"
+#include <memory>
 #include <android/bitmap.h>
 #include "ImageInfo.h"
 #include "Local.h"

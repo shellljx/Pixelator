@@ -58,7 +58,9 @@ class Pixelator private constructor() : IPixelator {
     }
 
     override fun setEffect(config: String) {
-
+        if (mId != 0L) {
+            nativeSetEffect(mId, config)
+        }
     }
 
     override fun updateEffect(config: String) {

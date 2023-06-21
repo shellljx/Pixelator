@@ -7,8 +7,9 @@
 
 #include <GLES3/gl3.h>
 #include "FrameBuffer.h"
+#include "BaseEffectRender.h"
 
-class PixelationRender {
+class PixelationRender : public BaseEffectRender {
  public:
   PixelationRender();
 
@@ -21,13 +22,9 @@ class PixelationRender {
    * @param height 纹理高
    * @return 绘制之后的纹理
    */
-  GLuint draw(GLuint textureId, int width, int height);
+  GLuint draw(GLuint textureId, int width, int height) override;
 
-  GLuint getTexture();
-
- private:
-  GLuint program_ = 0;
-  FrameBuffer *frameBuffer_ = nullptr;
+  int updateConfig(Json::Value &config) override;
 };
 
 #endif //PIXELATE_PIXELATIONRENDER_H

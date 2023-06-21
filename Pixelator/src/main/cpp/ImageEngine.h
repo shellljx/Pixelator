@@ -22,12 +22,13 @@
 #include "BitmapUtils.h"
 #include "FrameBuffer.h"
 #include "render/SourceRender.h"
-#include "render/PixelationRender.h"
+#include "render/effect/PixelationRender.h"
 #include "render/PaintRender.h"
 #include "render/ScreenRender.h"
 #include "render/BlendRender.h"
 #include "render/MiniScreenRender.h"
 #include "render/DeeplabMaskRender.h"
+#include "render/effect/BaseEffectRender.h"
 
 using namespace glm;
 
@@ -62,14 +63,13 @@ class ImageEngine : public thread::HandlerCallback {
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
   int insertImageInternal(const char *path, int rotate);
-  void setEffectInternal(char *config);
+  void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);
   int refreshFrameInternal();
   void refreshTransform();
   void saveInternal();
   void redoInternal();
   void undoInternal();
-  int decodeImage(GLuint &texture, const char *path, int *width, int *height);
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
   void callJavaFrameBoundsChanged(float left, float top, float right, float bottom);
@@ -92,7 +92,7 @@ class ImageEngine : public thread::HandlerCallback {
   //笔刷
   ImageInfo *brushImage_ = nullptr;
   SourceRender *sourceRender_;
-  PixelationRender *pixelationRender_;
+  BaseEffectRender *effectRender_;
   PaintRender *paintRender_;
   ScreenRender *screenRender_;
   BlendRender *blendRender_;

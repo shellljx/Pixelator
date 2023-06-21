@@ -8,17 +8,14 @@
 #include "Log.h"
 #include "Global.h"
 #include "Local.h"
-
-#define STB_IMAGE_IMPLEMENTATION
-
-#include "stb_image.h"
+#include "render/effect/ImageEffect.h"
 #include "OpenGL.h"
 #include "json/json.h"
-#include <fstream>
+#include "utils/ImageDecoder.h"
 
 ImageEngine::ImageEngine(jobject object)
     : sourceRender_(nullptr),
-      pixelationRender_(nullptr),
+      effectRender_(nullptr),
       paintRender_(nullptr),
       screenRender_(nullptr),
       blendRender_(nullptr),
@@ -49,8 +46,8 @@ ImageEngine::~ImageEngine() {
 
   delete paintRender_;
   paintRender_ = nullptr;
-  delete pixelationRender_;
-  pixelationRender_ = nullptr;
+  delete effectRender_;
+  effectRender_ = nullptr;
   delete sourceRender_;
   sourceRender_ = nullptr;
   delete screenRender_;
@@ -294,11 +291,16 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       if (miniScreenRender_ != nullptr && length >= 2) {
         miniScreenRender_->tranlate(cx, cy);
       }
+      //没有选择特效不让绘制轨迹
+      if (effectRender_ == nullptr) {
+        delete[] buffer;
+        return;
+      }
       paintRender_->processPushBufferInternal(buffer, length);
       for (int i = 0; i < length; ++i) {
         touchData_.push_back(buffer[i]);
       }
-      paintRender_->draw(pixelationRender_->getTexture(),
+      paintRender_->draw(effectRender_->getTexture(),
                          sourceRender_->getTextureWidth(),
                          sourceRender_->getTextureHeight());
       delete[] buffer;
@@ -394,9 +396,6 @@ int ImageEngine::createEGLSurfaceInternal() {
   if (sourceRender_ == nullptr) {
     sourceRender_ = new SourceRender();
   }
-  if (pixelationRender_ == nullptr) {
-    pixelationRender_ = new PixelationRender();
-  }
   if (paintRender_ == nullptr) {
     paintRender_ = new PaintRender();
   }
@@ -421,19 +420,22 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
 }
 
 int ImageEngine::insertImageInternal(const char *path, int rotate) {
-  auto ret = decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
+  ImageDecoder imageDecoder;
+  auto ret = imageDecoder.decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
   sourceRender_->draw(imageTexture_,
                       imageWidth_,
                       imageHeight_,
                       rotate,
                       surfaceWidth_,
                       surfaceHeight_);
-  pixelationRender_->draw(sourceRender_->getTexture(),
-                          sourceRender_->getTextureWidth(),
-                          sourceRender_->getTextureHeight());
-  paintRender_->draw(pixelationRender_->getTexture(),
-                     sourceRender_->getTextureWidth(),
-                     sourceRender_->getTextureHeight());
+  if (effectRender_ != nullptr) {
+    effectRender_->draw(sourceRender_->getTexture(),
+                        sourceRender_->getTextureWidth(),
+                        sourceRender_->getTextureHeight());
+    paintRender_->draw(effectRender_->getTexture(),
+                       sourceRender_->getTextureWidth(),
+                       sourceRender_->getTextureHeight());
+  }
   screenRender_->initMatrix(surfaceWidth_,
                             surfaceHeight_,
                             sourceRender_->getTextureWidth(),
@@ -443,9 +445,46 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
   return 0;
 }
 
-void ImageEngine::setEffectInternal(char *config) {
-
+void ImageEngine::setEffectInternal(char *effect) {
+  Json::CharReaderBuilder builder;
+  JSONCPP_STRING err;
+  Json::Value root;
+  const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
+  std::string effect_json(effect);
+  if (!reader->parse(effect_json.c_str(), effect_json.c_str() + effect_json.length(), &root, &err)) {
+    LOGE("%s parse json error $s", effect_json.c_str(), err.c_str());
+    return;
+  }
+  int type = root["type"].asInt();
+  auto config = root["config"];
+  LOGI("parse effect json: type = %d ", type);
+  switch (type) {
+    case TypeMosaic: {
+      delete effectRender_;
+      effectRender_ = new PixelationRender();
+      break;
+    }
+    case TypeImage: {
+      delete effectRender_;
+      effectRender_ = new ImageEffect();
+      break;
+    }
+    default: {
+      LOGE("%d effect type not avaliable", type);
+      return;
+    }
+  }
+  effectRender_->updateConfig(config);
+  if (sourceRender_ != nullptr) {
+    effectRender_->draw(sourceRender_->getTexture(),
+                        sourceRender_->getTextureWidth(),
+                        sourceRender_->getTextureHeight());
+    paintRender_->draw(effectRender_->getTexture(),
+                       sourceRender_->getTextureWidth(),
+                       sourceRender_->getTextureHeight());
+  }
 }
+
 void ImageEngine::updateEffectInternal(char *config) {
 
 }
@@ -454,15 +493,24 @@ int ImageEngine::refreshFrameInternal() {
   if (renderSurface_ != EGL_NO_SURFACE) {
     eglCore_->makeCurrent(renderSurface_);
   }
-  blendRender_->draw(sourceRender_->getTexture(),
-                     paintRender_->getTexture(),
-                     sourceRender_->getTextureWidth(),
-                     sourceRender_->getTextureHeight());
-  screenRender_->draw(blendRender_->getTexture(),
-                      sourceRender_->getTextureWidth(),
-                      sourceRender_->getTextureHeight(),
-                      surfaceWidth_,
-                      surfaceHeight_);
+  if (effectRender_ != nullptr) {
+    blendRender_->draw(sourceRender_->getTexture(),
+                       paintRender_->getTexture(),
+                       sourceRender_->getTextureWidth(),
+                       sourceRender_->getTextureHeight());
+    screenRender_->draw(blendRender_->getTexture(),
+                        sourceRender_->getTextureWidth(),
+                        sourceRender_->getTextureHeight(),
+                        surfaceWidth_,
+                        surfaceHeight_);
+  } else{
+    screenRender_->draw(sourceRender_->getTexture(),
+                        sourceRender_->getTextureWidth(),
+                        sourceRender_->getTextureHeight(),
+                        surfaceWidth_,
+                        surfaceHeight_);
+  }
+
   eglCore_->swapBuffers(renderSurface_);
   eglCore_->makeCurrent(EGL_NO_SURFACE);
   if (miniScreenRender_ != nullptr) {
@@ -486,41 +534,6 @@ void ImageEngine::refreshTransform() {
 
 void ImageEngine::saveInternal() {
   blendRender_->save();
-}
-
-int ImageEngine::decodeImage(GLuint &texture, const char *path, int *width, int *height) {
-
-  ImageInfo *info = nullptr;
-  auto ret = loadImageFromPath(path, &info);
-  if (ret == 0 && info != nullptr) {
-    *width = info->width_;
-    *height = info->height_;
-  } else {
-    int channel = 0;
-    auto data = stbi_load(path, width, height, &channel, STBI_rgb_alpha);
-    if (*width == 0 || *height == 0 || data == nullptr) {
-      LOGE("decode image error");
-      delete[] data;
-      return -1;
-    }
-    info = new ImageInfo(*width, *height, data);
-  }
-  if (texture == 0) {
-    glGenTextures(1, &texture);
-  }
-  if (*width % 2 != 0 || *height % 2 != 0) {
-    glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-  }
-  glActiveTexture(GL_TEXTURE0);
-  glBindTexture(GL_TEXTURE_2D, texture);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-  glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, info->pixels_);
-  glBindTexture(GL_TEXTURE_2D, 0);
-  delete info;
-  return 0;
 }
 
 void ImageEngine::callJavaEGLContextCreate() {
@@ -578,7 +591,7 @@ void ImageEngine::redoInternal() {
     paintRender_->setPaintSize(data.paintSize);
     paintRender_->setPaintType(data.paintType);
     paintRender_->processPushBufferInternal(data.data, data.length);
-    paintRender_->draw(pixelationRender_->getTexture(),
+    paintRender_->draw(effectRender_->getTexture(),
                        sourceRender_->getTextureWidth(),
                        sourceRender_->getTextureHeight());
     refreshFrameInternal();
@@ -598,7 +611,7 @@ void ImageEngine::undoInternal() {
       paintRender_->setPaintSize(element.paintSize);
       paintRender_->translate(element.matrix[0][0]);
       paintRender_->setPaintType(element.paintType);
-      paintRender_->draw(pixelationRender_->getTexture(),
+      paintRender_->draw(effectRender_->getTexture(),
                          sourceRender_->getTextureWidth(),
                          sourceRender_->getTextureHeight());
     }

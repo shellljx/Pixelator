@@ -34,12 +34,14 @@ add_library( # Sets the name of the library.
         json/json_reader.cpp
         json/json_value.cpp
         json/json_writer.cpp
+        render/effect/BaseEffectRender.cpp
+        render/effect/ImageEffect.cpp
+        render/effect/PixelationRender.cpp
         render/BlendRender.cpp
         render/DeeplabMaskRender.cpp
         render/ImageFrameBuffer.cpp
         render/MiniScreenRender.cpp
         render/PaintRender.cpp
-        render/PixelationRender.cpp
         render/ScreenRender.cpp
         render/SourceRender.cpp
         thread/Handler.cpp
@@ -47,6 +49,7 @@ add_library( # Sets the name of the library.
         thread/Looper.cpp
         thread/Message.cpp
         thread/MessageQueue.cpp
+        utils/ImageDecoder.cpp
         utils/TimeUtils.cpp
         Effect.cpp
         EGLCore.cpp

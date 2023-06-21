@@ -37,11 +37,12 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         }
         mContainer.onCreate()
         mContainer.getServiceManager().registerBusinessService(
-                listOf(
-                        PixelatorCoreService::class.java,
-                        TransformService::class.java,
-                        Deeplabv3Service::class.java
-                )
+            listOf(
+                PixelatorCoreService::class.java,
+                TransformService::class.java,
+                Deeplabv3Service::class.java,
+                EffectService::class.java
+            )
         )
         mContainer.getRenderService()?.updateViewPort(200.dp())
     }

@@ -131,6 +131,12 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
     }
 
+    override fun setEffect(config: String) {
+        runTaskOrPendding {
+            mImageSdk.setEffect(config)
+        }
+    }
+
     override fun undo() {
         mImageSdk.undo()
     }
@@ -240,13 +246,13 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 }
 
 interface IPixelatorCoreService : IService {
-
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
     fun setPaintType(@PaintType paintType: Int)
     fun setDeeplabMask(bitmap: Bitmap)
     fun setDeeplabMode(@MaskMode mode: Int)
     fun loadImage(path: String)
+    fun setEffect(config: String)
     fun undo()
     fun redo()
     fun setTransformMatrix(matrix: Matrix)

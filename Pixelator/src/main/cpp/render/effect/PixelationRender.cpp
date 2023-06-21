@@ -5,18 +5,11 @@
 #include "PixelationRender.h"
 #include "Log.h"
 
-PixelationRender::PixelationRender() {
-  frameBuffer_ = new FrameBuffer();
-  program_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, PIXELATE_RECT_FRAGMENT_SHADER);
+PixelationRender::PixelationRender() : BaseEffectRender(DEFAULT_VERTEX_SHADER, PIXELATE_RECT_FRAGMENT_SHADER) {
+
 }
 
 PixelationRender::~PixelationRender() {
-  delete frameBuffer_;
-  frameBuffer_ = nullptr;
-  if (program_ > 0) {
-    glDeleteProgram(program_);
-    program_ = 0;
-  }
 }
 
 GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
@@ -58,9 +51,7 @@ GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
   return frameBuffer_->getTexture();
 }
 
-GLuint PixelationRender::getTexture() {
-  if (frameBuffer_ == nullptr) {
-    return -1;
-  }
-  return frameBuffer_->getTexture();
+int PixelationRender::updateConfig(Json::Value &config) {
+
+  return 0;
 }

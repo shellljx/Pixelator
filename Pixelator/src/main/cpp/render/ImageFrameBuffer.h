@@ -6,13 +6,12 @@
 #define PIXELATE_IMAGEFRAMEBUFFER_H
 
 class ImageFrameBuffer {
-public:
-    ImageFrameBuffer();
-    ~ImageFrameBuffer();
+ public:
+  ImageFrameBuffer();
+  ~ImageFrameBuffer();
 
-private:
+ private:
 
 };
-
 
 #endif //PIXELATE_IMAGEFRAMEBUFFER_H
