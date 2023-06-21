@@ -34,7 +34,7 @@ GLuint ImageEffect::draw(GLuint textureId, int width, int height) {
   auto positionLoc = glGetAttribLocation(program_, "position");
   glEnableVertexAttribArray(positionLoc);
   glVertexAttribPointer(positionLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                        DEFAULT_VERTEX_COORDINATE);
+                        DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP);
   auto textureCoordinateLoc = glGetAttribLocation(program_, "inputTextureCoordinate");
   glEnableVertexAttribArray(textureCoordinateLoc);
   glVertexAttribPointer(textureCoordinateLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),

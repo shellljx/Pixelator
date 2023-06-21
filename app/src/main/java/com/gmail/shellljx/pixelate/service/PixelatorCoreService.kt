@@ -178,6 +178,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return mPaintSize
     }
 
+    override fun save() {
+        mImageSdk.save()
+    }
+
     override fun addPaintSizeObserver(observer: PaintSizeObserver) {
         if (!mPaintSizeObservers.contains(observer)) {
             mPaintSizeObservers.add(observer)
@@ -261,6 +265,7 @@ interface IPixelatorCoreService : IService {
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
+    fun save()
     fun addPaintSizeObserver(observer: PaintSizeObserver)
     fun addDeeplabMaskObserver(observer: OnDeeplabMaskObserver)
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)

@@ -37,8 +37,8 @@ GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int he
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
   GL_CHECK(glClearColor(0.f, 0.f, 0.f, 0.f))
 
-  drawTexture(textureId, width, height);
-  drawTexture(maskTexture, width, height);
+  drawTexture(textureId, false);
+  drawTexture(maskTexture, true);
 
   if (buffer_ == nullptr) {
     buffer_ = new uint8_t[width * height * 4];
@@ -49,7 +49,11 @@ GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int he
   return frameBuffer_->getTexture();
 }
 
-void BlendRender::drawTexture(GLuint textureId, int width, int height) {
+void BlendRender::drawTexture(GLuint textureId, bool revert) {
+  auto textureCoordinate = DEFAULT_TEXTURE_COORDINATE;
+  if (revert){
+    textureCoordinate = DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP;
+  }
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -59,7 +63,7 @@ void BlendRender::drawTexture(GLuint textureId, int width, int height) {
   auto textureLocation = glGetAttribLocation(program_, "inputTextureCoordinate");
   GL_CHECK(glEnableVertexAttribArray(textureLocation))
   GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP))
+                                 textureCoordinate))
 
   GL_CHECK(glActiveTexture(GL_TEXTURE0));
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, textureId));

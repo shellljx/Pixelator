@@ -20,7 +20,7 @@ class BlendRender {
 
   GLuint draw(GLuint textureId, GLuint maskTexture, int width, int height);
 
-  void drawTexture(GLuint textureId, int width, int height);
+  void drawTexture(GLuint textureId, bool revert);
 
   void save();
   GLuint getTexture();

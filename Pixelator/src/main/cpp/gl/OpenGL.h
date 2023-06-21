@@ -130,7 +130,7 @@ static const char *PIXELATE_RECT_FRAGMENT_SHADER =
     "void main() {                                                                          \n"
     "   vec2 textureXY = gl_FragCoord.xy; \n"
     "   vec2 rectXY = vec2(floor(textureXY.x/rectSize.x)*rectSize.x, floor(textureXY.y/rectSize.y)*rectSize.y); \n"
-    "   vec2 rectUV = vec2(rectXY.x/textureSize.x, rectXY.y/textureSize.y); \n"
+    "   vec2 rectUV = vec2(rectXY.x/textureSize.x, 1.f - rectXY.y/textureSize.y); \n"
     "   vec4 color = texture2D(inputImageTexture, rectUV); \n"
     "   gl_FragColor = color;                    \n"
     "}                                                                                      \n";
