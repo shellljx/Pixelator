@@ -18,13 +18,16 @@ import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGAT
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
+import com.gmail.shellljx.pixelate.view.PickItem
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.ERASER
+import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.pixelator.PAINT
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
+import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import org.json.JSONObject
 
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnSingleDownObserver, OnSingleUpObserver {
@@ -45,6 +48,12 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mAlbumView by lazy { getView()?.findViewById<View>(R.id.iv_album) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
+    private var mPickPanelToken: PanelToken? = null
+    private val mLockItems = arrayListOf(
+            PickItem(-1, context.getString(R.string.lock_portrait)),
+            PickItem(-1, context.getString(R.string.lock_background)),
+            PickItem(-1, context.getString(R.string.lock_off))
+    )
 
     override fun onBindVEContainer(container: IContainer) {
         mContainer = container
@@ -63,20 +72,34 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mPointSeekbar?.setSeekPercentListener(this)
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
-        val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) } ?: 0f
+        val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
+                ?: 0f
         mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
 
         mPaintView?.setOnClickListener {
-            mCoreService?.setPaintType(PAINT)
         }
         mLockView?.setOnClickListener {
-            it.isSelected = !it.isSelected
+            mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
+                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mLockItems, 1) { position ->
+                    val isOn = position != 2
+                    mLockView?.isSelected = isOn
+                    val mode = when (position) {
+                        0 -> MaskMode.PERSON
+                        1 -> MaskMode.BACKGROUND
+                        else -> MaskMode.NONE
+                    }
+                    mCoreService?.setDeeplabMode(mode)
+                })
+            }
         }
         mEraserView?.setOnClickListener {
             it.isSelected = !it.isSelected
-            mCoreService?.setPaintType(ERASER)
+            val type = if (it.isSelected) ERASER else PAINT
+            mCoreService?.setPaintType(type)
+            val id = if (it.isSelected) R.string.paint_type_eraser else R.string.paint_type_paint
+            Toast.makeText(context, context.getString(id), Toast.LENGTH_SHORT).show()
         }
         mUndoView?.setOnClickListener {
             mCoreService?.undo()

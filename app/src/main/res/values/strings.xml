@@ -1,3 +1,10 @@
 <resources>
     <string name="app_name">PixelateMe</string>
+
+    <string name="lock_off">关闭</string>
+    <string name="lock_background">背景保护</string>
+    <string name="lock_portrait">人像保护</string>
+
+    <string name="paint_type_eraser">橡皮擦模式</string>
+    <string name="paint_type_paint">画笔模式</string>
 </resources>
