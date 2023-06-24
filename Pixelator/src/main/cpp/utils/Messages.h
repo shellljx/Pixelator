@@ -24,6 +24,7 @@ enum PixelateMessage {
   kSetPaintSize,
   kTouchEvent,
   kSetMatrix,
+  kUpdateViewPort,
   kRefreshFrame,
   kSave,
   kUndo,

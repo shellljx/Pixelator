@@ -118,6 +118,11 @@ void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray f
   env->ReleaseFloatArrayElements(floatArray, matrix, 0);
 }
 
+void Android_Jni_update_viewport(JNIEnv *env, jobject object, jlong id, jint offset) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->updateViewPort(offset);
+}
+
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   pixelator->refreshFrame();

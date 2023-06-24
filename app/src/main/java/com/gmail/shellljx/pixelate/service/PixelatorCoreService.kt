@@ -24,6 +24,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private val mContentBounds = RectF() //图片变换后最新的bounds
     private val mTransformMatrix = Matrix() //变换矩阵
     private var mPaintSize = 0
+
     @PaintType
     private var mPaintType = PAINT
     private var mEglWindowCreated = false
@@ -145,15 +146,21 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk.redo()
     }
 
+    override fun updateViewPort(offset: Int) {
+        runTaskOrPendding {
+            mImageSdk.updateViewPort(offset)
+        }
+    }
+
     override fun setTransformMatrix(matrix: Matrix) {
         mTransformMatrix.set(matrix)
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-            v[0], v[3], 0f, 0f,
-            v[1], v[4], 0f, 0f,
-            0f, 0f, 1f, 0f,
-            v[2], v[5], 0f, 1f
+                v[0], v[3], 0f, 0f,
+                v[1], v[4], 0f, 0f,
+                0f, 0f, 1f, 0f,
+                v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -210,8 +217,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -259,6 +266,7 @@ interface IPixelatorCoreService : IService {
     fun setEffect(config: String)
     fun undo()
     fun redo()
+    fun updateViewPort(offset: Int)
     fun setTransformMatrix(matrix: Matrix)
     fun getTransformMatrix(): Matrix
     fun getMiniScreen(): IMiniScreen

@@ -74,6 +74,12 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
         }
     }
 
+    override fun onTransformEnd() {
+        mTransformProcessor.process {
+            it.onTransformEnd()
+        }
+    }
+
     override fun addSingleMoveObserver(observer: OnSingleMoveObserver, priority: Int) {
         mSingleMoveProcessor.add(observer, priority)
     }
@@ -124,4 +130,7 @@ interface OnSingleMoveObserver {
 
 interface OnTransformObserver {
     fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF): Boolean
+    fun onTransformEnd(): Boolean {
+        return false
+    }
 }

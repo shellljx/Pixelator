@@ -44,7 +44,6 @@ class PixelatorFragment : Fragment(), IImageDelegate {
                 EffectService::class.java
             )
         )
-        mContainer.getRenderService()?.updateViewPort(200.dp())
     }
 
     override fun onCreateView(inflater: LayoutInflater, container: ViewGroup?, savedInstanceState: Bundle?): View? {

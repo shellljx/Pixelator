@@ -28,6 +28,8 @@ import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
+import com.google.android.material.bottomsheet.BottomSheetBehavior
+import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import org.json.JSONObject
 
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnSingleDownObserver, OnSingleUpObserver {
@@ -50,9 +52,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val effectItems = arrayListOf<EffectItem>()
     private var mPickPanelToken: PanelToken? = null
     private val mLockItems = arrayListOf(
-            PickItem(-1, context.getString(R.string.lock_portrait)),
-            PickItem(-1, context.getString(R.string.lock_background)),
-            PickItem(-1, context.getString(R.string.lock_off))
+        PickItem(-1, context.getString(R.string.lock_portrait)),
+        PickItem(-1, context.getString(R.string.lock_background)),
+        PickItem(-1, context.getString(R.string.lock_off))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -66,6 +68,25 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     }
 
     override fun onViewCreated(view: View?) {
+        view ?: return
+        val bottomSheet = view.findViewById<View>(R.id.container)
+        val behavior = BottomSheetBehavior.from(bottomSheet)
+        behavior.addBottomSheetCallback(object : BottomSheetCallback() {
+            override fun onStateChanged(bottomSheet: View, newState: Int) {
+            }
+
+            override fun onSlide(bottomSheet: View, slideOffset: Float) {
+                val initBounds = mCoreService?.getInitBounds() ?: return
+                val contentBounds = mCoreService?.getContentBounds() ?: return
+                if (initBounds.contains(contentBounds)) {
+                    //如果 content bounds 比 initBounds 小, 不能被面板遮挡
+                    val offset = 200.dp() + 150.dp() * slideOffset
+                    mCoreService?.updateViewPort(offset.toInt())
+                }
+            }
+        })
+
+        mCoreService?.updateViewPort(200.dp())
         mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView?.adapter = mEffectsAdapter
         mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 10.dp(), true))
@@ -73,7 +94,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
         val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
-                ?: 0f
+            ?: 0f
         mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
@@ -211,5 +232,4 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     override fun onSeekComplete() {
         mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_HIDE_FINGER_POINT)
     }
-
 }

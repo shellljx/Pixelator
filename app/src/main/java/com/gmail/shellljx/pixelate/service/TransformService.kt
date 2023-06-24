@@ -15,7 +15,7 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mMiniToken: PanelToken? = null
-    private val innerBounds = RectF(0f, 50f, 1080f, 1500f)
+    private val innerBounds = RectF()
 
     override fun onStart() {
         mContainer.getGestureService()?.addSingleDownObserver(this)
@@ -42,7 +42,6 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
     override fun onSingleUp(event: MotionEvent): Boolean {
         mContainer.getControlService()?.show()
         mMiniToken?.let { mContainer.getPanelService()?.hidePanel(it) }
-        tryToKeepInInnerBounds()
         return false
     }
 
@@ -81,35 +80,46 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
         animator.start()
     }
 
+    /**
+     * innerBounds 在 initBounds 居中且大小是一半
+     * 如果 content bounds 比 initBounds 大，则最大偏移距离不能超过 innerBounds
+     * 如果 content bounds 大小 initBounds 和 innerBounds 之间，则居中显示
+     * 如果 content bounds 小于 innerBounds 则放大到 innerBounds 剧中
+     */
     private fun generateToRect(): RectF? {
         val bounds = mCoreService?.getContentBounds() ?: return null
         val initBounds = mCoreService?.getInitBounds() ?: return null
+        //innerBounds 是 initBounds 长宽的一半，且居中
+        innerBounds.set(initBounds)
+        innerBounds.inset(innerBounds.width() / 4f, innerBounds.height() / 4f)
         val to = RectF(bounds)
-        if (to.width() / initBounds.width() < 0.5) {
-            to.set(0f, 0f, initBounds.width() * 0.5f, initBounds.height() * 0.5f)
+        //如果 to 比 innerBounds 小，则放大到 innerBounds
+        if (to.height() < innerBounds.height()) {
+            to.set(innerBounds)
+            return to
+        }
+        //如果 to 比 initBounds 小，则居中
+        if (to.height() < initBounds.height()) {
+            val left = initBounds.left + (initBounds.width() - to.width()) / 2
+            val top = initBounds.top + (initBounds.height() - to.height()) / 2
+            to.set(left, top, left + to.width(), top + to.height())
+            return to
         }
         var offsetX = 0f
         var offsetY = 0f
-        if (to.height() >= innerBounds.height()) {
-            if (to.bottom < innerBounds.bottom) {
-                offsetY = innerBounds.bottom - to.bottom
-            } else if (to.top > innerBounds.top) {
-                offsetY = innerBounds.top - to.top
-            }
-        } else {
-            val newTop = (innerBounds.height() - to.height()) / 2f
-            offsetY = newTop - to.top
-        }
 
-        if (to.width() >= innerBounds.width()) {
+        //如果 to 比 initBounds 大，则限定移动边界不能超过 innerBounds
+        if (to.height() >= initBounds.height()) {
             if (to.right < innerBounds.right) {
                 offsetX = innerBounds.right - to.right
             } else if (to.left > innerBounds.left) {
                 offsetX = innerBounds.left - to.left
             }
-        } else {
-            val newLeft = (innerBounds.width() - to.width()) / 2f
-            offsetX = newLeft - to.left
+            if (to.bottom < innerBounds.bottom) {
+                offsetY = innerBounds.bottom - to.bottom
+            } else if (to.top > innerBounds.top) {
+                offsetY = innerBounds.top - to.top
+            }
         }
 
         if (offsetX != 0f || offsetY != 0f) {
@@ -126,7 +136,7 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
         val y2 = point2.y
 
         val scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
-            ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
+                ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
         ).toFloat()
 
         val transformMatrix = mCoreService?.getTransformMatrix() ?: return false
@@ -143,7 +153,12 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
 
         transformMatrix.postTranslate(dx, dy)
         mCoreService?.setTransformMatrix(transformMatrix)
-        return true
+        return false
+    }
+
+    override fun onTransformEnd(): Boolean {
+        tryToKeepInInnerBounds()
+        return false
     }
 }
 

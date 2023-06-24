@@ -58,6 +58,7 @@ class ImageEngine : public thread::HandlerCallback {
   void setDeeplabMaskMode(int mode);
   void setEffect(const char *config);
   void updateEffect(const char *config);
+  void updateViewPort(int offset);
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();

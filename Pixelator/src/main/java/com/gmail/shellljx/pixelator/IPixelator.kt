@@ -33,6 +33,8 @@ interface IPixelator {
 
     fun setMatrix(matrix: FloatArray)
 
+    fun updateViewPort(offset: Int)
+
     fun refreshFrame()
 
     fun undo()

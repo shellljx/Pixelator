@@ -272,7 +272,9 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       paintRender_->setDeeplabMaskMode(mode);
       if (mode != 0) {
         deeplabMaskRender_->setMaskMode(mode);
-        deeplabMaskRender_->draw(paintRender_->getMaskTexture(), paintRender_->getMaskWidth(), paintRender_->getMaskHeight());
+        deeplabMaskRender_->draw(paintRender_->getMaskTexture(),
+                                 paintRender_->getMaskWidth(),
+                                 paintRender_->getMaskHeight());
         deeplabMaskRender_->download();
       }
       break;
@@ -317,6 +319,17 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       refreshTransform();
       refreshFrameInternal();
       delete[] buffer;
+      break;
+    }
+    case PixelateMessage::kUpdateViewPort: {
+      auto offset = msg->arg1;
+      screenRender_->updateViewPort(offset);
+      screenRender_->initMatrix(surfaceWidth_,
+                                surfaceHeight_,
+                                sourceRender_->getTextureWidth(),
+                                sourceRender_->getTextureHeight());
+      refreshTransform();
+      refreshFrameInternal();
       break;
     }
     case PixelateMessage::kRefreshFrame: {
@@ -451,7 +464,10 @@ void ImageEngine::setEffectInternal(char *effect) {
   Json::Value root;
   const std::unique_ptr<Json::CharReader> reader(builder.newCharReader());
   std::string effect_json(effect);
-  if (!reader->parse(effect_json.c_str(), effect_json.c_str() + effect_json.length(), &root, &err)) {
+  if (!reader->parse(effect_json.c_str(),
+                     effect_json.c_str() + effect_json.length(),
+                     &root,
+                     &err)) {
     LOGE("%s parse json error $s", effect_json.c_str(), err.c_str());
     return;
   }
@@ -503,7 +519,7 @@ int ImageEngine::refreshFrameInternal() {
                         sourceRender_->getTextureHeight(),
                         surfaceWidth_,
                         surfaceHeight_);
-  } else{
+  } else {
     screenRender_->draw(sourceRender_->getTexture(),
                         sourceRender_->getTextureWidth(),
                         sourceRender_->getTextureHeight(),
@@ -514,7 +530,10 @@ int ImageEngine::refreshFrameInternal() {
   eglCore_->swapBuffers(renderSurface_);
   eglCore_->makeCurrent(EGL_NO_SURFACE);
   if (miniScreenRender_ != nullptr) {
-    miniScreenRender_->draw(blendRender_->getTexture(), eglCore_.get(), blendRender_->getWidth(), blendRender_->getHeight());
+    miniScreenRender_->draw(blendRender_->getTexture(),
+                            eglCore_.get(),
+                            blendRender_->getWidth(),
+                            blendRender_->getHeight());
   }
   return 0;
 }
@@ -522,8 +541,12 @@ int ImageEngine::refreshFrameInternal() {
 void ImageEngine::refreshTransform() {
   paintRender_->setMatrix(screenRender_->getModelMatrix());
   paintRender_->translate(screenRender_->getModelMatrix()[0][0]);
+  if (sourceRender_->getTextureHeight() <= 0) {
+    return;
+  }
   glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
-  glm::vec4 rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
+  glm::vec4
+      rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
   lt = screenRender_->getModelMatrix() * lt;
   rb = screenRender_->getModelMatrix() * rb;
   if (miniScreenRender_ != nullptr) {
@@ -622,7 +645,8 @@ void ImageEngine::stopTouch() {
   if (touchData_.empty())return;
   auto *data = new float[touchData_.size()];
   memcpy(data, touchData_.data(), touchData_.size() * sizeof(float));
-  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(), paintRender_->getPaintSize(), paintRender_->getPaintType()});
+  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getModelMatrix(),
+                        paintRender_->getPaintSize(), paintRender_->getPaintType()});
   touchData_.clear();
 
   for (auto &element : redoStack_) {
@@ -650,5 +674,11 @@ void ImageEngine::setDeeplabMaskMode(int mode) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::ksetDeeplabMaskMode;
   msg->arg1 = mode;
+  handler_->sendMessage(msg);
+}
+void ImageEngine::updateViewPort(int offset) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kUpdateViewPort;
+  msg->arg1 = offset;
   handler_->sendMessage(msg);
 }

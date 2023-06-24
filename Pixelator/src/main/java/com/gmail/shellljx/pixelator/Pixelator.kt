@@ -116,6 +116,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun updateViewPort(offset: Int) {
+        if (mId != 0L) {
+            nativeUpdateViewPort(mId, offset)
+        }
+    }
+
     override fun refreshFrame() {
         if (mId != 0L) {
             refreshFrame(mId)
@@ -210,6 +216,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
     private external fun nativeStopTouch(id: Long)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
+    private external fun nativeUpdateViewPort(id: Long, offset: Int)
     private external fun refreshFrame(id: Long)
     private external fun nativeUndo(id: Long)
     private external fun nativeRedo(id: Long)

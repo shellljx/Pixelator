@@ -41,6 +41,10 @@ class ScreenRender {
     return fitHeight_;
   }
 
+  int getOffset() {
+    return offset_;
+  }
+
   int getX() {
     return x_;
   }
@@ -49,13 +53,28 @@ class ScreenRender {
     return y_;
   }
 
-  void translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY);
+  void translate(float scale,
+                 float pivotX,
+                 float pivotY,
+                 float angle,
+                 float translateX,
+                 float translateY);
   void setTransformMatrix(glm::mat4 matrix);
   float getScale() {
     return scale_;
   }
+  void updateViewPort(int offset);
  private:
-  void cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *fitWidth, int *fitHeight);
+  void cropVertexCoordinate(int frameWidth,
+                            int frameHeight,
+                            int screenWidth,
+                            int screenHeight,
+                            int *fitWidth,
+                            int *fitHeight);
+  void updateModelMatrix(int screenWidth,
+                         int screenHeight,
+                         int textureWidth,
+                         int textureHeight);
  private:
   GLuint program_ = 0;
   float scale_ = 1.f;
@@ -64,6 +83,7 @@ class ScreenRender {
   float angle_ = 0.f;
   float translateX_ = 0.f;
   float translateY_ = 0.f;
+  int offset_ = 0;
   int fitWidth_ = 0;
   int fitHeight_ = 0;
   int x_ = 0;

@@ -25,7 +25,10 @@ ScreenRender::~ScreenRender() {
   }
 }
 
-void ScreenRender::initMatrix(int screenWidth, int screenHeight, int textureWidth, int textureHeight) {
+void ScreenRender::initMatrix(int screenWidth,
+                              int screenHeight,
+                              int textureWidth,
+                              int textureHeight) {
   //这个投影矩阵反转是因为双指手势和view坐标系一致
   projectionMatrix_ = glm::ortho(0.f, static_cast<float>(screenWidth),
                                  static_cast<float>(screenHeight), 0.f, 1.f, 100.f);
@@ -33,25 +36,14 @@ void ScreenRender::initMatrix(int screenWidth, int screenHeight, int textureWidt
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   viewMatrix_ = glm::lookAt(position, direction, up);
-
-  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-  float frameRatio = static_cast<float>(textureWidth) / static_cast<float>(textureHeight);
-  float x = 0.f;
-  float y = 0.f;
-  if (frameRatio > screenRatio) {
-    //frame比屏幕宽
-    scale_ = screenWidth * 1.f / textureWidth;
-    y = (screenHeight - textureHeight * scale_) / 2.f;
-  } else {
-    //frame比屏幕窄
-    scale_ = screenHeight * 1.f / textureHeight;
-    x = (screenWidth - textureWidth * scale_) / 2.f;
-  }
-  modelMatrix_ = glm::translate(modelMatrix_, glm::vec3(x, y, 0.f));
-  modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(scale_, scale_, 1.f));
+  updateModelMatrix(screenWidth, screenHeight, textureWidth, textureHeight);
 }
 
-GLuint ScreenRender::draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight) {
+GLuint ScreenRender::draw(GLuint textureId,
+                          int width,
+                          int height,
+                          int screenWidth,
+                          int screenHeight) {
   if (frameBuffer_ == nullptr) {
     return -1;
   }
@@ -84,7 +76,11 @@ GLuint ScreenRender::draw(GLuint textureId, int width, int height, int screenWid
   return frameBuffer_->getTexture();
 }
 
-void ScreenRender::drawTexture(GLuint textureId, int width, int height, int screenWidth, int screenHeight) {
+void ScreenRender::drawTexture(GLuint textureId,
+                               int width,
+                               int height,
+                               int screenWidth,
+                               int screenHeight) {
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -112,7 +108,12 @@ GLuint ScreenRender::getTexture() {
   return frameBuffer_->getTexture();
 }
 
-void ScreenRender::translate(float scale, float pivotX, float pivotY, float angle, float translateX, float translateY) {
+void ScreenRender::translate(float scale,
+                             float pivotX,
+                             float pivotY,
+                             float angle,
+                             float translateX,
+                             float translateY) {
   scale_ = scale;
   pivotX_ = pivotX;
   pivotY_ = pivotY;
@@ -125,7 +126,12 @@ void ScreenRender::setTransformMatrix(glm::mat4 matrix) {
   transformMatrix_ = matrix;
 }
 
-void ScreenRender::cropVertexCoordinate(int frameWidth, int frameHeight, int screenWidth, int screenHeight, int *fitWidth, int *fitHeight) {
+void ScreenRender::cropVertexCoordinate(int frameWidth,
+                                        int frameHeight,
+                                        int screenWidth,
+                                        int screenHeight,
+                                        int *fitWidth,
+                                        int *fitHeight) {
   float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
   float frameRatio = static_cast<float>(frameWidth) / static_cast<float>(frameHeight);
   float widthScale = 1.f;
@@ -152,4 +158,31 @@ void ScreenRender::cropVertexCoordinate(int frameWidth, int frameHeight, int scr
     vertexCoordinate_[6] = *fitWidth + x_;
     vertexCoordinate_[7] = y_;
   }
+}
+
+void ScreenRender::updateModelMatrix(int screenWidth,
+                                     int screenHeight,
+                                     int textureWidth,
+                                     int textureHeight) {
+
+  auto viewPortHeight = screenHeight - offset_;
+  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(viewPortHeight);
+  float frameRatio = static_cast<float>(textureWidth) / static_cast<float>(textureHeight);
+  float x = 0.f;
+  float y = 0.f;
+  if (frameRatio > screenRatio) {
+    //frame比屏幕宽
+    scale_ = screenWidth * 1.f / textureWidth;
+    y = (viewPortHeight - textureHeight * scale_) / 2.f;
+  } else {
+    //frame比屏幕窄
+    scale_ = viewPortHeight * 1.f / textureHeight;
+    x = (screenWidth - textureWidth * scale_) / 2.f;
+  }
+  modelMatrix_ = glm::mat4(1);
+  modelMatrix_ = glm::translate(modelMatrix_, glm::vec3(x, y, 0.f));
+  modelMatrix_ = glm::scale(modelMatrix_, glm::vec3(scale_, scale_, 1.f));
+}
+void ScreenRender::updateViewPort(int offset) {
+  offset_ = offset;
 }

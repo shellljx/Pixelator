@@ -51,6 +51,8 @@ void Android_Jni_nativeStopTouch(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray);
 
+void Android_Jni_update_viewport(JNIEnv *env, jobject object, jlong id, jint offset);
+
 void Andriod_Jni_refresh_frame(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_undo(JNIEnv *env, jobject object, jlong id);
@@ -81,6 +83,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"nativeUndo", "(J)V", (void **) Android_Jni_undo},
     {"nativeRedo", "(J)V", (void **) Android_Jni_redo},
     {"nativeSetMatrix", "(J[F)V", (void **) Android_Jni_set_matrix},
+    {"nativeUpdateViewPort", "(JI)V", (void **) Android_Jni_update_viewport},
     {"nativeSave", "(J)V", (void **) Android_Jni_save}
 };
 

@@ -33,8 +33,8 @@ class FrameBuffer {
  private:
   GLuint frameBufferId_ = 0;
   GLuint frameTextureId_ = 0;
-  int width_;
-  int height_;
+  int width_ = 0;
+  int height_ = 0;
 };
 
 #endif //CAMERARECORD_FRAMEBUFFER_H
