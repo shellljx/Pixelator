@@ -38,7 +38,6 @@ add_library( # Sets the name of the library.
         render/effect/ImageEffect.cpp
         render/effect/PixelationRender.cpp
         render/BlendRender.cpp
-        render/DeeplabMaskRender.cpp
         render/ImageFrameBuffer.cpp
         render/MiniScreenRender.cpp
         render/PaintRender.cpp

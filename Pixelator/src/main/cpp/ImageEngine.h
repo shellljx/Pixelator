@@ -27,7 +27,6 @@
 #include "render/ScreenRender.h"
 #include "render/BlendRender.h"
 #include "render/MiniScreenRender.h"
-#include "render/DeeplabMaskRender.h"
 #include "render/effect/BaseEffectRender.h"
 
 using namespace glm;
@@ -98,7 +97,6 @@ class ImageEngine : public thread::HandlerCallback {
   ScreenRender *screenRender_;
   BlendRender *blendRender_;
   MiniScreenRender *miniScreenRender_;
-  DeeplabMaskRender *deeplabMaskRender_;
   std::vector<LineData> undoStack_;
   std::vector<LineData> redoStack_;
   std::vector<float> touchData_;

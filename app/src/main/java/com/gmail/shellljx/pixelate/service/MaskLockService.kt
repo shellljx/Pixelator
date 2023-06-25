@@ -9,11 +9,13 @@ import androidx.core.graphics.toRect
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
 import com.gmail.shellljx.pixelate.BasicAuthInterceptor
+import com.gmail.shellljx.pixelate.panel.ProgressPanel
 import com.gmail.shellljx.pixelate.view.DeeplabMaskView
 import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
+import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
 import okhttp3.MediaType.Companion.toMediaTypeOrNull
 import okhttp3.MultipartBody
@@ -30,17 +32,22 @@ import java.lang.ref.WeakReference
  * @Date: 2023/6/7
  * @Description:
  */
-class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObserver, OnDeeplabMaskObserver, OnContentBoundsObserver, OnSingleUpObserver, OnSingleDownObserver {
+class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserver, OnContentBoundsObserver, OnSingleUpObserver, OnSingleDownObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var worker: HandlerThread? = null // 工作线程（加载和运行模型）
     private var receiver: ReceiverHander? = null // 接收来自工作线程的消息
     private var sender: Handler? = null // 发送消息给工作线程
     private var mDeeplabMaskView: DeeplabMaskView? = null
+    private var mProgressToken: PanelToken? = null
+    @MaskMode
+    private var mMaskMode = MaskMode.NONE
+
+    @Volatile
+    private var mAbort = false
 
     override fun onStart() {
         mContainer.getLifeCycleService()?.addObserver(this)
-        mCoreService?.addDeeplabMaskObserver(this)
         mCoreService?.addContentBoundsObserver(this)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
@@ -54,6 +61,32 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
 
     override fun onStop() {
         mContainer.getLifeCycleService()?.removeObserver(this)
+    }
+
+    override fun setMaskMode(mode: Int) {
+        val path = mCoreService?.getImagePath() ?: return
+        mProgressToken = mContainer.getPanelService()?.showPanel(ProgressPanel::class.java)
+        mMaskMode = mode
+        if (receiver == null) {
+            receiver = ReceiverHander(WeakReference(this))
+        }
+        if (worker == null) {
+            worker = HandlerThread("Thread_Predictor_Worker")
+            worker?.start()
+        }
+        if (sender == null) {
+            worker?.let { sender = SenderHandler(WeakReference(this), WeakReference(mContainer.getContext()), it.looper) }
+            sender?.sendEmptyMessage(SenderHandler.REQUEST_INIT)
+        }
+        val msg = Message.obtain()
+        msg.what = SenderHandler.REQUEST_DETECT
+        msg.obj = path
+        sender?.sendMessage(msg)
+        mDeeplabMaskView?.setMaskMode(mMaskMode)
+    }
+
+    override fun stop() {
+        mAbort = true
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
@@ -74,8 +107,16 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
     }
 
     private fun setMaskInternal(bitmap: Bitmap) {
+        if (isAbort()) {
+            return
+        }
         mCoreService?.setDeeplabMask(bitmap)
-        mCoreService?.setDeeplabMode(MaskMode.PERSON)
+        mCoreService?.setDeeplabMode(mMaskMode)
+        val bounds = mCoreService?.getContentBounds() ?: return
+        mDeeplabMaskView?.setMask(bounds.toRect(), bitmap)
+        mProgressToken?.let {
+            mContainer.getPanelService()?.hidePanel(it)
+        }
     }
 
     private fun dispatchRunModeSuccess(bitmap: Bitmap) {
@@ -83,11 +124,6 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
         msg.what = ReceiverHander.RUN_MODEL_SUCCESSED
         msg.obj = bitmap
         receiver?.sendMessage(msg)
-    }
-
-    override fun onDeeplabMaskChanged(mask: Bitmap) {
-        val bounds = mCoreService?.getContentBounds() ?: return
-        mDeeplabMaskView?.setMask(bounds.toRect(), mask)
     }
 
     override fun onContentBoundsChanged(bound: Rect) {
@@ -106,24 +142,10 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
     }
 
     override fun onImageLoaded(path: String) {
-        if (receiver == null) {
-            receiver = ReceiverHander(WeakReference(this))
-        }
-        if (worker == null) {
-            worker = HandlerThread("Thread_Predictor_Worker")
-            worker?.start()
-        }
-        if (sender == null) {
-            worker?.let { sender = SenderHandler(WeakReference(this), WeakReference(mContainer.getContext()), it.looper) }
-            sender?.sendEmptyMessage(SenderHandler.REQUEST_INIT)
-        }
-        val msg = Message.obtain()
-        msg.what = SenderHandler.REQUEST_DETECT
-        msg.obj = path
-        sender?.sendMessage(msg)
+
     }
 
-    private class ReceiverHander(private val service: WeakReference<Deeplabv3Service>) : Handler(Looper.getMainLooper()) {
+    private class ReceiverHander(private val service: WeakReference<MaskLockService>) : Handler(Looper.getMainLooper()) {
         companion object {
             const val RUN_MODEL_SUCCESSED = 0
         }
@@ -138,7 +160,7 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
     }
 
     private class SenderHandler(
-        private val service: WeakReference<Deeplabv3Service>,
+        private val service: WeakReference<MaskLockService>,
         private val context: WeakReference<Context>, worker: Looper
     ) : Handler(worker) {
         private var client: OkHttpClient? = null
@@ -164,6 +186,9 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
 
         private fun removeBackground(path: String?): Bitmap? {
             path ?: return null
+            if (service.get()?.isAbort() == true) {
+                return null
+            }
             val smallpath = getminiPath(path) ?: return null
             val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
                 .addFormDataPart("image", "origin_image.png", RequestBody.create("image/png".toMediaTypeOrNull(), File(smallpath)))
@@ -180,6 +205,9 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
             val buff = response?.body?.bytes()
             out.write(buff)
             out.close()
+            if (service.get()?.isAbort() == true) {
+                return null
+            }
             val bitmap = BitmapFactory.decodeFile(
                 (context.get()?.filesDir?.absolutePath
                     ?: "") + "/" + "removed.png"
@@ -207,7 +235,13 @@ class Deeplabv3Service : IDeeplabv3Service, LifecycleObserver, OnImageLoadedObse
             return small.absolutePath
         }
     }
+
+    private fun isAbort(): Boolean {
+        return mAbort
+    }
 }
 
-interface IDeeplabv3Service : IService {
+interface IMaskLockService : IService {
+    fun stop()
+    fun setMaskMode(mode: Int)
 }

@@ -24,12 +24,12 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private val mContentBounds = RectF() //图片变换后最新的bounds
     private val mTransformMatrix = Matrix() //变换矩阵
     private var mPaintSize = 0
+    private var mImagePath: String? = null
 
     @PaintType
     private var mPaintType = PAINT
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
-    private val mDeeplabMaskObservers = arrayListOf<OnDeeplabMaskObserver>()
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
     private val mImageLoadedObservers = arrayListOf<OnImageLoadedObserver>()
 
@@ -55,10 +55,6 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
 
         override fun onFrameSaved(bitmap: Bitmap) {
-        }
-
-        override fun onDeeplabMaskCreated(bitmap: Bitmap) {
-            mDeeplabMaskObservers.forEach { it.onDeeplabMaskChanged(bitmap) }
         }
 
         override fun onRenderError(code: Int, msg: String) {
@@ -128,6 +124,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         runTaskOrPendding {
             mImageSdk.addImagePath(path, getRotate(path))
             mImageSdk.refreshFrame()
+            mImagePath = path
             mImageLoadedObservers.forEach { it.onImageLoaded(path) }
         }
     }
@@ -157,10 +154,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-                v[0], v[3], 0f, 0f,
-                v[1], v[4], 0f, 0f,
-                0f, 0f, 1f, 0f,
-                v[2], v[5], 0f, 1f
+            v[0], v[3], 0f, 0f,
+            v[1], v[4], 0f, 0f,
+            0f, 0f, 1f, 0f,
+            v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -185,6 +182,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return mPaintSize
     }
 
+    override fun getImagePath(): String? {
+        return mImagePath
+    }
+
     override fun save() {
         mImageSdk.save()
     }
@@ -192,12 +193,6 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     override fun addPaintSizeObserver(observer: PaintSizeObserver) {
         if (!mPaintSizeObservers.contains(observer)) {
             mPaintSizeObservers.add(observer)
-        }
-    }
-
-    override fun addDeeplabMaskObserver(observer: OnDeeplabMaskObserver) {
-        if (!mDeeplabMaskObservers.contains(observer)) {
-            mDeeplabMaskObservers.add(observer)
         }
     }
 
@@ -217,8 +212,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_NORMAL
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -273,19 +268,15 @@ interface IPixelatorCoreService : IService {
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
+    fun getImagePath(): String?
     fun save()
     fun addPaintSizeObserver(observer: PaintSizeObserver)
-    fun addDeeplabMaskObserver(observer: OnDeeplabMaskObserver)
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)
     fun addImageLoadedObserver(observer: OnImageLoadedObserver)
 }
 
 interface PaintSizeObserver {
     fun onPaintSizeChanged(size: Int)
-}
-
-interface OnDeeplabMaskObserver {
-    fun onDeeplabMaskChanged(mask: Bitmap)
 }
 
 interface OnContentBoundsObserver {

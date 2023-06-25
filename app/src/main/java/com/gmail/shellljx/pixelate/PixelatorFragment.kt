@@ -10,6 +10,7 @@ import android.view.*
 import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.panel.ProgressPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
@@ -40,7 +41,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
             listOf(
                 PixelatorCoreService::class.java,
                 TransformService::class.java,
-                Deeplabv3Service::class.java,
+                MaskLockService::class.java,
                 EffectService::class.java
             )
         )

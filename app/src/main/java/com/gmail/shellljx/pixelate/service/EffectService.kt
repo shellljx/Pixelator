@@ -21,6 +21,9 @@ class EffectService : IEffectService {
         effectList.add(EffectItem(8, EffectType.TypeImage, "/sdcard/PixelatorResources/8.png", "/sdcard/PixelatorResources/8.png"))
         effectList.add(EffectItem(9, EffectType.TypeImage, "/sdcard/PixelatorResources/9.png", "/sdcard/PixelatorResources/9.png"))
         effectList.add(EffectItem(10, EffectType.TypeImage, "/sdcard/PixelatorResources/10.png", "/sdcard/PixelatorResources/10.png"))
+        effectList.add(EffectItem(11, EffectType.TypeImage, "/sdcard/PixelatorResources/11.jpg", "/sdcard/PixelatorResources/11.jpg"))
+        effectList.add(EffectItem(12, EffectType.TypeImage, "/sdcard/PixelatorResources/12.png", "/sdcard/PixelatorResources/12.png"))
+        effectList.add(EffectItem(12, EffectType.TypeImage, "/sdcard/PixelatorResources/13.png", "/sdcard/PixelatorResources/13.png"))
     }
 
     override fun bindVEContainer(container: IContainer) {

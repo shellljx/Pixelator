@@ -146,11 +146,13 @@ GLuint PaintRender::draw(GLuint textureId, int width, int height) {
   glBindTexture(GL_TEXTURE_2D, brushTexture_);
   auto brushTextureLoc = glGetUniformLocation(program_, "brushTexture");
   glUniform1i(brushTextureLoc, 1);
-  //绑定deeplab mask 纹理到纹理单元2
-  glActiveTexture(GL_TEXTURE2);
-  glBindTexture(GL_TEXTURE_2D, maskTexture_);
-  auto maskTextureLoc = glGetUniformLocation(program_, "deeplabMask");
-  glUniform1i(maskTextureLoc, 2);
+  if (maskTexture_ > 0) {
+    //绑定deeplab mask 纹理到纹理单元2
+    glActiveTexture(GL_TEXTURE2);
+    glBindTexture(GL_TEXTURE_2D, maskTexture_);
+    auto maskTextureLoc = glGetUniformLocation(program_, "deeplabMask");
+    glUniform1i(maskTextureLoc, 2);
+  }
   //设置mask mode
   auto maskModeLocation = glGetUniformLocation(program_, "deeplabMode");
   glUniform1i(maskModeLocation, maskMode_);

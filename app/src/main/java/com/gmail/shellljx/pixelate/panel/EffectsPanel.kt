@@ -39,6 +39,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
+    private var mMaskService:IMaskLockService? = null
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
@@ -61,6 +62,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer = container
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
         mEffectService = mContainer.getServiceManager().getService(EffectService::class.java)
+        mMaskService = mContainer.getServiceManager().getService(MaskLockService::class.java)
     }
 
     override fun getLayoutId(): Int {
@@ -111,7 +113,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                         1 -> MaskMode.BACKGROUND
                         else -> MaskMode.NONE
                     }
-                    mCoreService?.setDeeplabMode(mode)
+                    mMaskService?.setMaskMode(mode)
                 })
             }
         }

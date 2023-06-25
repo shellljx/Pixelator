@@ -183,12 +183,6 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
-    private fun onDeeplabMaskCreated(bitmap: Bitmap) {
-        mainHandler.post {
-            mRenderListener?.onDeeplabMaskCreated(bitmap)
-        }
-    }
-
     private fun onRenderError(code: Int, msg: String) {
         mainHandler.post {
             mRenderListener?.onRenderError(code, msg)
