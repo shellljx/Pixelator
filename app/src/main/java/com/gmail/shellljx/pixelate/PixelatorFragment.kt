@@ -114,6 +114,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
         activity?.startActivityForResult(intent, OPEN_GALLERY_REQUEST_CODE)
     }
+
 }
 
 interface IImageDelegate : AbsDelegate {

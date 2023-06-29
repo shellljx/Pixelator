@@ -39,7 +39,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
-    private var mMaskService:IMaskLockService? = null
+    private var mMaskService: IMaskLockService? = null
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
@@ -104,8 +104,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mPaintView?.setOnClickListener {
         }
         mLockView?.setOnClickListener {
+            val maskMode = mMaskService?.getMaskMode() ?: return@setOnClickListener
             mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
-                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mLockItems, 1) { position ->
+                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mLockItems, getMaskModePosition(maskMode)) { position ->
                     val isOn = position != 2
                     mLockView?.isSelected = isOn
                     val mode = when (position) {
@@ -145,6 +146,14 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val startPosition = effectItems.size
         effectItems.addAll(effectList)
         mEffectsAdapter.notifyItemRangeInserted(startPosition, effectList.size)
+    }
+
+    private fun getMaskModePosition(@MaskMode maskMode: Int): Int {
+        return when (maskMode) {
+            MaskMode.PERSON -> 0
+            MaskMode.BACKGROUND -> 1
+            else -> 2
+        }
     }
 
     inner class EffectAdapter : Adapter<ViewHolder>() {

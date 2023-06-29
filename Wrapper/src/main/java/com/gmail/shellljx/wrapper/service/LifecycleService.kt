@@ -1,13 +1,22 @@
 package com.gmail.shellljx.wrapper.service
 
-import androidx.lifecycle.Lifecycle
-import androidx.lifecycle.LifecycleObserver
-import androidx.lifecycle.LifecycleOwner
-import androidx.lifecycle.LifecycleRegistry
+import android.util.Log
+import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import kotlinx.coroutines.*
+import java.util.logging.Level
+import java.util.logging.Logger
+import kotlin.coroutines.CoroutineContext
 
-class LifecycleService : ILifecycleService, LifecycleOwner {
+class LifecycleService : ILifecycleService, LifecycleOwner, CoroutineExceptionHandler {
+    override val key: CoroutineContext.Key<*>
+        get() = CoroutineExceptionHandler
+
+    override fun handleException(context: CoroutineContext, exception: Throwable) {
+        Logger.getLogger("LifecycleService").log(Level.WARNING, exception.message)
+    }
+
     private val mLifecycleRegistry = LifecycleRegistry(this)
 
     override fun onStart() {
@@ -18,7 +27,7 @@ class LifecycleService : ILifecycleService, LifecycleOwner {
         mLifecycleRegistry.handleLifecycleEvent(event)
     }
 
-    override fun bindVEContainer(veContainer: IContainer) {
+    override fun bindVEContainer(container: IContainer) {
     }
 
     override fun onStop() {
@@ -35,10 +44,20 @@ class LifecycleService : ILifecycleService, LifecycleOwner {
     override fun getLifecycle(): Lifecycle {
         return mLifecycleRegistry
     }
+
+    override fun launchSafely(context: CoroutineContext, start: CoroutineStart, block: suspend CoroutineScope.() -> Unit) {
+        lifecycle.coroutineScope.launch(context + this, start, block)
+    }
 }
 
 interface ILifecycleService : IService {
     fun handleLifecycleEvent(event: Lifecycle.Event)
     fun addObserver(listener: LifecycleObserver)
     fun removeObserver(listener: LifecycleObserver)
+
+    fun launchSafely(
+        context: CoroutineContext = Dispatchers.Main.immediate,
+        start: CoroutineStart = CoroutineStart.DEFAULT,
+        block: suspend CoroutineScope.() -> Unit
+    )
 }
