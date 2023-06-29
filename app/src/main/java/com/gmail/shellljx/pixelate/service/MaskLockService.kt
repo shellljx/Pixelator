@@ -112,14 +112,17 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserv
         val path = mCoreService?.getImagePath() ?: return
         launch(mContainer) {
             mProgressToken = mContainer.getPanelService()?.showPanel(ProgressPanel::class.java)
-            val scaledBitmap = BitmapUtils.decodeBitmap(path, 4000)
-            val parentPath = mContainer.getContext().cacheDir.absolutePath + PATH_SMALL_SRC
-            val fileName = getFileName(parentPath)
-            val scaledPath = scaledBitmap.writeToPngFile(parentPath, fileName, 50) ?: return@launch
+            val fileName = getFileName(path)
             val removedBgPath = mContainer.getContext().cacheDir.absolutePath + PATH_REMOVED_BG + fileName + ".png"
-            requestRemoveBackground(scaledPath, removedBgPath)
+            if (!File(removedBgPath).exists()) {
+                //文件不存在
+                val scalePath = mContainer.getContext().cacheDir.absolutePath + PATH_SMALL_SRC + fileName + ".png"
+                val scaledBitmap = BitmapUtils.decodeBitmap(path, 4000)
+                scaledBitmap.writeToPngFile(scalePath, 50)
+                requestRemoveBackground(scalePath, removedBgPath)
+            }
             val maskBitmap = BitmapUtils.decodeBitmap(removedBgPath, 4000)
-            onMaskGenerateSuccess(maskBitmap)
+            setMaskBitmap(maskBitmap)
             mProgressToken?.let {
                 mContainer.getPanelService()?.hidePanel(it)
             }
@@ -170,15 +173,12 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserv
         return hashText
     }
 
-    private fun onMaskGenerateSuccess(bitmap: Bitmap) {
+    private fun setMaskBitmap(bitmap: Bitmap) {
         mCoreService?.setDeeplabMask(bitmap)
         mCoreService?.setDeeplabMode(mMaskMode)
         val bounds = mCoreService?.getContentBounds() ?: return
         mMaskRenderView?.setMask(bounds.toRect(), bitmap)
         mMaskRenderView?.setMaskMode(mMaskMode)
-        mProgressToken?.let {
-            mContainer.getPanelService()?.hidePanel(it)
-        }
     }
 
     override fun onContentBoundsChanged(bound: Rect) {

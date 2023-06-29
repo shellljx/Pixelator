@@ -27,6 +27,7 @@ class MaskRenderView @JvmOverloads constructor(
     private var mOverlayBitmap: Bitmap? = null
     private var mXfermode: PorterDuffXfermode? = null
     private var mHideAnimator: ValueAnimator? = null
+    private var mShowAnimator: ValueAnimator? = null
 
     init {
         mMaskPaint.alpha = 180
@@ -45,6 +46,12 @@ class MaskRenderView @JvmOverloads constructor(
             canvas.drawBitmap(it, mSrcBounds, mDstBounds, mMaskPaint)
         }
         mMaskPaint.xfermode = null
+    }
+
+    override fun onDetachedFromWindow() {
+        super.onDetachedFromWindow()
+        mHideAnimator?.cancel()
+        mShowAnimator?.cancel()
     }
 
     fun setMask(bounds: Rect, mask: Bitmap) {
@@ -72,7 +79,7 @@ class MaskRenderView @JvmOverloads constructor(
             }
         }
         invalidate()
-        startHideAnimator()
+        startShowAnimator()
     }
 
     fun setContentBounds(dstBounds: Rect) {
@@ -90,14 +97,37 @@ class MaskRenderView @JvmOverloads constructor(
         return mHideAnimator?.isRunning ?: false
     }
 
+    private fun startShowAnimator() {
+        isVisible = true
+        alpha = 0f
+        mShowAnimator?.cancel()
+        mShowAnimator?.removeAllUpdateListeners()
+        mShowAnimator?.removeAllListeners()
+        if (mShowAnimator == null) {
+            mShowAnimator = ValueAnimator.ofFloat(0f, 1f)
+            mShowAnimator?.duration = 400
+        }
+        mShowAnimator?.addUpdateListener {
+            val value = it.animatedValue as Float
+            alpha = value
+        }
+        mShowAnimator?.addListener(object : AnimatorListenerAdapter() {
+            override fun onAnimationEnd(animation: Animator) {
+                startHideAnimator()
+            }
+        })
+        isVisible = true
+        mShowAnimator?.start()
+    }
+
     private fun startHideAnimator() {
         mHideAnimator?.cancel()
         mHideAnimator?.removeAllUpdateListeners()
         mHideAnimator?.removeAllListeners()
         if (mHideAnimator == null) {
             mHideAnimator = ValueAnimator.ofFloat(1f, 0f)
-            mHideAnimator?.duration = 300
-            mHideAnimator?.startDelay = 500
+            mHideAnimator?.duration = 400
+            mHideAnimator?.startDelay = 400
         }
         mHideAnimator?.addUpdateListener {
             val value = it.animatedValue as Float
@@ -106,10 +136,8 @@ class MaskRenderView @JvmOverloads constructor(
         mHideAnimator?.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 isVisible = false
-                alpha = 1f
             }
         })
-        isVisible = true
         mHideAnimator?.start()
     }
 }

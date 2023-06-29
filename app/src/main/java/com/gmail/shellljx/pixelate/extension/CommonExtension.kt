@@ -20,23 +20,17 @@ fun launch(container: IContainer, block: suspend CoroutineScope.() -> Unit) {
     container.getLifeCycleService()?.launchSafely(block = block)
 }
 
-suspend fun Bitmap.writeToPngFile(parentPath: String, name: String, quality: Int): String? {
+suspend fun Bitmap.writeToPngFile(targetPath: String, quality: Int): Boolean {
     return withContext(Dispatchers.IO) {
-        val parent = File(parentPath)
-        if (!parent.exists()) {
-            parent.mkdirs()
+        val targetFile = File(targetPath)
+        if (targetFile.parentFile?.exists() != true) {
+            targetFile.parentFile?.mkdirs()
         }
-        val targetFile = File(parent, "$name.png")
         val stream = FileOutputStream(targetFile)
         try {
-            val success = compress(Bitmap.CompressFormat.JPEG, quality, stream)
-            if (success) {
-                targetFile.absolutePath
-            } else {
-                null
-            }
+            compress(Bitmap.CompressFormat.PNG, quality, stream)
         } catch (e: Exception) {
-            null
+            false
         } finally {
             stream.flush()
             stream.close()
