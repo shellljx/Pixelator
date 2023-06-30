@@ -45,4 +45,5 @@ interface IPixelator {
 
     fun setRenderListener(listener: IRenderListener)
     fun save()
+    fun destroy()
 }

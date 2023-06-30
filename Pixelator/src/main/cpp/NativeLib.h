@@ -63,6 +63,8 @@ void Android_Jni_redo(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_save(JNIEnv *env, jobject object, jlong id);
 
+void Android_Jni_destroy(JNIEnv *env, jobject object, jlong id);
+
 static JNINativeMethod pixelatorNativeMethods[] = {
     {"create", "()J", (void **) Android_Jni_Pixelator_create},
     {"onSurfaceCreate", "(JLandroid/view/Surface;)V", (void **) Android_Jni_surface_create},
@@ -87,7 +89,8 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"nativeRedo", "(J)V", (void **) Android_Jni_redo},
     {"nativeSetMatrix", "(J[F)V", (void **) Android_Jni_set_matrix},
     {"nativeUpdateViewPort", "(JI)V", (void **) Android_Jni_update_viewport},
-    {"nativeSave", "(J)V", (void **) Android_Jni_save}
+    {"nativeSave", "(J)V", (void **) Android_Jni_save},
+    {"nativeDestroy", "(J)V", (void **) Android_Jni_destroy}
 };
 
 #endif //PIXELATE_PIXELATOR_JNI_H

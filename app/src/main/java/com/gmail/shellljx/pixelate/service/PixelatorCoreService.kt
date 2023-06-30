@@ -79,6 +79,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     }
 
     override fun onStop() {
+        mImageSdk.destroy()
     }
 
     override fun setDisplaySuerface(surface: Surface) {

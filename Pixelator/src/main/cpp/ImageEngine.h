@@ -58,10 +58,14 @@ class ImageEngine : public thread::HandlerCallback {
   void setEffect(const char *config);
   void updateEffect(const char *config);
   void updateViewPort(int offset);
+  void onSurfaceDestroy();
+  void destroy();
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
+  void surfaceDestroyInternal();
+  void destroyEGLInternal();
   int insertImageInternal(const char *path, int rotate);
   void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);

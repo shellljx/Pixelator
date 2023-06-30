@@ -83,6 +83,14 @@ void ImageEngine::onSurfaceChanged(int width, int height) {
   LOGI("leave %s", __func__);
 }
 
+void ImageEngine::onSurfaceDestroy() {
+  LOGI("enter %s", __func__);
+  auto msg = new thread::Message();
+  msg->what = EGLMessage::kDestroyEGLSurface;
+  handler_->sendMessage(msg);
+  LOGI("leave %s", __func__);
+}
+
 void ImageEngine::onMiniSurfaceCreate(jobject surface) {
   JNIEnv *env = JNIEnvironment::Current();
   ANativeWindow *window = nullptr;
@@ -231,6 +239,14 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       int width = msg->arg1;
       int height = msg->arg2;
       surfaceChangedInternal(width, height);
+      break;
+    }
+    case EGLMessage::kDestroyEGLSurface: {
+      surfaceDestroyInternal();
+      break;
+    }
+    case EGLMessage::kDestroyEGL: {
+      destroyEGLInternal();
       break;
     }
     case PixelateMessage::kInsertImage: {
@@ -418,6 +434,28 @@ int ImageEngine::surfaceChangedInternal(int width, int height) {
   surfaceWidth_ = width;
   surfaceHeight_ = height;
   return 0;
+}
+
+void ImageEngine::surfaceDestroyInternal() {
+  if (nativeWindow_ != nullptr) {
+    ANativeWindow_release(nativeWindow_);
+    nativeWindow_ = nullptr;
+  }
+  if (eglCore_ != nullptr) {
+    if (renderSurface_ != EGL_NO_SURFACE) {
+      eglCore_->makeCurrent(renderSurface_);
+      eglCore_->releaseSurface(renderSurface_);
+      eglCore_->makeCurrent(EGL_NO_SURFACE);
+      renderSurface_ = EGL_NO_SURFACE;
+    }
+  }
+}
+
+void ImageEngine::destroyEGLInternal() {
+  if (eglCore_ != nullptr) {
+    eglCore_->release();
+    eglCore_ = nullptr;
+  }
 }
 
 int ImageEngine::insertImageInternal(const char *path, int rotate) {
@@ -686,4 +724,10 @@ void ImageEngine::updateViewPort(int offset) {
   msg->what = PixelateMessage::kUpdateViewPort;
   msg->arg1 = offset;
   handler_->sendMessage(msg);
+}
+void ImageEngine::destroy() {
+  auto msg = new thread::Message();
+  msg->what = EGLMessage::kDestroyEGL;
+  handler_->sendMessage(msg);
+  handlerThread_->quitSafely();
 }

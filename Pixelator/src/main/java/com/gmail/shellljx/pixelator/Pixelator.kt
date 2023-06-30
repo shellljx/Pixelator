@@ -152,6 +152,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun destroy() {
+        if (mId != 0L) {
+            nativeDestroy(mId)
+        }
+    }
+
     /**
      * jni callback method
      */
@@ -218,6 +224,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun nativeUndo(id: Long)
     private external fun nativeRedo(id: Long)
     private external fun nativeSave(id: Long)
+    private external fun nativeDestroy(id: Long)
 
     companion object {
         // Used to load the 'pixelator' library on application startup.

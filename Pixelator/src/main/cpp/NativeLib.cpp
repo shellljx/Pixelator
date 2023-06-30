@@ -22,7 +22,8 @@ void Android_Jni_surface_changed(JNIEnv *env, jobject object, jlong id, jint wid
 }
 
 void Android_Jni_surface_destroy(JNIEnv *env, jobject object, jlong id) {
-
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->onSurfaceDestroy();
 }
 
 void Android_Jni_mini_surface_create(JNIEnv *env, jobject object, jlong id, jobject jsurface) {
@@ -145,4 +146,10 @@ void Android_Jni_redo(JNIEnv *env, jobject object, jlong id) {
 void Android_Jni_save(JNIEnv *env, jobject object, jlong id) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
   pixelator->save();
+}
+
+void Android_Jni_destroy(JNIEnv *env, jobject object, jlong id) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->destroy();
+  delete engine;
 }
