@@ -3,6 +3,7 @@ package com.gmail.shellljx.pixelate.service
 import android.animation.*
 import android.graphics.*
 import android.view.MotionEvent
+import androidx.core.graphics.contains
 import com.gmail.shellljx.pixelate.RectfEvaluator
 import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
 import com.gmail.shellljx.wrapper.IContainer
@@ -16,6 +17,7 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
     private var mCoreService: IPixelatorCoreService? = null
     private var mMiniToken: PanelToken? = null
     private val innerBounds = RectF()
+    private var scaleAndTranslate = true
 
     override fun onStart() {
         mContainer.getGestureService()?.addSingleDownObserver(this)
@@ -129,6 +131,13 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
         return null
     }
 
+    override fun onTransformStart(point: PointF, point2: PointF): Boolean {
+        //如果双指中点不在画面内容里，
+        val center = PointF((point.x + point2.x) / 2f, (point.y + point2.y) / 2f)
+        scaleAndTranslate = mCoreService?.getContentBounds()?.contains(center) ?: false
+        return false
+    }
+
     override fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF): Boolean {
         val x1 = point.x
         val y1 = point.y
@@ -143,15 +152,23 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
         val matrixValues = FloatArray(9)
         transformMatrix.getValues(matrixValues)
         val scaleX = matrixValues[Matrix.MSCALE_X]
-        val scaleLimit = scaleX > 4f && scale > 1f
-        if (!scaleLimit) {
-            transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
+        val scaleLimit = scaleX > 6f && scale > 1f
+        if (scaleAndTranslate) {
+            if (!scaleLimit) {
+                transformMatrix.postScale(scale, scale, (x1 + x2) / 2f, (y1 + y2) / 2f)
+            }
+            val dx = (x1 + x2) / 2f - (lastPoint.x + lastPoint2.x) / 2f
+            val dy = (y1 + y2) / 2f - (lastPoint.y + lastPoint2.y) / 2f
+
+            transformMatrix.postTranslate(dx, dy)
+        } else {
+            if (!scaleLimit) {
+                mCoreService?.getContentBounds()?.let {
+                    transformMatrix.postScale(scale,scale, it.centerX(), it.centerY())
+                }
+            }
         }
 
-        val dx = (x1 + x2) / 2f - (lastPoint.x + lastPoint2.x) / 2f
-        val dy = (y1 + y2) / 2f - (lastPoint.y + lastPoint2.y) / 2f
-
-        transformMatrix.postTranslate(dx, dy)
         mCoreService?.setTransformMatrix(transformMatrix)
         return false
     }

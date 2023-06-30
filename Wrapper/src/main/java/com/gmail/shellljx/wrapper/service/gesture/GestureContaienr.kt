@@ -57,12 +57,17 @@ class GestureContaienr : View {
                 if (!mGestureEnable) return false
                 if (mActivePointerId1 != INVALID_POINTER_ID && mActivePointerId2 != INVALID_POINTER_ID) {
                     if (mActivePointerId1 == mActivePointerId2) return false
-                    mInMove = true
-                    mInTransform = true
                     val x1 = event.getX(event.findPointerIndex(mActivePointerId1))
                     val y1 = event.getY(event.findPointerIndex(mActivePointerId1))
-                    val x2 = event.getX(event.findPointerIndex(mActivePointerId2))
-                    val y2 = event.getY(event.findPointerIndex(mActivePointerId2))
+                    val point2Index = event.findPointerIndex(mActivePointerId2)
+                    if (point2Index < 0) return false
+                    val x2 = event.getX(point2Index)
+                    val y2 = event.getY(point2Index)
+                    if (!mInTransform) {
+                        mListener?.onTransformStart(PointF(x1, y1), PointF(x2, y2))
+                    }
+                    mInMove = true
+                    mInTransform = true
                     mListener?.onTransform(mLastPoint, mLastPoint2, PointF(x1, y1), PointF(x2, y2))
                     mLastPoint.set(x1, y1)
                     mLastPoint2.set(x2, y2)
@@ -119,6 +124,7 @@ class GestureContaienr : View {
         fun onSingleUp(event: MotionEvent)
         fun onSingleTap()
         fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF)
+        fun onTransformStart(point: PointF, point2: PointF)
         fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF)
         fun onTransformEnd()
     }
