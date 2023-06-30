@@ -23,6 +23,8 @@ class SourceRender {
    */
   GLuint draw(GLuint textureId, int width, int height, int rotate, int screenWidth, int screenHeight);
 
+  GLuint getFrameBuffer();
+
   GLuint getTexture();
 
   int getTextureWidth();

@@ -10,30 +10,25 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "FrameBuffer.h"
-#include <jni.h>
-#include <Global.h>
 
 class BlendRender {
  public:
-  BlendRender(jobject object);
+  BlendRender();
   ~BlendRender();
 
   GLuint draw(GLuint textureId, GLuint maskTexture, int width, int height);
 
   void drawTexture(GLuint textureId, bool revert);
 
-  void save();
+  GLuint getFrameBuffer();
   GLuint getTexture();
   int getWidth();
   int getHeight();
 
  private:
-  void createBlendBitmap(int width, int height);
- private:
   FrameBuffer *frameBuffer_;
   GLuint program_ = 0;
   uint8_t *buffer_;
-  Global<jobject> pixelator_;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_BLENDRENDER_H_

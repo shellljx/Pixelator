@@ -4,17 +4,15 @@
 
 #include "ScreenRender.h"
 #include <memory>
+#include "Program.h"
 
-ScreenRender::ScreenRender() : frameBuffer_(nullptr), vertexCoordinate_(nullptr) {
-  frameBuffer_ = new FrameBuffer();
+ScreenRender::ScreenRender() : vertexCoordinate_(nullptr) {
   program_ = Program::CreateProgram(DEFAULT_MATRIX_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
   vertexCoordinate_ = new float[8];
   memcpy(vertexCoordinate_, DEFAULT_VERTEX_COORDINATE, sizeof(float) * 8);
 }
 
 ScreenRender::~ScreenRender() {
-  delete frameBuffer_;
-  frameBuffer_ = nullptr;
   if (program_ > 0) {
     glDeleteProgram(program_);
     program_ = 0;
@@ -39,15 +37,11 @@ void ScreenRender::initMatrix(int screenWidth,
   updateModelMatrix(screenWidth, screenHeight, textureWidth, textureHeight);
 }
 
-GLuint ScreenRender::draw(GLuint textureId,
+void ScreenRender::draw(GLuint textureId,
                           int width,
                           int height,
                           int screenWidth,
                           int screenHeight) {
-  if (frameBuffer_ == nullptr) {
-    return -1;
-  }
-  //cropVertexCoordinate(width, height, screenWidth, screenHeight, &fitWidth_, &fitHeight_);
 
   if (vertexCoordinate_ != nullptr) {
     vertexCoordinate_[0] = 0.f;
@@ -60,27 +54,11 @@ GLuint ScreenRender::draw(GLuint textureId,
     vertexCoordinate_[7] = 0.f;
   }
 
-  GL_CHECK(glEnable(GL_BLEND))
-  GL_CHECK(glBlendFunc(GL_ONE, GL_ONE_MINUS_SRC_ALPHA))
-  GL_CHECK(glBlendEquation(GL_FUNC_ADD))
   if (screenWidth % 2 != 0 || screenHeight % 2 != 0) {
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
   }
   GL_CHECK(glViewport(0, 0, screenWidth, screenHeight));
   GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-
-  drawTexture(textureId, width, height, screenWidth, screenHeight);
-
-  GL_CHECK(glDisable(GL_BLEND))
-
-  return frameBuffer_->getTexture();
-}
-
-void ScreenRender::drawTexture(GLuint textureId,
-                               int width,
-                               int height,
-                               int screenWidth,
-                               int screenHeight) {
   GL_CHECK(glUseProgram(program_))
   auto positionLoction = glGetAttribLocation(program_, "position");
   GL_CHECK(glEnableVertexAttribArray(positionLoction))
@@ -104,60 +82,12 @@ void ScreenRender::drawTexture(GLuint textureId,
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
 }
 
-GLuint ScreenRender::getTexture() {
-  return frameBuffer_->getTexture();
-}
-
-void ScreenRender::translate(float scale,
-                             float pivotX,
-                             float pivotY,
-                             float angle,
-                             float translateX,
-                             float translateY) {
+void ScreenRender::translate(float scale) {
   scale_ = scale;
-  pivotX_ = pivotX;
-  pivotY_ = pivotY;
-  angle_ = angle;
-  translateX_ = translateX;
-  translateY_ = translateY;
 }
 
 void ScreenRender::setTransformMatrix(glm::mat4 matrix) {
   transformMatrix_ = matrix;
-}
-
-void ScreenRender::cropVertexCoordinate(int frameWidth,
-                                        int frameHeight,
-                                        int screenWidth,
-                                        int screenHeight,
-                                        int *fitWidth,
-                                        int *fitHeight) {
-  float screenRatio = static_cast<float>(screenWidth) / static_cast<float>(screenHeight);
-  float frameRatio = static_cast<float>(frameWidth) / static_cast<float>(frameHeight);
-  float widthScale = 1.f;
-  float heightScale = 1.f;
-  if (frameRatio > screenRatio) {
-    //frame比屏幕宽
-    heightScale = screenRatio / frameRatio;
-  } else {
-    //frame比屏幕窄
-    widthScale = frameRatio / screenRatio;
-  }
-  *fitHeight = static_cast<int>(screenHeight * heightScale);
-  *fitWidth = static_cast<int>(screenWidth * widthScale);
-  x_ = (screenWidth - *fitWidth) / 2.f;
-  y_ = (screenHeight - *fitHeight) / 2.f;
-
-  if (vertexCoordinate_ != nullptr) {
-    vertexCoordinate_[0] = x_;
-    vertexCoordinate_[1] = *fitHeight + y_;
-    vertexCoordinate_[2] = *fitWidth + x_;
-    vertexCoordinate_[3] = *fitHeight + y_;
-    vertexCoordinate_[4] = x_;
-    vertexCoordinate_[5] = y_;
-    vertexCoordinate_[6] = *fitWidth + x_;
-    vertexCoordinate_[7] = y_;
-  }
 }
 
 void ScreenRender::updateModelMatrix(int screenWidth,

@@ -406,9 +406,10 @@ int ImageEngine::createEGLSurfaceInternal() {
     screenRender_ = new ScreenRender();
   }
   if (blendRender_ == nullptr) {
-    blendRender_ = new BlendRender(pixelator_.get());
+    blendRender_ = new BlendRender();
   }
   callJavaEGLWindowCreate();
+  refreshFrameInternal();
   LOGI("leave %s", __func__);
   return 0;
 }
@@ -543,7 +544,10 @@ void ImageEngine::refreshTransform() {
 }
 
 void ImageEngine::saveInternal() {
-  blendRender_->save();
+  saveFrameBufferToBitmap(pixelator_.get(),
+                          blendRender_->getFrameBuffer(),
+                          blendRender_->getWidth(),
+                          blendRender_->getHeight());
 }
 
 void ImageEngine::callJavaEGLContextCreate() {

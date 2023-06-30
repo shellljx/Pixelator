@@ -94,6 +94,10 @@ GLuint SourceRender::draw(GLuint textureId,
   return frameBuffer_->getTexture();
 }
 
+GLuint SourceRender::getFrameBuffer() {
+  return frameBuffer_->getFrameBuffer();
+}
+
 GLuint SourceRender::getTexture() {
   if (frameBuffer_ != nullptr) {
     return frameBuffer_->getTexture();

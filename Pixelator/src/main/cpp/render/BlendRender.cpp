@@ -7,10 +7,9 @@
 #include "Local.h"
 #include <android/bitmap.h>
 
-BlendRender::BlendRender(jobject object) : frameBuffer_(nullptr), buffer_(nullptr) {
+BlendRender::BlendRender() : frameBuffer_(nullptr), buffer_(nullptr) {
   frameBuffer_ = new FrameBuffer();
   program_ = Program::CreateProgram(DEFAULT_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
-  pixelator_.reset(JNIEnvironment::Current(), object);
 }
 
 BlendRender::~BlendRender() {
@@ -51,7 +50,7 @@ GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int he
 
 void BlendRender::drawTexture(GLuint textureId, bool revert) {
   auto textureCoordinate = DEFAULT_TEXTURE_COORDINATE;
-  if (revert){
+  if (revert) {
     textureCoordinate = DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP;
   }
   GL_CHECK(glUseProgram(program_))
@@ -76,39 +75,8 @@ void BlendRender::drawTexture(GLuint textureId, bool revert) {
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
 }
 
-void BlendRender::createBlendBitmap(int width, int height) {
-  JNIEnv *env = JNIEnvironment::Current();
-  if (env == nullptr) {
-    return;
-  }
-  Local<jclass> bitmapClass = {env, env->FindClass("android/graphics/Bitmap")};
-  const char *bitmapCreateMethod = "(IILandroid/graphics/Bitmap$Config;)Landroid/graphics/Bitmap;";
-  jmethodID bitmapCreateMethodId = env->GetStaticMethodID(bitmapClass.get(), "createBitmap", bitmapCreateMethod);
-
-  jstring configName = env->NewStringUTF("ARGB_8888");
-  Local<jclass> configClass = {env, env->FindClass("android/graphics/Bitmap$Config")};
-  const char *bitmapConfigSignature = "(Ljava/lang/String;)Landroid/graphics/Bitmap$Config;";
-  jmethodID bitmapConfigMethodId = env->GetStaticMethodID(configClass.get(), "valueOf", bitmapConfigSignature);
-  Local<jobject> bitmapConfig = {env, env->CallStaticObjectMethod(configClass.get(), bitmapConfigMethodId, configName)};
-  Local<jobject> bitmap = {env, env->CallStaticObjectMethod(bitmapClass.get(), bitmapCreateMethodId, width, height, bitmapConfig.get())};
-
-  void *bitmapPixels;
-  if ((AndroidBitmap_lockPixels(env, bitmap.get(), &bitmapPixels)) < 0) {
-    return;
-  }
-  memcpy((uint8_t *) bitmapPixels, buffer_, width * height * 4);
-  AndroidBitmap_unlockPixels(env, bitmap.get());
-
-  Local<jclass> sdkClass = {env, env->GetObjectClass(pixelator_.get())};
-  jmethodID frameSavedMethodId = env->GetMethodID(sdkClass.get(), "onFrameSaved", "(Landroid/graphics/Bitmap;)V");
-  env->CallVoidMethod(pixelator_.get(), frameSavedMethodId, bitmap.get());
-}
-
-void BlendRender::save() {
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
-  glReadPixels(0, 0, frameBuffer_->getTextureWidth(), frameBuffer_->getTextureHeight(), GL_RGBA, GL_UNSIGNED_BYTE, buffer_);
-  createBlendBitmap(frameBuffer_->getTextureWidth(), frameBuffer_->getTextureHeight());
-  glBindFramebuffer(GL_READ_FRAMEBUFFER, GL_NONE);
+GLuint BlendRender::getFrameBuffer() {
+  return frameBuffer_->getFrameBuffer();
 }
 
 GLuint BlendRender::getTexture() {
