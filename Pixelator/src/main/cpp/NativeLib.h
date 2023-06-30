@@ -14,6 +14,8 @@ void Android_Jni_surface_create(JNIEnv *env, jobject object, jlong id, jobject j
 
 void Android_Jni_surface_changed(JNIEnv *env, jobject object, jlong id, jint width, jint height);
 
+void Android_Jni_surface_destroy(JNIEnv *env, jobject object, jlong id);
+
 void Android_Jni_mini_surface_create(JNIEnv *env, jobject object, jlong id, jobject jsurface);
 
 void Android_Jni_mini_surface_changed(JNIEnv *env,
@@ -65,6 +67,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"create", "()J", (void **) Android_Jni_Pixelator_create},
     {"onSurfaceCreate", "(JLandroid/view/Surface;)V", (void **) Android_Jni_surface_create},
     {"onSurfaceChanged", "(JII)V", (void **) Android_Jni_surface_changed},
+    {"onSurfaceDestroy", "(J)V", (void **) Android_Jni_surface_destroy},
     {"onMiniScreenSurfaceCreate", "(JLandroid/view/Surface;)V",
      (void **) Android_Jni_mini_surface_create},
     {"onMiniScreenSurfaceChanged", "(JII)V", (void **) Android_Jni_mini_surface_changed},

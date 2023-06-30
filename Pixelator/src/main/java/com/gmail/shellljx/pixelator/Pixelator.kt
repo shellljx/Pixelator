@@ -48,7 +48,9 @@ class Pixelator private constructor() : IPixelator {
     }
 
     override fun destroyDisplaySurface() {
-
+        if (mId != 0L) {
+            onSurfaceDestroy(mId)
+        }
     }
 
     override fun addImagePath(path: String, rotate: Int) {
@@ -171,9 +173,9 @@ class Pixelator private constructor() : IPixelator {
     /**
      * jni callback method
      */
-    private fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+    private fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float, reset: Boolean) {
         mainHandler.post {
-            mRenderListener?.onFrameBoundsChanged(left, top, right, bottom)
+            mRenderListener?.onFrameBoundsChanged(left, top, right, bottom, reset)
         }
     }
 
@@ -196,6 +198,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun create(): Long
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
+    private external fun onSurfaceDestroy(id: Long)
     private external fun onMiniScreenSurfaceCreate(id: Long, surface: Surface)
     private external fun onMiniScreenSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun onMiniScreenSurfaceDestroy(id: Long)

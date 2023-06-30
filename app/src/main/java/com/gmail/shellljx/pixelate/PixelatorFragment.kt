@@ -38,12 +38,12 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         }
         mContainer.onCreate()
         mContainer.getServiceManager().registerBusinessService(
-            listOf(
-                PixelatorCoreService::class.java,
-                TransformService::class.java,
-                MaskLockService::class.java,
-                EffectService::class.java
-            )
+                listOf(
+                        PixelatorCoreService::class.java,
+                        TransformService::class.java,
+                        MaskLockService::class.java,
+                        EffectService::class.java
+                )
         )
     }
 

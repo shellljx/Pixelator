@@ -31,18 +31,12 @@ void PrintGLError() {
   }
 }
 
-GLuint SourceRender::draw(GLuint textureId,
-                          int width,
-                          int height,
-                          int rotate,
-                          int screenWidth,
-                          int screenHeight) {
+GLuint SourceRender::draw(GLuint textureId, int width, int height, int rotate) {
   if (frameBuffer_ == nullptr) {
     return -1;
   }
   int frameWidth = width;
   int frameHeight = height;
-  //cropVertexCoordinate(width, height, screenWidth, screenHeight, &textureWidth, &textureHeight);
   float *textureCoordinate = DEFAULT_TEXTURE_COORDINATE;
   if (rotate % 360 == 90) {
     frameWidth = height;
@@ -55,13 +49,6 @@ GLuint SourceRender::draw(GLuint textureId,
     frameHeight = width;
   }
   frameBuffer_->createFrameBuffer(frameWidth, frameHeight);
-//  glm::mat4 projection = glm::ortho(0.f, static_cast<float>(textureWidth),
-//                                    0.f, static_cast<float>(textureHeight), 1.f, 100.f);
-//  glm::vec3 position = glm::vec3(0.f, 0.f, 10.f);
-//  glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
-//  glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
-//  glm::mat4 viewMatrix = glm::lookAt(position, direction, up);
-//  auto matrix = glm::mat4(1);
 
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
   glViewport(0, 0, frameWidth, frameHeight);
@@ -76,10 +63,6 @@ GLuint SourceRender::draw(GLuint textureId,
   glEnableVertexAttribArray(textureCoordinateLoc);
   glVertexAttribPointer(textureCoordinateLoc, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
                         textureCoordinate);
-
-  //matrix = projection * viewMatrix * matrix;
-  //auto mvpLoc = glGetUniformLocation(program_, "mvp");
-  //glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
 
   auto inputTextureLoc = glGetUniformLocation(program_, "inputImageTexture");
   glActiveTexture(GL_TEXTURE0);

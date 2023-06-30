@@ -5,7 +5,7 @@ import android.graphics.Bitmap
 interface IRenderListener {
     fun onEGLContextCreate()
     fun onEGLWindowCreate()
-    fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float)
+    fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float, reset: Boolean)
     fun onFrameSaved(bitmap: Bitmap)
     fun onRenderError(code: Int, msg: String)
 }

@@ -21,7 +21,7 @@ class SourceRender {
    * @param height 纹理高
    * @return 绘制之后的纹理
    */
-  GLuint draw(GLuint textureId, int width, int height, int rotate, int screenWidth, int screenHeight);
+  GLuint draw(GLuint textureId, int width, int height, int rotate);
 
   GLuint getFrameBuffer();
 

@@ -426,9 +426,11 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
   sourceRender_->draw(imageTexture_,
                       imageWidth_,
                       imageHeight_,
-                      rotate,
-                      surfaceWidth_,
-                      surfaceHeight_);
+                      rotate);
+  saveFrameBufferToBitmap(pixelator_.get(),
+                          sourceRender_->getFrameBuffer(),
+                          sourceRender_->getTextureWidth(),
+                          sourceRender_->getTextureHeight());
   if (effectRender_ != nullptr) {
     effectRender_->draw(sourceRender_->getTexture(),
                         sourceRender_->getTextureWidth(),
@@ -437,11 +439,12 @@ int ImageEngine::insertImageInternal(const char *path, int rotate) {
                        sourceRender_->getTextureWidth(),
                        sourceRender_->getTextureHeight());
   }
+  screenRender_->setTransformMatrix(glm::mat4(1));
   screenRender_->initMatrix(surfaceWidth_,
                             surfaceHeight_,
                             sourceRender_->getTextureWidth(),
                             sourceRender_->getTextureHeight());
-  refreshTransform();
+  refreshTransform(true);
   refreshFrameInternal();
   return 0;
 }
@@ -526,7 +529,7 @@ int ImageEngine::refreshFrameInternal() {
   return 0;
 }
 
-void ImageEngine::refreshTransform() {
+void ImageEngine::refreshTransform(bool reset) {
   paintRender_->setMatrix(screenRender_->getModelMatrix());
   paintRender_->translate(screenRender_->getModelMatrix()[0][0]);
   if (sourceRender_->getTextureHeight() <= 0) {
@@ -540,7 +543,7 @@ void ImageEngine::refreshTransform() {
   if (miniScreenRender_ != nullptr) {
     miniScreenRender_->setBounds(lt.x, lt.y, rb.x, rb.y);
   }
-  callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y);
+  callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y, reset);
 }
 
 void ImageEngine::saveInternal() {
@@ -580,17 +583,28 @@ void ImageEngine::callJavaEGLWindowCreate() {
   }
 }
 
-void ImageEngine::callJavaFrameBoundsChanged(float left, float top, float right, float bottom) {
+void ImageEngine::callJavaFrameBoundsChanged(float left,
+                                             float top,
+                                             float right,
+                                             float bottom,
+                                             bool reset) {
   if (pixelator_.empty()) {
     return;
   }
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> jclass = {env, env->GetObjectClass(pixelator_.get())};
-    jmethodID
-        frameAvaliableMethodId = env->GetMethodID(jclass.get(), "onFrameBoundsChanged", "(FFFF)V");
-    if (frameAvaliableMethodId != nullptr) {
-      env->CallVoidMethod(pixelator_.get(), frameAvaliableMethodId, left, top, right, bottom);
+    jmethodID boundChangedMethodId = env->GetMethodID(
+        jclass.get(), "onFrameBoundsChanged", "(FFFFZ)V"
+    );
+    if (boundChangedMethodId != nullptr) {
+      env->CallVoidMethod(pixelator_.get(),
+                          boundChangedMethodId,
+                          left,
+                          top,
+                          right,
+                          bottom,
+                          reset);
     }
   }
 }

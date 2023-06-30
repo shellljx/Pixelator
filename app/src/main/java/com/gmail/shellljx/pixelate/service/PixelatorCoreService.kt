@@ -46,9 +46,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             mPenddingTasks.clear()
         }
 
-        override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
-            if (mInitBounds.isEmpty) {
+        override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float, reset: Boolean) {
+            if (reset) {
                 mInitBounds.set(left, top, right, bottom)
+                mTransformMatrix.reset()
             }
             mContentBounds.set(left, top, right, bottom)
             mContentBoundsObservers.forEach { it.onContentBoundsChanged(mContentBounds.toRect()) }
@@ -123,9 +124,14 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     override fun loadImage(path: String) {
         runTaskOrPendding {
             mImageSdk.addImagePath(path, getRotate(path))
-            mImageSdk.refreshFrame()
             mImagePath = path
             mImageLoadedObservers.forEach { it.onImageLoaded(path) }
+        }
+    }
+
+    override fun refreshFrame() {
+        runTaskOrPendding {
+            mImageSdk.refreshFrame()
         }
     }
 
@@ -154,10 +160,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-            v[0], v[3], 0f, 0f,
-            v[1], v[4], 0f, 0f,
-            0f, 0f, 1f, 0f,
-            v[2], v[5], 0f, 1f
+                v[0], v[3], 0f, 0f,
+                v[1], v[4], 0f, 0f,
+                0f, 0f, 1f, 0f,
+                v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -212,8 +218,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -258,6 +264,7 @@ interface IPixelatorCoreService : IService {
     fun setDeeplabMask(bitmap: Bitmap)
     fun setDeeplabMode(@MaskMode mode: Int)
     fun loadImage(path: String)
+    fun refreshFrame()
     fun setEffect(config: String)
     fun undo()
     fun redo()

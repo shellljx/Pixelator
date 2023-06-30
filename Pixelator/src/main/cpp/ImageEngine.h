@@ -66,13 +66,13 @@ class ImageEngine : public thread::HandlerCallback {
   void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);
   int refreshFrameInternal();
-  void refreshTransform();
+  void refreshTransform(bool reset = false);
   void saveInternal();
   void redoInternal();
   void undoInternal();
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
-  void callJavaFrameBoundsChanged(float left, float top, float right, float bottom);
+  void callJavaFrameBoundsChanged(float left, float top, float right, float bottom, bool reset);
 
  private:
   std::unique_ptr<thread::HandlerThread> handlerThread_ = nullptr;

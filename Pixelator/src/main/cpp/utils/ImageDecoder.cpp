@@ -30,6 +30,9 @@ int ImageDecoder::decodeImage(GLuint &texture, const char *path, int *width, int
     }
     info = new ImageInfo(*width, *height, data);
   }
+  if (texture > 0) {
+    glDeleteTextures(1, &texture);
+  }
   if (texture == 0) {
     glGenTextures(1, &texture);
   }
@@ -42,7 +45,15 @@ int ImageDecoder::decodeImage(GLuint &texture, const char *path, int *width, int
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
   glTexParameterf(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-  glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, *width, *height, 0, GL_RGBA, GL_UNSIGNED_BYTE, info->pixels_);
+  glTexImage2D(GL_TEXTURE_2D,
+               0,
+               GL_RGBA,
+               *width,
+               *height,
+               0,
+               GL_RGBA,
+               GL_UNSIGNED_BYTE,
+               info->pixels_);
   glBindTexture(GL_TEXTURE_2D, 0);
   delete info;
   return 0;

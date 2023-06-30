@@ -49,13 +49,14 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
     private val mRedoView by lazy { getView()?.findViewById<View>(R.id.iv_redo) }
     private val mAlbumView by lazy { getView()?.findViewById<View>(R.id.iv_album) }
+    private val mBottomSheetView by lazy { getView()?.findViewById<View>(R.id.container) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
     private var mPickPanelToken: PanelToken? = null
     private val mLockItems = arrayListOf(
-        PickItem(-1, context.getString(R.string.lock_portrait)),
-        PickItem(-1, context.getString(R.string.lock_background)),
-        PickItem(-1, context.getString(R.string.lock_off))
+            PickItem(-1, context.getString(R.string.lock_portrait)),
+            PickItem(-1, context.getString(R.string.lock_background)),
+            PickItem(-1, context.getString(R.string.lock_off))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -71,7 +72,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
 
     override fun onViewCreated(view: View?) {
         view ?: return
-        val bottomSheet = view.findViewById<View>(R.id.container)
+        val bottomSheet = mBottomSheetView ?: return
         val behavior = BottomSheetBehavior.from(bottomSheet)
         behavior.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
@@ -96,7 +97,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
         val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
-            ?: 0f
+                ?: 0f
         mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addSingleUpObserver(this)
         mContainer.getGestureService()?.addSingleDownObserver(this)
@@ -222,6 +223,10 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     override fun onSingleDown(event: MotionEvent): Boolean {
         mPointSeekbar?.visibility = View.INVISIBLE
         mOperationArea?.visibility = View.INVISIBLE
+        mBottomSheetView?.let {
+            val behavior = BottomSheetBehavior.from(it)
+            behavior.setState(BottomSheetBehavior.STATE_COLLAPSED)
+        }
         return false
     }
 
