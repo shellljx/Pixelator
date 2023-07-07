@@ -1,7 +1,7 @@
 package com.gmail.shellljx.wrapper.service.gesture
 
 import android.content.Context
-import android.graphics.*
+import android.graphics.PointF
 import android.util.AttributeSet
 import android.view.*
 import kotlin.math.pow
@@ -15,6 +15,7 @@ class GestureContaienr : View {
     private var mActivePointerId1 = INVALID_POINTER_ID
     private var mActivePointerId2 = INVALID_POINTER_ID
     private var mListener: GestureListener? = null
+    private lateinit var mGestureDetector: GestureDetector
     private var mTouchSlop: Int = ViewConfiguration.get(context).scaledTouchSlop
     private var mLastPoint = PointF()
     private var mLastPoint2 = PointF()
@@ -28,9 +29,12 @@ class GestureContaienr : View {
 
     constructor(context: Context) : this(context, null)
     constructor(context: Context, attrs: AttributeSet?) : this(context, attrs, 0)
-    constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def)
+    constructor(context: Context, attrs: AttributeSet?, def: Int) : super(context, attrs, def) {
+        mGestureDetector = GestureDetector(context, DoubleTapGestureListener())
+    }
 
     override fun onTouchEvent(event: MotionEvent): Boolean {
+        mGestureDetector.onTouchEvent(event)
         when (event.actionMasked) {
             MotionEvent.ACTION_DOWN -> {
                 mActivePointerId1 = event.getPointerId(0)
@@ -76,6 +80,9 @@ class GestureContaienr : View {
                     if (distanceTo(mFromPoint, mCurrentPoint) < mTouchSlop && !mInMove) {
                         return true
                     }
+                    if (!mInMove) {
+                        mListener?.onStartSingleMove()
+                    }
                     mInMove = true
                     if (mFromPoint.equals(mCurrentPoint.x, mCurrentPoint.y)) {
                         return true
@@ -107,6 +114,13 @@ class GestureContaienr : View {
         return true
     }
 
+    private inner class DoubleTapGestureListener : GestureDetector.SimpleOnGestureListener() {
+        override fun onDoubleTap(event: MotionEvent): Boolean {
+            mListener?.onDoubleTap()
+            return true
+        }
+    }
+
     private fun distanceTo(from: PointF, to: PointF): Float {
         return sqrt((to.x - from.x).pow(2) + (to.y - from.y).pow(2))
     }
@@ -123,6 +137,8 @@ class GestureContaienr : View {
         fun onSingleDown(event: MotionEvent)
         fun onSingleUp(event: MotionEvent)
         fun onSingleTap()
+        fun onDoubleTap()
+        fun onStartSingleMove()
         fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF)
         fun onTransformStart(point: PointF, point2: PointF)
         fun onTransform(lastPoint: PointF, lastPoint2: PointF, point: PointF, point2: PointF)

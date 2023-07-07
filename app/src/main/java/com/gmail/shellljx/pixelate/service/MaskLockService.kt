@@ -15,8 +15,7 @@ import com.gmail.shellljx.pixelate.utils.BitmapUtils
 import com.gmail.shellljx.pixelate.view.MaskRenderView
 import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.wrapper.*
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
+import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
 import kotlinx.coroutines.*
@@ -38,7 +37,7 @@ import java.util.concurrent.TimeUnit
  * @Date: 2023/6/7
  * @Description:
  */
-class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserver, OnContentBoundsObserver, OnSingleUpObserver, OnSingleDownObserver {
+class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserver, OnContentBoundsObserver, OnTapObserver {
     companion object {
         private const val PATH_SMALL_SRC = "/assets/small/"
         private const val PATH_REMOVED_BG = "/assets/removed/"
@@ -63,8 +62,7 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserv
     override fun onStart() {
         mContainer.getLifeCycleService()?.addObserver(this)
         mCoreService?.addContentBoundsObserver(this)
-        mContainer.getGestureService()?.addSingleUpObserver(this)
-        mContainer.getGestureService()?.addSingleDownObserver(this)
+        mContainer.getGestureService()?.addTapObserver(this)
         mCoreService?.addImageLoadedObserver(this)
     }
 

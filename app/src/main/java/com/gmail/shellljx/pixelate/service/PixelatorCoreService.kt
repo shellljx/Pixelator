@@ -7,14 +7,13 @@ import android.view.Surface
 import androidx.core.graphics.toRect
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.*
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
+import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.utils.PointUtils
 import java.util.LinkedList
 
-class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnSingleUpObserver {
+class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTapObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null
 
@@ -26,12 +25,13 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private var mPaintSize = 0
     private var mImagePath: String? = null
 
-    @PaintType
-    private var mPaintType = PAINT
+    @PaintMode
+    private var mPaintMode = PAINT
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
     private val mImageLoadedObservers = arrayListOf<OnImageLoadedObserver>()
+    private val mUndoRedoStateObservers = arrayListOf<UndoRedoStateObserver>()
 
     private val mRenderListener = object : IRenderListener {
         override fun onEGLContextCreate() {
@@ -61,6 +61,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         override fun onRenderError(code: Int, msg: String) {
 
         }
+
+        override fun onUndoRedoChanged(canUndo: Boolean, canRedo: Boolean) {
+            mUndoRedoStateObservers.forEach { it.onUndoRedoStateChange(canUndo, canRedo) }
+        }
     }
 
     override fun onStart() {
@@ -68,7 +72,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk = Pixelator.create()
         mImageSdk.setRenderListener(mRenderListener)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
-        mContainer.getGestureService()?.addSingleUpObserver(this)
+        mContainer.getGestureService()?.addTapObserver(this)
         mPaintSize = mContainer.getConfig().run { (minPaintSize + maxPaintSize) / 2 }
         setPaintSize(mPaintSize)
     }
@@ -109,9 +113,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
     }
 
-    override fun setPaintType(paintType: Int) {
-        mPaintType = paintType
-        mImageSdk.setPaintType(paintType)
+    override fun setPaintMode(paintType: Int) {
+        mPaintMode = paintType
+        mImageSdk.setPaintMode(paintType)
     }
 
     override fun setDeeplabMask(bitmap: Bitmap) {
@@ -161,10 +165,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-                v[0], v[3], 0f, 0f,
-                v[1], v[4], 0f, 0f,
-                0f, 0f, 1f, 0f,
-                v[2], v[5], 0f, 1f
+            v[0], v[3], 0f, 0f,
+            v[1], v[4], 0f, 0f,
+            0f, 0f, 1f, 0f,
+            v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -215,12 +219,18 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
     }
 
+    override fun addUndoRedoStateObserver(observer: UndoRedoStateObserver) {
+        if (!mUndoRedoStateObservers.contains(observer)) {
+            mUndoRedoStateObservers.add(observer)
+        }
+    }
+
     private fun getRotate(path: String): Int {
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_NORMAL
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -261,7 +271,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 interface IPixelatorCoreService : IService {
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
-    fun setPaintType(@PaintType paintType: Int)
+    fun setPaintMode(@PaintMode paintMode: Int)
     fun setDeeplabMask(bitmap: Bitmap)
     fun setDeeplabMode(@MaskMode mode: Int)
     fun loadImage(path: String)
@@ -281,6 +291,7 @@ interface IPixelatorCoreService : IService {
     fun addPaintSizeObserver(observer: PaintSizeObserver)
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)
     fun addImageLoadedObserver(observer: OnImageLoadedObserver)
+    fun addUndoRedoStateObserver(observer: UndoRedoStateObserver)
 }
 
 interface PaintSizeObserver {
@@ -293,4 +304,8 @@ interface OnContentBoundsObserver {
 
 interface OnImageLoadedObserver {
     fun onImageLoaded(path: String)
+}
+
+interface UndoRedoStateObserver {
+    fun onUndoRedoStateChange(canUndo: Boolean, canRedo: Boolean)
 }

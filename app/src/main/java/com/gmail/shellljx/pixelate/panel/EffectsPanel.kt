@@ -24,17 +24,22 @@ import com.gmail.shellljx.pixelator.ERASER
 import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.pixelator.PAINT
 import com.gmail.shellljx.wrapper.IContainer
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleDownObserver
-import com.gmail.shellljx.wrapper.service.gesture.OnSingleUpObserver
-import com.gmail.shellljx.wrapper.service.panel.AbsPanel
-import com.gmail.shellljx.wrapper.service.panel.PanelToken
+import com.gmail.shellljx.wrapper.service.gesture.*
+import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import org.json.JSONObject
 
-class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnSingleDownObserver, OnSingleUpObserver {
+class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
+
+    override val panelConfig: PanelConfig
+        get() {
+            val config = PanelConfig()
+            config.exitAnim = R.anim.translate_fade_out
+            config.enterAnim = R.anim.translate_fade_in
+            return config
+        }
 
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
@@ -54,9 +59,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val effectItems = arrayListOf<EffectItem>()
     private var mPickPanelToken: PanelToken? = null
     private val mLockItems = arrayListOf(
-            PickItem(-1, context.getString(R.string.lock_portrait)),
-            PickItem(-1, context.getString(R.string.lock_background)),
-            PickItem(-1, context.getString(R.string.lock_off))
+        PickItem(-1, context.getString(R.string.lock_portrait)),
+        PickItem(-1, context.getString(R.string.lock_background)),
+        PickItem(-1, context.getString(R.string.lock_off))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -72,24 +77,6 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
 
     override fun onViewCreated(view: View?) {
         view ?: return
-        val bottomSheet = mBottomSheetView ?: return
-        val behavior = BottomSheetBehavior.from(bottomSheet)
-        behavior.addBottomSheetCallback(object : BottomSheetCallback() {
-            override fun onStateChanged(bottomSheet: View, newState: Int) {
-            }
-
-            override fun onSlide(bottomSheet: View, slideOffset: Float) {
-                val initBounds = mCoreService?.getInitBounds() ?: return
-                val contentBounds = mCoreService?.getContentBounds() ?: return
-                if (initBounds.contains(contentBounds)) {
-                    //如果 content bounds 比 initBounds 小, 不能被面板遮挡
-                    val offset = 200.dp() + 150.dp() * slideOffset
-                    mCoreService?.updateViewPort(offset.toInt())
-                }
-            }
-        })
-
-        mCoreService?.updateViewPort(200.dp())
         mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView?.adapter = mEffectsAdapter
         mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 10.dp(), true))
@@ -97,10 +84,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
         val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
-                ?: 0f
+            ?: 0f
         mPointSeekbar?.setPercent(percent)
-        mContainer.getGestureService()?.addSingleUpObserver(this)
-        mContainer.getGestureService()?.addSingleDownObserver(this)
+        mContainer.getGestureService()?.addTapObserver(this)
+        mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mCoreService?.addUndoRedoStateObserver(this)
 
         mPaintView?.setOnClickListener {
         }
@@ -122,7 +110,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mEraserView?.setOnClickListener {
             it.isSelected = !it.isSelected
             val type = if (it.isSelected) ERASER else PAINT
-            mCoreService?.setPaintType(type)
+            mCoreService?.setPaintMode(type)
             val id = if (it.isSelected) R.string.paint_type_eraser else R.string.paint_type_paint
             Toast.makeText(context, context.getString(id), Toast.LENGTH_SHORT).show()
         }
@@ -220,9 +208,13 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
     }
 
-    override fun onSingleDown(event: MotionEvent): Boolean {
+    override fun onStartSingleMove(): Boolean {
         mPointSeekbar?.visibility = View.INVISIBLE
         mOperationArea?.visibility = View.INVISIBLE
+        return false
+    }
+
+    override fun onSingleDown(event: MotionEvent): Boolean {
         mBottomSheetView?.let {
             val behavior = BottomSheetBehavior.from(it)
             behavior.setState(BottomSheetBehavior.STATE_COLLAPSED)
@@ -247,5 +239,10 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
 
     override fun onSeekComplete() {
         mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_HIDE_FINGER_POINT)
+    }
+
+    override fun onUndoRedoStateChange(canUndo: Boolean, canRedo: Boolean) {
+        mUndoView?.isSelected = canUndo
+        mRedoView?.isSelected = canRedo
     }
 }

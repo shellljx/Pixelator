@@ -30,27 +30,21 @@ class GesturePriorityProcessor<T> {
     }
 
     fun process(callback: (processor: T) -> Boolean): Boolean {
+        val allProcessor = arrayListOf<T>()
         mProcessorMap[GESTURE_PRIORITY_HIGHT]?.let { list ->
-            list.forEach {
-                if (callback.invoke(it)) {
-                    return true
-                }
-            }
+            allProcessor.addAll(list)
         }
 
         mProcessorMap[GESTURE_PRIORITY_NORMAL]?.let { list ->
-            list.forEach {
-                if (callback.invoke(it)) {
-                    return true
-                }
-            }
+            allProcessor.addAll(list)
         }
 
         mProcessorMap[GESTURE_PRIORITY_LOW]?.let { list ->
-            list.forEach {
-                if (callback.invoke(it)) {
-                    return true
-                }
+            allProcessor.addAll(list)
+        }
+        allProcessor.forEach {
+            if (callback.invoke(it)) {
+                return true
             }
         }
         return false

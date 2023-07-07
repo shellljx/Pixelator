@@ -53,11 +53,11 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
         return renderLayer
     }
 
-    override fun getVideoHeight(): Int {
+    override fun getRenderHeight(): Int {
         return mVideoRenderLayer?.view()?.height ?: 0
     }
 
-    override fun getVideoWidth(): Int {
+    override fun getRenderWidth(): Int {
         return mVideoRenderLayer?.view()?.width ?: 0
     }
 
@@ -89,12 +89,12 @@ interface IRenderContainerService : IService {
     /**
      * 返回视频渲染层宽度
      */
-    fun getVideoWidth(): Int
+    fun getRenderWidth(): Int
 
     /**
      * 返回视频渲染层高度
      */
-    fun getVideoHeight(): Int
+    fun getRenderHeight(): Int
     fun updateViewPort(offset: Int)
 }
 

@@ -9,8 +9,6 @@ import android.provider.MediaStore
 import android.view.*
 import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
-import com.gmail.shellljx.pixelate.panel.EffectsPanel
-import com.gmail.shellljx.pixelate.panel.ProgressPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
@@ -24,6 +22,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
 
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
+    private var mEffectService: IEffectService? = null
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
@@ -38,12 +37,12 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         }
         mContainer.onCreate()
         mContainer.getServiceManager().registerBusinessService(
-                listOf(
-                        PixelatorCoreService::class.java,
-                        TransformService::class.java,
-                        MaskLockService::class.java,
-                        EffectService::class.java
-                )
+            listOf(
+                PixelatorCoreService::class.java,
+                TransformService::class.java,
+                MaskLockService::class.java,
+                EffectService::class.java
+            )
         )
     }
 
@@ -55,9 +54,9 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         super.onViewCreated(view, savedInstanceState)
         mContainer.getDelegateService()?.putDelegate(KEY_IMAGE_DELEGATE, this)
         mContainer.onViewCreated(view, savedInstanceState)
-        mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
-
+        mEffectService = mContainer.getServiceManager().getService(EffectService::class.java)
+        mEffectService?.showPanel()
         mCoreService?.setBrushResource(R.mipmap.ic_brush_blur)
     }
 

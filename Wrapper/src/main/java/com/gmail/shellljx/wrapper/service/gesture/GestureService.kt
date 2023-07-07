@@ -1,7 +1,6 @@
 package com.gmail.shellljx.wrapper.service.gesture
 
 import android.content.Context
-import android.graphics.Matrix
 import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
@@ -14,9 +13,7 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
     private var mGestureContaienr: GestureContaienr? = null
     private val mSingleMoveProcessor = GesturePriorityProcessor<OnSingleMoveObserver>()
     private val mTransformProcessor = GesturePriorityProcessor<OnTransformObserver>()
-    private val mSingleUpProcessor = GesturePriorityProcessor<OnSingleUpObserver>()
-    private val mSingleTapProcessor = GesturePriorityProcessor<OnSingleTapObserver>()
-    private val mSingleDownProcessor = GesturePriorityProcessor<OnSingleDownObserver>()
+    private val mTapProcessor = GesturePriorityProcessor<OnTapObserver>()
 
     override fun onStart() {
     }
@@ -40,25 +37,35 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
     override fun onStop() {
         mSingleMoveProcessor.clear()
         mTransformProcessor.clear()
-        mSingleUpProcessor.clear()
-        mSingleDownProcessor.clear()
     }
 
     override fun onSingleDown(event: MotionEvent) {
-        mSingleDownProcessor.process {
+        mTapProcessor.process {
             it.onSingleDown(event)
         }
     }
 
     override fun onSingleUp(event: MotionEvent) {
-        mSingleUpProcessor.process {
+        mTapProcessor.process {
             it.onSingleUp(event)
         }
     }
 
     override fun onSingleTap() {
-        mSingleTapProcessor.process {
+        mTapProcessor.process {
             it.onSingleTap()
+        }
+    }
+
+    override fun onDoubleTap() {
+        mTapProcessor.process {
+            it.onDoubleTap()
+        }
+    }
+
+    override fun onStartSingleMove() {
+        mSingleMoveProcessor.process {
+            it.onStartSingleMove()
         }
     }
 
@@ -90,20 +97,12 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
         mSingleMoveProcessor.add(observer, priority)
     }
 
-    override fun addSingleUpObserver(observer: OnSingleUpObserver, priority: Int) {
-        mSingleUpProcessor.add(observer, priority)
-    }
-
-    override fun addSingleTapObserver(observer: OnSingleTapObserver, priority: Int) {
-        mSingleTapProcessor.add(observer, priority)
+    override fun addTapObserver(observer: OnTapObserver, priority: Int) {
+        mTapProcessor.add(observer, priority)
     }
 
     override fun addTransformObserver(observer: OnTransformObserver, priority: Int) {
         mTransformProcessor.add(observer, priority)
-    }
-
-    override fun addSingleDownObserver(observer: OnSingleDownObserver, priority: Int) {
-        mSingleDownProcessor.add(observer, priority)
     }
 }
 
@@ -111,27 +110,36 @@ interface IGestureService : IService {
     fun createView(context: Context): View?
     fun gestureEnable(enable: Boolean)
     fun addSingleMoveObserver(observer: OnSingleMoveObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
-    fun addSingleUpObserver(observer: OnSingleUpObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
-    fun addSingleTapObserver(observer: OnSingleTapObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
+    fun addTapObserver(observer: OnTapObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
     fun addTransformObserver(observer: OnTransformObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
-    fun addSingleDownObserver(observer: OnSingleDownObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
-
 }
 
-interface OnSingleDownObserver {
-    fun onSingleDown(event: MotionEvent): Boolean
-}
+interface OnTapObserver {
+    fun onSingleUp(event: MotionEvent): Boolean {
+        return false
+    }
 
-interface OnSingleUpObserver {
-    fun onSingleUp(event: MotionEvent): Boolean
-}
+    fun onSingleDown(event: MotionEvent): Boolean {
+        return false
+    }
 
-interface OnSingleTapObserver {
-    fun onSingleTap(): Boolean
+    fun onSingleTap(): Boolean {
+        return false
+    }
+
+    fun onDoubleTap(): Boolean {
+        return false
+    }
 }
 
 interface OnSingleMoveObserver {
-    fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF): Boolean
+    fun onStartSingleMove(): Boolean {
+        return false
+    }
+
+    fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF): Boolean {
+        return false
+    }
 }
 
 interface OnTransformObserver {

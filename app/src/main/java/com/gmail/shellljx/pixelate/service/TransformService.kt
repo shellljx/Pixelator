@@ -12,7 +12,7 @@ import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import kotlin.math.sqrt
 
-class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObserver, OnTransformObserver {
+class TransformService : ITransformService, OnTapObserver, OnTransformObserver,OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mMiniToken: PanelToken? = null
@@ -20,9 +20,9 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
     private var scaleAndTranslate = true
 
     override fun onStart() {
-        mContainer.getGestureService()?.addSingleDownObserver(this)
-        mContainer.getGestureService()?.addSingleUpObserver(this)
+        mContainer.getGestureService()?.addTapObserver(this)
         mContainer.getGestureService()?.addTransformObserver(this)
+        mContainer.getGestureService()?.addSingleMoveObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -33,7 +33,7 @@ class TransformService : ITransformService, OnSingleDownObserver, OnSingleUpObse
     override fun onStop() {
     }
 
-    override fun onSingleDown(event: MotionEvent): Boolean {
+    override fun onStartSingleMove(): Boolean {
         mContainer.getControlService()?.hide()
         mMiniToken?.let { mContainer.getPanelService()?.showPanel(it) } ?: run {
             mMiniToken = mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
