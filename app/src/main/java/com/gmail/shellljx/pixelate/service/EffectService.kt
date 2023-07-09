@@ -1,9 +1,10 @@
 package com.gmail.shellljx.pixelate.service
 
-import android.animation.ValueAnimator
+import android.animation.*
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.EffectType
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
@@ -15,6 +16,7 @@ class EffectService : IEffectService, OnTapObserver {
     private val effectList = arrayListOf<EffectItem>()
     private val effectChangedObservers = arrayListOf<EffectChangedObserver>()
     private var mCoreService: IPixelatorCoreService? = null
+    private var mTransformService: ITransformService? = null
     private var mPanelToken: PanelToken? = null
     private var mViewPortAnimator = ValueAnimator.ofInt(200.dp(), 0)
     override fun onStart() {
@@ -36,17 +38,27 @@ class EffectService : IEffectService, OnTapObserver {
         mCoreService?.updateViewPort(200.dp())
         mViewPortAnimator.duration = 400
         mViewPortAnimator.addUpdateListener(mAnimatorUpdateListener)
+        mViewPortAnimator.addListener(mAnimatorListener)
     }
 
     override fun bindVEContainer(container: IContainer) {
         mContainer = container
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
+        mTransformService = mContainer.getServiceManager().getService(TransformService::class.java)
         mContainer.getRenderService()?.getRenderHeight()
     }
 
     private val mAnimatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val viewport = it.animatedValue as Int
         mCoreService?.updateViewPort(viewport)
+        val progress = 1 - (viewport.toFloat() / 200.dp())
+        mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_TRANSLATE_PROGRESS, progress)
+    }
+
+    private val mAnimatorListener = object : AnimatorListenerAdapter() {
+        override fun onAnimationEnd(animation: Animator) {
+            mTransformService?.tryKeepInInnerBounds()
+        }
     }
 
     override fun onStop() {
@@ -70,15 +82,10 @@ class EffectService : IEffectService, OnTapObserver {
     }
 
     private fun tryUpdateViewPort(reverse: Boolean) {
-        val renderWidth = mContainer.getRenderService()?.getRenderWidth() ?: return
-        val renderHeight = mContainer.getRenderService()?.getRenderHeight() ?: return
-        val contentBounds = mCoreService?.getContentBounds() ?: return
-        if (contentBounds.width() < renderWidth || contentBounds.height() < renderHeight) {
-            if (reverse) {
-                mViewPortAnimator.reverse()
-            } else {
-                mViewPortAnimator.start()
-            }
+        if (reverse) {
+            mViewPortAnimator.reverse()
+        } else {
+            mViewPortAnimator.start()
         }
     }
 

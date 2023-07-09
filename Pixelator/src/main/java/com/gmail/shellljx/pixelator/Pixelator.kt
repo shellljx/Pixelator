@@ -87,6 +87,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun setPaintMode(paintMode: Int) {
+        if (mId != 0L) {
+            nativeSetPaintMode(mId, paintMode)
+        }
+    }
+
     override fun setPaintType(paintType: Int) {
         if (mId != 0L) {
             nativeSetPaintType(mId, paintType)
@@ -103,6 +109,12 @@ class Pixelator private constructor() : IPixelator {
         if (buffer.isEmpty()) return
         if (mId != 0L) {
             pushTouchBuffer(mId, buffer, cx, cy)
+        }
+    }
+
+    override fun startTouch(x: Float, y: Float) {
+        if (mId != 0L) {
+            nativeStartTouch(mId, x, y)
         }
     }
 
@@ -185,6 +197,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    private fun onInitBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+        mainHandler.post {
+            mRenderListener?.onInitBoundsChanged(left, top, right, bottom)
+        }
+    }
+
     private fun onFrameSaved(bitmap: Bitmap) {
         mainHandler.post {
             mRenderListener?.onFrameSaved(bitmap)
@@ -194,6 +212,12 @@ class Pixelator private constructor() : IPixelator {
     private fun onRenderError(code: Int, msg: String) {
         mainHandler.post {
             mRenderListener?.onRenderError(code, msg)
+        }
+    }
+
+    private fun onUndoRedoChanged(canUndo: Boolean, canRedo: Boolean) {
+        mainHandler.post {
+            mRenderListener?.onUndoRedoChanged(canUndo, canRedo)
         }
     }
 
@@ -214,9 +238,11 @@ class Pixelator private constructor() : IPixelator {
     private external fun setBrush(id: Long, bitmap: Bitmap): Boolean
     private external fun nativeSetDeeplabMask(id: Long, bitmap: Bitmap)
     private external fun nativeSetDeeplabMaskMode(id: Long, mode: Int)
+    private external fun nativeSetPaintMode(id: Long, mode: Int)
     private external fun nativeSetPaintType(id: Long, type: Int)
     private external fun setPaintSize(id: Long, size: Int)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
+    private external fun nativeStartTouch(id: Long, x: Float, y: Float)
     private external fun nativeStopTouch(id: Long)
     private external fun nativeSetMatrix(id: Long, floatArray: FloatArray)
     private external fun nativeUpdateViewPort(id: Long, offset: Int)

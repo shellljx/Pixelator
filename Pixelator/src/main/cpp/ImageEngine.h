@@ -52,7 +52,7 @@ class ImageEngine : public thread::HandlerCallback {
   void undo();
   void handleMessage(thread::Message *msg) override;
   void stopTouch();
-  void setPaintType(int paintType);
+  void setPaintMode(int paintMode);
   void setDeeplabMask(jobject bitmap);
   void setDeeplabMaskMode(int mode);
   void setEffect(const char *config);
@@ -60,6 +60,8 @@ class ImageEngine : public thread::HandlerCallback {
   void updateViewPort(int offset);
   void onSurfaceDestroy();
   void destroy();
+  void startTouch(float x, float y);
+  void setPaintType(int type);
  private:
   int createEGLInternal();
   int createEGLSurfaceInternal();
@@ -70,14 +72,16 @@ class ImageEngine : public thread::HandlerCallback {
   void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);
   int refreshFrameInternal();
-  void refreshTransform(bool reset = false);
+  void refreshTransform(bool reset = false, bool resetInit = false);
+  void stopTouchInternal();
   void saveInternal();
   void redoInternal();
   void undoInternal();
   void callJavaEGLContextCreate();
   void callJavaEGLWindowCreate();
   void callJavaFrameBoundsChanged(float left, float top, float right, float bottom, bool reset);
-
+  void callJavaInitBoundsChanged(float left, float top, float right, float bottom);
+  void callJavaUndoRedoChanged();
  private:
   std::unique_ptr<thread::HandlerThread> handlerThread_ = nullptr;
   std::unique_ptr<thread::Handler> handler_ = nullptr;
@@ -87,14 +91,11 @@ class ImageEngine : public thread::HandlerCallback {
   Global<jobject> pixelator_;
 
   GLuint imageTexture_ = 0;
-  FrameBuffer *frameBuffer_ = nullptr;
-  GLuint program2_ = 0;
   int surfaceWidth_ = 0;
   int surfaceHeight_ = 0;
   int imageWidth_ = 0;
   int imageHeight_ = 0;
   //笔刷
-  ImageInfo *brushImage_ = nullptr;
   SourceRender *sourceRender_;
   BaseEffectRender *effectRender_;
   PaintRender *paintRender_;

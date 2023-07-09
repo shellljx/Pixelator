@@ -23,11 +23,15 @@ interface IPixelator {
 
     fun setDeeplabMaskMode(@MaskMode mode: Int)
 
+    fun setPaintMode(@PaintMode paintMode: Int)
+
     fun setPaintType(@PaintType paintType: Int)
 
     fun setPaintSize(size: Int)
 
     fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float)
+
+    fun startTouch(x: Float, y: Float)
 
     fun stopTouch()
 

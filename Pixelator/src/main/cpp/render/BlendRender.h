@@ -16,7 +16,7 @@ class BlendRender {
   BlendRender();
   ~BlendRender();
 
-  GLuint draw(GLuint textureId, GLuint maskTexture, int width, int height);
+  GLuint draw(GLuint textureId, GLuint maskTexture, GLuint maskTexture2, int width, int height);
 
   void drawTexture(GLuint textureId, bool revert);
 

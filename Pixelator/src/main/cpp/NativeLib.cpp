@@ -82,6 +82,11 @@ void Android_Jni_setDeeplabMaskMode(JNIEnv *env, jobject object, jlong id, jint 
   engine->setDeeplabMaskMode(mode);
 }
 
+void Android_Jni_setPaintMode(JNIEnv *env, jobject object, jlong id, jint paintType) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->setPaintMode(paintType);
+}
+
 void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintType) {
   auto engine = reinterpret_cast<ImageEngine *>(id);
   engine->setPaintType(paintType);
@@ -110,6 +115,11 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
 void Android_Jni_nativeStopTouch(JNIEnv *env, jobject object, jlong id) {
   auto engine = reinterpret_cast<ImageEngine *>(id);
   engine->stopTouch();
+}
+
+void Android_Jni_nativeStartTouch(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->startTouch(x, y);
 }
 
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray) {

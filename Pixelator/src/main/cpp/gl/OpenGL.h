@@ -203,6 +203,42 @@ static const char *DEEPLAB_FRAGMENT_SHADER =
     "        }                                                                                  \n"
     "    }";
 
+static const char *RECT_PAINT_VERTEX_SHADER =
+    "#ifdef GL_ES\n"
+    "precision highp float;\n"
+    "#endif\n"
+    "\n"
+    "attribute vec4 position;\n"
+    "uniform mat4 mvp;\n"
+    "\n"
+    "\n"
+    "void main() {\n"
+    "gl_Position = mvp * position;\n"
+    "}";
+
+static const char *RECT_PAINT_FRAGMENT_SHADER =
+    "#ifdef GL_ES\n"
+    "precision highp float;\n"
+    "#endif\n"
+    "\n"
+    "uniform sampler2D inputImageTexture;\n"
+    "uniform vec2 textureSize; \n"
+    "uniform vec2 inputStartPoint;\n"
+    "uniform vec2 inputEndPoint;\n"
+    "\n"
+    "void main(){\n"
+    "    vec2 textureXY = gl_FragCoord.xy; \n"
+    "    vec2 rectUV = vec2(textureXY.x/textureSize.x, textureXY.y/textureSize.y); \n"
+    "    vec2 fragCoord = 2.0*rectUV-1.0; \n"
+    "    bool insideRectangle = fragCoord.x >= inputStartPoint.x && fragCoord.x <= inputEndPoint.x &&\n"
+    "                           fragCoord.y >= inputStartPoint.y && fragCoord.y <= inputEndPoint.y;\n"
+    "    if(insideRectangle){\n"
+    "    gl_FragColor = texture2D(inputImageTexture, rectUV);\n"
+    "    }else{\n"
+    "    gl_FragColor = vec4(0.0,0.0,0.0,0.0);\n"
+    "    }"
+    "}";
+
 //void PrintGLError() {
 //  GLenum err;
 //  for (;;) {

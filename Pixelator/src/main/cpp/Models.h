@@ -13,11 +13,22 @@ typedef struct LineData {
   int length = 0;
   glm::mat4 matrix = glm::mat4(1);
   int paintSize = 0;
-  int paintType = 1;
+  int paintMode = 1;
+  std::string effectConfig;
 } LineModel;
 
 typedef enum {
   TypeMosaic = 0,
   TypeImage
 } EffectType;
+
+typedef enum {
+  Eraser = 0,
+  Paint
+} PaintMode;
+
+typedef enum {
+  Graffiti = 0,
+  Rect
+} PaintType;
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_MODELS_H_

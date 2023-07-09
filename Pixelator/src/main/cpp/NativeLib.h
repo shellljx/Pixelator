@@ -38,6 +38,8 @@ void Android_Jni_setDeeplabMask(JNIEnv *env, jobject object, jlong id, jobject b
 
 void Android_Jni_setDeeplabMaskMode(JNIEnv *env, jobject object, jlong id, jint mode);
 
+void Android_Jni_setPaintMode(JNIEnv *env, jobject object, jlong id, jint paintType);
+
 void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintType);
 
 void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size);
@@ -50,6 +52,8 @@ void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jfloat cy);
 
 void Android_Jni_nativeStopTouch(JNIEnv *env, jobject object, jlong id);
+
+void Android_Jni_nativeStartTouch(JNIEnv *env, jobject object, jlong id, jfloat x, jfloat y);
 
 void Android_Jni_set_matrix(JNIEnv *env, jobject object, jlong id, jfloatArray floatArray);
 
@@ -80,10 +84,12 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"setBrush", "(JLandroid/graphics/Bitmap;)Z", (void **) Android_Jni_setBrush},
     {"nativeSetDeeplabMask", "(JLandroid/graphics/Bitmap;)V", (void **) Android_Jni_setDeeplabMask},
     {"nativeSetDeeplabMaskMode", "(JI)V", (void **) Android_Jni_setDeeplabMaskMode},
+    {"nativeSetPaintMode", "(JI)V", (void **) Android_Jni_setPaintMode},
     {"nativeSetPaintType", "(JI)V", (void **) Android_Jni_setPaintType},
     {"setPaintSize", "(JI)V", (void **) Android_Jni_setPaintSize},
     {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},
     {"nativeStopTouch", "(J)V", (void **) Android_Jni_nativeStopTouch},
+    {"nativeStartTouch", "(JFF)V", (void **) Android_Jni_nativeStartTouch},
     {"refreshFrame", "(J)V", (void **) Andriod_Jni_refresh_frame},
     {"nativeUndo", "(J)V", (void **) Android_Jni_undo},
     {"nativeRedo", "(J)V", (void **) Android_Jni_redo},

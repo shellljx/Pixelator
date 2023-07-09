@@ -23,7 +23,7 @@ BlendRender::~BlendRender() {
   buffer_ = nullptr;
 }
 
-GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int height) {
+GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, GLuint maskTexture2, int width, int height) {
   frameBuffer_->createFrameBuffer(width, height);
   glBindFramebuffer(GL_FRAMEBUFFER, frameBuffer_->getFrameBuffer());
   GL_CHECK(glEnable(GL_BLEND))
@@ -38,12 +38,14 @@ GLuint BlendRender::draw(GLuint textureId, GLuint maskTexture, int width, int he
 
   drawTexture(textureId, false);
   drawTexture(maskTexture, true);
-
+  if (maskTexture2 != GL_NONE) {
+    drawTexture(maskTexture2, true);
+  }
   if (buffer_ == nullptr) {
     buffer_ = new uint8_t[width * height * 4];
   }
   GL_CHECK(glDisable(GL_BLEND))
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0))
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE))
 
   return frameBuffer_->getTexture();
 }

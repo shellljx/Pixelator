@@ -27,6 +27,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     @PaintMode
     private var mPaintMode = PAINT
+    @PaintType
+    private var mPaintType = Graffiti
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
@@ -53,6 +55,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
             }
             mContentBounds.set(left, top, right, bottom)
             mContentBoundsObservers.forEach { it.onContentBoundsChanged(mContentBounds.toRect()) }
+        }
+
+        override fun onInitBoundsChanged(left: Float, top: Float, right: Float, bottom: Float) {
+            mInitBounds.set(left, top, right, bottom)
         }
 
         override fun onFrameSaved(bitmap: Bitmap) {
@@ -113,9 +119,14 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mPaintSizeObservers.forEach { it.onPaintSizeChanged(size) }
     }
 
-    override fun setPaintMode(paintType: Int) {
-        mPaintMode = paintType
-        mImageSdk.setPaintMode(paintType)
+    override fun setPaintMode(paintMode: Int) {
+        mPaintMode = paintMode
+        mImageSdk.setPaintMode(paintMode)
+    }
+
+    override fun setPaintType(paintType: Int) {
+        mPaintType = paintType
+        mImageSdk.setPaintType(paintType)
     }
 
     override fun setDeeplabMask(bitmap: Bitmap) {
@@ -254,6 +265,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return false
     }
 
+    override fun onSingleDown(event: MotionEvent): Boolean {
+        mImageSdk.startTouch(event.x, event.y)
+        return false
+    }
+
     override fun onSingleUp(event: MotionEvent): Boolean {
         mImageSdk.stopTouch()
         return false
@@ -272,6 +288,7 @@ interface IPixelatorCoreService : IService {
     fun setBrushResource(id: Int)
     fun setPaintSize(size: Int)
     fun setPaintMode(@PaintMode paintMode: Int)
+    fun setPaintType(@PaintType paintType: Int)
     fun setDeeplabMask(bitmap: Bitmap)
     fun setDeeplabMode(@MaskMode mode: Int)
     fun loadImage(path: String)

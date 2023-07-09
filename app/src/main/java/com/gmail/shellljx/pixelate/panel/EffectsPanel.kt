@@ -15,14 +15,13 @@ import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.*
 import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
+import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
 import com.gmail.shellljx.pixelate.view.PickItem
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
-import com.gmail.shellljx.pixelator.ERASER
-import com.gmail.shellljx.pixelator.MaskMode
-import com.gmail.shellljx.pixelator.PAINT
+import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.*
@@ -90,7 +89,14 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleMoveObserver(this)
         mCoreService?.addUndoRedoStateObserver(this)
 
+        var b = true
         mPaintView?.setOnClickListener {
+            if (b) {
+                mCoreService?.setPaintType(Graffiti)
+            } else {
+                mCoreService?.setPaintType(Rect)
+            }
+            b = !b
         }
         mLockView?.setOnClickListener {
             val maskMode = mMaskService?.getMaskMode() ?: return@setOnClickListener

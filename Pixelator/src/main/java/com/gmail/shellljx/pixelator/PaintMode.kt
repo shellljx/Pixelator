@@ -2,19 +2,12 @@ package com.gmail.shellljx.pixelator
 
 import androidx.annotation.IntDef
 
-/**
- * @Author: shell
- * @Email: shellljx@gmail.com
- * @Date: 2023/7/4
- * @Description:
- */
-
-const val Graffiti = 0
-const val Rect = 1
+const val ERASER = 0
+const val PAINT = 1
 
 @IntDef(
-    Graffiti, Rect
+    ERASER, PAINT
 )
 @Target(AnnotationTarget.FIELD, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.SOURCE)
-annotation class PaintType
+annotation class PaintMode

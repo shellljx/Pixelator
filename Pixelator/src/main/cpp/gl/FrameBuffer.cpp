@@ -46,7 +46,7 @@ void FrameBuffer::createFrameBuffer(int width, int height) {
     LOGE("frame buffer create error %d, %d", width, height);
   }
   GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
-  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, 0))
+  GL_CHECK(glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE))
   width_ = width;
   height_ = height;
 }

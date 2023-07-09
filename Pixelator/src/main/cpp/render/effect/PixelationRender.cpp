@@ -47,7 +47,7 @@ GLuint PixelationRender::draw(GLuint textureId, int width, int height) {
   glDrawArrays(GL_TRIANGLE_STRIP, 0, 4);
   glDisableVertexAttribArray(positionLoc);
   glBindTexture(GL_TEXTURE_2D, 0);
-  glBindFramebuffer(GL_FRAMEBUFFER, 0);
+  glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
   return frameBuffer_->getTexture();
 }
 

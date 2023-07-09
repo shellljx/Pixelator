@@ -24,8 +24,12 @@ class ScreenRender {
  */
   void draw(GLuint textureId, int width, int height, int screenWidth, int screenHeight);
 
-  glm::mat4 getModelMatrix() {
+  glm::mat4 getTransformMatrix() {
     return transformMatrix_ * modelMatrix_;
+  }
+
+  glm::mat4 getModelMatrix() {
+    return modelMatrix_;
   }
 
   void translate(float scale);

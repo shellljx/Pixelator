@@ -12,7 +12,7 @@ import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import kotlin.math.sqrt
 
-class TransformService : ITransformService, OnTapObserver, OnTransformObserver,OnSingleMoveObserver {
+class TransformService : ITransformService, OnTapObserver, OnTransformObserver, OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mMiniToken: PanelToken? = null
@@ -47,7 +47,7 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver,O
         return false
     }
 
-    private fun tryToKeepInInnerBounds() {
+    override fun tryKeepInInnerBounds() {
         val bounds = mCoreService?.getContentBounds() ?: return
         val transformMatrix = mCoreService?.getTransformMatrix()
         val from = RectF(bounds)
@@ -145,7 +145,7 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver,O
         val y2 = point2.y
 
         val scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
-                ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
+            ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
         ).toFloat()
 
         val transformMatrix = mCoreService?.getTransformMatrix() ?: return false
@@ -164,7 +164,7 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver,O
         } else {
             if (!scaleLimit) {
                 mCoreService?.getContentBounds()?.let {
-                    transformMatrix.postScale(scale,scale, it.centerX(), it.centerY())
+                    transformMatrix.postScale(scale, scale, it.centerX(), it.centerY())
                 }
             }
         }
@@ -174,9 +174,11 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver,O
     }
 
     override fun onTransformEnd(): Boolean {
-        tryToKeepInInnerBounds()
+        tryKeepInInnerBounds()
         return false
     }
 }
 
-interface ITransformService : IService
+interface ITransformService : IService {
+    fun tryKeepInInnerBounds()
+}
