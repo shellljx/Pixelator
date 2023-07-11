@@ -57,6 +57,9 @@ static int loadImageFromPath(const char *path, ImageInfo **info) {
                                                   decodeMethodId,
                                                   env->NewStringUTF(path));
   auto ret = createBitmapInfo(bitmapObj, info);
+  Local<jclass> bitmapClass = {env,env->GetObjectClass(bitmapObj)};
+  jmethodID recycleMethodId = env->GetMethodID(bitmapClass.get(),"recycle","()V");
+  env->CallVoidMethod(bitmapObj,recycleMethodId);
   env->DeleteLocalRef(bitmapObj);
   return ret;
 }
