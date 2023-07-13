@@ -29,6 +29,10 @@ add_library( # Sets the name of the library.
 
         # Sets the library as a shared library.
         SHARED
+        filter/BaseFilter.cpp
+        filter/GraffitiFilter.cpp
+        filter/MatrixFilter.cpp
+        filter/RectFilter.cpp
         gl/FrameBuffer.cpp
         gl/Program.cpp
         json/json_reader.cpp
@@ -47,6 +51,7 @@ add_library( # Sets the name of the library.
         thread/Looper.cpp
         thread/Message.cpp
         thread/MessageQueue.cpp
+        utils/GLUtils.cpp
         utils/ImageDecoder.cpp
         utils/TimeUtils.cpp
         Effect.cpp

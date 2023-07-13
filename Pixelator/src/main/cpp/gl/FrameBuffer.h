@@ -26,7 +26,7 @@ class FrameBuffer {
 
   int getTextureHeight();
 
-  GLuint getFrameBuffer();
+  GLuint getFrameBuffer() const;
 
   void deleteFrameBuffer();
 

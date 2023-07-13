@@ -10,6 +10,7 @@
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
 #include "FrameBuffer.h"
+#include "filter/BaseFilter.h"
 
 class BlendRender {
  public:
@@ -18,7 +19,7 @@ class BlendRender {
 
   GLuint draw(GLuint textureId, GLuint maskTexture, GLuint maskTexture2, int width, int height);
 
-  void drawTexture(GLuint textureId, bool revert);
+  void drawTexture(GLuint textureId, bool revert, int width, int height);
 
   GLuint getFrameBuffer();
   GLuint getTexture();
@@ -27,6 +28,7 @@ class BlendRender {
 
  private:
   FrameBuffer *frameBuffer_;
+  BaseFilter* filter_;
   GLuint program_ = 0;
   uint8_t *buffer_;
 };

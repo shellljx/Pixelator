@@ -510,7 +510,15 @@ void ImageEngine::setEffectInternal(char *effect) {
     }
     case TypeImage: {
       delete effectRender_;
+      std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(
+          std::chrono::system_clock::now().time_since_epoch()
+      );
       effectRender_ = new ImageEffect();
+      std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(
+          std::chrono::system_clock::now().time_since_epoch()
+      );
+      LOGE("lijinxiang duration %d", end.count()-start.count());
+
       break;
     }
     default: {
@@ -518,14 +526,18 @@ void ImageEngine::setEffectInternal(char *effect) {
       return;
     }
   }
+
   effectRender_->updateConfig(config);
+
   if (sourceRender_ != nullptr) {
+
     effectRender_->draw(sourceRender_->getTexture(),
                         sourceRender_->getTextureWidth(),
                         sourceRender_->getTextureHeight());
     paintRender_->draw(effectRender_->getTexture(),
                        sourceRender_->getTextureWidth(),
                        sourceRender_->getTextureHeight());
+
   }
 }
 

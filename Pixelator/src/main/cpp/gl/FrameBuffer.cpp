@@ -63,7 +63,7 @@ int FrameBuffer::getTextureHeight() {
   return height_;
 }
 
-GLuint FrameBuffer::getFrameBuffer() {
+GLuint FrameBuffer::getFrameBuffer() const{
   return frameBufferId_;
 }
 

@@ -5,8 +5,10 @@
 #include "ScreenRender.h"
 #include <memory>
 #include "Program.h"
+#include "filter/MatrixFilter.h"
 
 ScreenRender::ScreenRender() : vertexCoordinate_(nullptr) {
+  filter_ = new MatrixFilter();
   program_ = Program::CreateProgram(DEFAULT_MATRIX_VERTEX_SHADER, DEFAULT_FRAGMENT_SHADER);
   vertexCoordinate_ = new float[8];
   memcpy(vertexCoordinate_, DEFAULT_VERTEX_COORDINATE, sizeof(float) * 8);
@@ -38,10 +40,10 @@ void ScreenRender::initMatrix(int screenWidth,
 }
 
 void ScreenRender::draw(GLuint textureId,
-                          int width,
-                          int height,
-                          int screenWidth,
-                          int screenHeight) {
+                        int width,
+                        int height,
+                        int screenWidth,
+                        int screenHeight) {
 
   if (vertexCoordinate_ != nullptr) {
     vertexCoordinate_[0] = 0.f;
@@ -57,29 +59,11 @@ void ScreenRender::draw(GLuint textureId,
   if (screenWidth % 2 != 0 || screenHeight % 2 != 0) {
     GL_CHECK(glPixelStorei(GL_UNPACK_ALIGNMENT, 1));
   }
-  GL_CHECK(glViewport(0, 0, screenWidth, screenHeight));
-  GL_CHECK(glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT));
-  GL_CHECK(glUseProgram(program_))
-  auto positionLoction = glGetAttribLocation(program_, "position");
-  GL_CHECK(glEnableVertexAttribArray(positionLoction))
-  GL_CHECK(glVertexAttribPointer(positionLoction, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 vertexCoordinate_))
-  auto textureLocation = glGetAttribLocation(program_, "inputTextureCoordinate");
-  GL_CHECK(glEnableVertexAttribArray(textureLocation))
-  GL_CHECK(glVertexAttribPointer(textureLocation, 2, GL_FLOAT, GL_FALSE, 2 * sizeof(GLfloat),
-                                 DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP))
   auto matrix = projectionMatrix_ * viewMatrix_ * transformMatrix_ * modelMatrix_;
-  auto mvpLoc = glGetUniformLocation(program_, "mvp");
-  glUniformMatrix4fv(mvpLoc, 1, GL_FALSE, glm::value_ptr(matrix));
-
-  GL_CHECK(glActiveTexture(GL_TEXTURE0));
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, textureId));
-  auto inputTextureLocation = glGetUniformLocation(program_, "inputImageTexture");
-  GL_CHECK(glUniform1i(inputTextureLocation, 0))
-  GL_CHECK(glDrawArrays(GL_TRIANGLE_STRIP, 0, 4))
-  GL_CHECK(glDisableVertexAttribArray(positionLoction))
-  GL_CHECK(glDisableVertexAttribArray(textureLocation))
-  GL_CHECK(glBindTexture(GL_TEXTURE_2D, 0))
+  filter_->initialize();
+  FilterSource source = {textureId, DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP, width, height};
+  FilterTarget target = {nullptr, matrix, vertexCoordinate_, screenWidth, screenHeight};
+  filter_->draw(&source, &target);
 }
 
 void ScreenRender::translate(float scale) {

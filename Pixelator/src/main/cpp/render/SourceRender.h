@@ -7,6 +7,7 @@
 
 #include <GLES3/gl3.h>
 #include "FrameBuffer.h"
+#include "filter/BaseFilter.h"
 
 class SourceRender {
  public:
@@ -32,8 +33,8 @@ class SourceRender {
   int getTextureHeight();
 
  private:
-  GLuint program_ = 0;
-  FrameBuffer *frameBuffer_ = nullptr;
+  FrameBuffer *frameBuffer_;
+  BaseFilter *filter_;
 };
 
 #endif //PIXELATE_SOURCERENDER_H

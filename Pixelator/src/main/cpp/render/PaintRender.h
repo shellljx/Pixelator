@@ -13,6 +13,8 @@
 #include "FrameBuffer.h"
 #include "ImageInfo.h"
 #include "Models.h"
+#include "filter/GraffitiFilter.h"
+#include "filter/RectFilter.h"
 
 class PaintRender {
  public:
@@ -79,6 +81,9 @@ class PaintRender {
   float touchPointX_ = 0;
   float touchPointY_ = 0;
   glm::mat4 matrix_ = glm::mat4(1);
+  GraffitiFilter *graffitiFilter;
+  RectFilter *rectFilter;
+  BaseFilter *blendFilter;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_PAINTRENDER_H_

@@ -7,6 +7,7 @@
 
 #include <detail/type_mat.hpp>
 #include <detail/type_mat4x4.hpp>
+#include <string>
 
 typedef struct LineData {
   float *data = nullptr;

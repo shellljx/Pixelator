@@ -8,6 +8,7 @@
 #include "glm/glm.hpp"
 #include "glm/gtc/type_ptr.hpp"
 #include "glm/gtc/matrix_transform.hpp"
+#include "filter/BaseFilter.h"
 
 class ScreenRender {
  public:
@@ -44,6 +45,7 @@ class ScreenRender {
   float scale_ = 1.f;
   int offset_ = 0;
   float *vertexCoordinate_;
+  BaseFilter* filter_;
   glm::mat4 projectionMatrix_ = glm::mat4(1);
   glm::mat4 viewMatrix_ = glm::mat4(1);
   glm::mat4 modelMatrix_ = glm::mat4(1);
