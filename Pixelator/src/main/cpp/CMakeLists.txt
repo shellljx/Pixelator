@@ -44,7 +44,6 @@ add_library( # Sets the name of the library.
         json/json_reader.cpp
         json/json_value.cpp
         json/json_writer.cpp
-        render/MiniScreenRender.cpp
         render/Renderer.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp

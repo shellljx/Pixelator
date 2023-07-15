@@ -10,8 +10,7 @@
 #include "json/json.h"
 #include "utils/ImageDecoder.h"
 
-ImageEngine::ImageEngine(jobject object)
-    : miniScreenRender_(nullptr), renderer(new Renderer()) {
+ImageEngine::ImageEngine(jobject object) : renderer(new Renderer()) {
   std::string name("ImageEngineThread");
   renderer->setRenderCallback(this);
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
@@ -23,10 +22,8 @@ ImageEngine::ImageEngine(jobject object)
 }
 
 ImageEngine::~ImageEngine() {
-  delete miniScreenRender_;
   delete renderer;
   renderer = nullptr;
-  miniScreenRender_ = nullptr;
 }
 
 void ImageEngine::onSurfaceCreate(jobject surface) {
@@ -65,14 +62,12 @@ void ImageEngine::onSurfaceDestroy() {
 
 void ImageEngine::onMiniSurfaceCreate(jobject surface) {
   JNIEnv *env = JNIEnvironment::Current();
-  ANativeWindow *window = nullptr;
   if (env != nullptr) {
-    window = ANativeWindow_fromSurface(env, surface);
+    miniScreenWindow_ = ANativeWindow_fromSurface(env, surface);
   }
-  if (window != nullptr) {
+  if (miniScreenWindow_ != nullptr) {
     auto msg = new thread::Message();
     msg->what = PixelateMessage::kCreateMiniSurface;
-    msg->obj1 = window;
     handler_->sendMessage(msg);
   }
 }
@@ -223,6 +218,20 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       destroyEGLInternal();
       break;
     }
+    case PixelateMessage::kCreateMiniSurface: {
+      createMiniEGLSurfaceInternal();
+      break;
+    }
+    case PixelateMessage::kMiniSurfaceChanged: {
+      int width = msg->arg1;
+      int height = msg->arg2;
+      renderer->setMiniSurfaceChanged(width, height);
+      break;
+    }
+    case PixelateMessage::kMiniSurfaceDestroy: {
+      miniSurfaceDestroyInternal();
+      break;
+    }
     case PixelateMessage::kInsertImage: {
       auto path = reinterpret_cast<char *>(msg->obj1);
       auto rotate = msg->arg1;
@@ -281,12 +290,6 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       int length = msg->arg1;
       float cx = msg->arg3;
       float cy = msg->arg4;
-
-      if (miniScreenRender_ != nullptr && length >= 2) {
-        miniScreenRender_->tranlate(cx, cy);
-      }
-      //没有选择特效不让绘制轨迹
-
       bool ret = renderer->updateTouchBuffer(buffer, length, cx, cy);
       if (ret != 0) {
         delete[] buffer;
@@ -301,7 +304,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
 
     case PixelateMessage::kSetMatrix: {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
-      renderer->setTransformMatrix(glm::make_mat4(buffer));
+      renderer->setTransformMatrix(buffer);
       delete[] buffer;
       break;
     }
@@ -323,32 +326,6 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     }
     case PixelateMessage::kRedo: {
       redoInternal();
-      break;
-    }
-    case PixelateMessage::kCreateMiniSurface: {
-      if (eglCore_ == nullptr) {
-        return;
-      }
-      if (miniScreenRender_ == nullptr) {
-        miniScreenRender_ = new MiniScreenRender(eglCore_.get());
-      }
-      auto window = reinterpret_cast<ANativeWindow *>(msg->obj1);
-      miniScreenRender_->createEglSurface(eglCore_.get(), window);
-//      miniScreenRender_->setTransformMatrix(screenRender_->getTransformMatrix());
-      break;
-    }
-    case PixelateMessage::kMiniSurfaceChanged: {
-      if (miniScreenRender_ != nullptr) {
-        int width = msg->arg1;
-        int height = msg->arg2;
-        miniScreenRender_->surfaceChanged(width, height);
-      }
-      break;
-    }
-    case PixelateMessage::kMiniSurfaceDestroy: {
-      if (miniScreenRender_ != nullptr) {
-        miniScreenRender_->destroyEglSurface(eglCore_.get());
-      }
       break;
     }
   }
@@ -388,6 +365,24 @@ int ImageEngine::createEGLSurfaceInternal() {
   return 0;
 }
 
+int ImageEngine::createMiniEGLSurfaceInternal() {
+  LOGI("enter %s", __func__);
+  if (eglCore_ == nullptr) {
+    LOGE("egl core is null");
+    return -1;
+  } else if (miniScreenWindow_ == nullptr) {
+    LOGE("mini native window is null");
+    return -1;
+  }
+  miniSurface_ = eglCore_->createWindowSurface(miniScreenWindow_);
+  if (miniSurface_ == EGL_NO_SURFACE) {
+    LOGE("create egl mini surface error");
+    return -1;
+  }
+  renderer->drawMiniScreen();
+  return 0;
+}
+
 int ImageEngine::surfaceChangedInternal(int width, int height) {
   renderer->setSurfaceChanged(width, height);
   return 0;
@@ -404,6 +399,21 @@ void ImageEngine::surfaceDestroyInternal() {
       eglCore_->releaseSurface(renderSurface_);
       eglCore_->makeCurrent(EGL_NO_SURFACE);
       renderSurface_ = EGL_NO_SURFACE;
+    }
+  }
+}
+
+void ImageEngine::miniSurfaceDestroyInternal() {
+  if (miniScreenWindow_ != nullptr) {
+    ANativeWindow_release(miniScreenWindow_);
+    miniScreenWindow_ = nullptr;
+  }
+  if (eglCore_ != nullptr) {
+    if (miniSurface_ != EGL_NO_SURFACE) {
+      eglCore_->makeCurrent(miniSurface_);
+      eglCore_->releaseSurface(miniSurface_);
+      eglCore_->makeCurrent(EGL_NO_SURFACE);
+      miniSurface_ = EGL_NO_SURFACE;
     }
   }
 }
@@ -458,6 +468,17 @@ void ImageEngine::bindScreen() {
 
 void ImageEngine::flushScreen() {
   eglCore_->swapBuffers(renderSurface_);
+  eglCore_->makeCurrent(EGL_NO_SURFACE);
+}
+
+void ImageEngine::bindMiniScreen() {
+  if (miniSurface_ != EGL_NO_SURFACE) {
+    eglCore_->makeCurrent(miniSurface_);
+  }
+}
+
+void ImageEngine::flushMiniScreen() {
+  eglCore_->swapBuffers(miniSurface_);
   eglCore_->makeCurrent(EGL_NO_SURFACE);
 }
 

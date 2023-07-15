@@ -9,30 +9,12 @@ class Pixelator private constructor() : IPixelator {
 
     private var mId = 0L
     private var mRenderListener: IRenderListener? = null
+    private val mMiniScreen: IMiniScreen
     private val mainHandler = Handler(Looper.getMainLooper())
 
     init {
         mId = create()
-    }
-
-    private val miniScreen = object : IMiniScreen {
-        override fun onSurfaceCreated(surface: Surface) {
-            if (mId != 0L) {
-                onMiniScreenSurfaceCreate(mId, surface)
-            }
-        }
-
-        override fun onSurfaceChanged(width: Int, height: Int) {
-            if (mId != 0L) {
-                onMiniScreenSurfaceChanged(mId, width, height)
-            }
-        }
-
-        override fun onSurfaceDestroy() {
-            if (mId != 0L) {
-                onMiniScreenSurfaceDestroy(mId)
-            }
-        }
+        mMiniScreen = MiniScreen(mId)
     }
 
     override fun setDisplaySurface(surface: Surface) {
@@ -155,7 +137,7 @@ class Pixelator private constructor() : IPixelator {
     }
 
     override fun getMiniScreen(): IMiniScreen {
-        return miniScreen
+        return mMiniScreen
     }
 
     override fun save() {
@@ -229,9 +211,6 @@ class Pixelator private constructor() : IPixelator {
     private external fun onSurfaceCreate(id: Long, surface: Surface)
     private external fun onSurfaceChanged(id: Long, width: Int, height: Int)
     private external fun onSurfaceDestroy(id: Long)
-    private external fun onMiniScreenSurfaceCreate(id: Long, surface: Surface)
-    private external fun onMiniScreenSurfaceChanged(id: Long, width: Int, height: Int)
-    private external fun onMiniScreenSurfaceDestroy(id: Long)
     private external fun nativeAddImagePath(id: Long, path: String, rotate: Int)
     private external fun nativeSetEffect(id: Long, config: String)
     private external fun nativeUpdateEffect(id: Long, config: String)

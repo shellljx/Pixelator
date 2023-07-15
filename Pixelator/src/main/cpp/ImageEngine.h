@@ -21,7 +21,6 @@
 #include <GLES3/gl3.h>
 #include "BitmapUtils.h"
 #include "FrameBuffer.h"
-#include "render/MiniScreenRender.h"
 #include "render/Renderer.h"
 
 using namespace glm;
@@ -60,13 +59,17 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
  private:
   void bindScreen() override;
   void flushScreen() override;
+  void bindMiniScreen() override;
+  void flushMiniScreen() override;
   void onTransformChanged(float left, float top, float right, float bottom, bool reset) override;
   void onInitBoundChanged(float left, float top, float right, float bottom) override;
   void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) override;
   int createEGLInternal();
   int createEGLSurfaceInternal();
+  int createMiniEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
   void surfaceDestroyInternal();
+  void miniSurfaceDestroyInternal();
   void destroyEGLInternal();
   int insertImageInternal(const char *path, int rotate);
   void setEffectInternal(char *effect);
@@ -86,8 +89,9 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   std::unique_ptr<EGLCore> eglCore_ = nullptr;
   ANativeWindow *nativeWindow_ = nullptr;
   EGLSurface renderSurface_ = EGL_NO_SURFACE;
+  ANativeWindow *miniScreenWindow_ = nullptr;
+  EGLSurface miniSurface_ = EGL_NO_SURFACE;
   Global<jobject> pixelator_;
-  MiniScreenRender *miniScreenRender_;
   std::vector<LineData> undoStack_;
   std::vector<LineData> redoStack_;
   std::vector<float> touchData_;

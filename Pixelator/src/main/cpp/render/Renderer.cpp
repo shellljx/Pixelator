@@ -4,6 +4,7 @@
 
 #include "Renderer.h"
 #include "ImageDecoder.h"
+#include "glm/gtc/type_ptr.hpp"
 
 Renderer::Renderer() {
   sourceFrameBuffer = new FrameBuffer();
@@ -38,6 +39,12 @@ void Renderer::setSurfaceChanged(int width, int height) {
                                 static_cast<float>(screenHeight), 0.f, 1.f, 100.f);
 }
 
+void Renderer::setMiniSurfaceChanged(int width, int height) {
+  miniScreenWidth = width;
+  miniScreenHeight = height;
+  miniScreenProjection = glm::ortho(0.f, width * 1.f, height * 1.f, 0.f, 1.f, 100.f);
+}
+
 void Renderer::setBottomOffset(int offset) {
   LOGI("enter func %s", __func__);
   bottomOffset = offset;
@@ -59,7 +66,6 @@ void Renderer::setInputImage(GLuint texture, int width, int height) {
   notifyTransformChanged(true);
   drawBlend();
   drawScreen();
-  renderCallback->saveFrameBuffer(sourceFrameBuffer, sourceWidth, sourceHeight);
 }
 
 void Renderer::setBrushImage(ImageInfo *image) {
@@ -130,9 +136,9 @@ void Renderer::setEffect(Json::Value &root) {
   }
 }
 
-void Renderer::setTransformMatrix(const glm::mat4 &matrix) {
+void Renderer::setTransformMatrix(const float *buffer) {
   LOGI("enter func %s", __func__);
-  transformMatrix = matrix;
+  transformMatrix = glm::make_mat4(buffer);
   notifyTransformChanged();
   drawScreen();
 }
@@ -156,6 +162,7 @@ bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
   drawPaint();
   drawBlend();
   drawScreen();
+  drawMiniScreen();
   return true;
 }
 
@@ -320,6 +327,23 @@ void Renderer::drawScreen() {
     FilterTarget target = {nullptr, matrix, vertexCoordinate, screenWidth, screenHeight};
     matrixFilter->draw(&source, &target);
     renderCallback->flushScreen();
+  }
+}
+
+void Renderer::drawMiniScreen() {
+  if (renderCallback != nullptr && sourceWidth > 0 && sourceHeight > 0) {
+    renderCallback->bindMiniScreen();
+    float vertexCoordinate_[8] = {0.f, 0.f, sourceWidth * 1.f, 0.f, 0.f, sourceHeight * 1.f,
+                                  sourceWidth * 1.f, sourceHeight * 1.f};
+    auto model = glm::mat4(1);
+    model = glm::translate(model, glm::vec3(-touchX, -touchY, 0.f));
+    model = glm::translate(model, glm::vec3(miniScreenWidth / 2.f, miniScreenHeight / 2.f, 0.f));
+    auto matrix = miniScreenProjection * viewMatrix * model * transformMatrix * modelMatrix;
+    matrixFilter->initialize();
+    FilterSource source = {blendFrameBuffer->getTexture(), DEFAULT_TEXTURE_COORDINATE};
+    FilterTarget target = {nullptr, matrix, vertexCoordinate_, miniScreenWidth, miniScreenHeight};
+    matrixFilter->draw(&source, &target);
+    renderCallback->flushMiniScreen();
   }
 }
 

@@ -17,6 +17,8 @@ class RenderCallback {
  public:
   virtual void bindScreen() = 0;
   virtual void flushScreen() = 0;
+  virtual void bindMiniScreen() = 0;
+  virtual void flushMiniScreen() = 0;
   virtual void onTransformChanged(float left, float top, float right, float bottom, bool reset) = 0;
   virtual void onInitBoundChanged(float left, float top, float right, float bottom) = 0;
   virtual void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) = 0;
@@ -27,6 +29,7 @@ class Renderer {
   explicit Renderer();
   ~Renderer();
   void setSurfaceChanged(int width, int height);
+  void setMiniSurfaceChanged(int width, int height);
   void setBottomOffset(int offset);
   void setInputImage(GLuint texture, int width, int height);
   void setBrushImage(ImageInfo *image);
@@ -36,11 +39,12 @@ class Renderer {
   void setPaintSize(int size);
   void setMaskMode(int mode);
   void setEffect(Json::Value &root);
-  void setTransformMatrix(const glm::mat4 &matrix);
+  void setTransformMatrix(const float *buffer);
   void startTouch(float x, float y);
   bool updateTouchBuffer(float *buffer, int length, float x, float y);
   void stopTouch();
   void drawScreen();
+  void drawMiniScreen();
   FrameBuffer *getBlendFrameBuffer() const;
   void setRenderCallback(RenderCallback *callback);
  private:
@@ -58,6 +62,7 @@ class Renderer {
  private:
   RenderCallback *renderCallback = nullptr;
   glm::mat4 screenProjection = glm::mat4(1);
+  glm::mat4 miniScreenProjection = glm::mat4(1);
   glm::mat4 paintProjection = glm::mat4(1);
   glm::mat4 viewMatrix = glm::mat4(1);
   glm::mat4 modelMatrix = glm::mat4(1);
@@ -79,6 +84,8 @@ class Renderer {
   int maskMode = 0;
   int screenWidth = 0;
   int screenHeight = 0;
+  int miniScreenWidth = 0;
+  int miniScreenHeight = 0;
   int sourceWidth = 0;
   int sourceHeight = 0;
   int bottomOffset = 0;
