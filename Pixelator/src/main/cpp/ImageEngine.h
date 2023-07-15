@@ -21,17 +21,12 @@
 #include <GLES3/gl3.h>
 #include "BitmapUtils.h"
 #include "FrameBuffer.h"
-#include "render/SourceRender.h"
-#include "render/effect/PixelationRender.h"
-#include "render/PaintRender.h"
-#include "render/ScreenRender.h"
-#include "render/BlendRender.h"
 #include "render/MiniScreenRender.h"
-#include "render/effect/BaseEffectRender.h"
+#include "render/Renderer.h"
 
 using namespace glm;
 
-class ImageEngine : public thread::HandlerCallback {
+class ImageEngine : public thread::HandlerCallback, RenderCallback {
  public:
   explicit ImageEngine(jobject object);
   virtual ~ImageEngine();
@@ -63,6 +58,11 @@ class ImageEngine : public thread::HandlerCallback {
   void startTouch(float x, float y);
   void setPaintType(int type);
  private:
+  void bindScreen() override;
+  void flushScreen() override;
+  void onTransformChanged(float left, float top, float right, float bottom, bool reset) override;
+  void onInitBoundChanged(float left, float top, float right, float bottom) override;
+  void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) override;
   int createEGLInternal();
   int createEGLSurfaceInternal();
   int surfaceChangedInternal(int width, int height);
@@ -71,8 +71,6 @@ class ImageEngine : public thread::HandlerCallback {
   int insertImageInternal(const char *path, int rotate);
   void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);
-  int refreshFrameInternal();
-  void refreshTransform(bool reset = false, bool resetInit = false);
   void stopTouchInternal();
   void saveInternal();
   void redoInternal();
@@ -89,22 +87,11 @@ class ImageEngine : public thread::HandlerCallback {
   ANativeWindow *nativeWindow_ = nullptr;
   EGLSurface renderSurface_ = EGL_NO_SURFACE;
   Global<jobject> pixelator_;
-
-  GLuint imageTexture_ = 0;
-  int surfaceWidth_ = 0;
-  int surfaceHeight_ = 0;
-  int imageWidth_ = 0;
-  int imageHeight_ = 0;
-  //笔刷
-  SourceRender *sourceRender_;
-  BaseEffectRender *effectRender_;
-  PaintRender *paintRender_;
-  ScreenRender *screenRender_;
-  BlendRender *blendRender_;
   MiniScreenRender *miniScreenRender_;
   std::vector<LineData> undoStack_;
   std::vector<LineData> redoStack_;
   std::vector<float> touchData_;
+  Renderer *renderer;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_PIXELATOR_H_

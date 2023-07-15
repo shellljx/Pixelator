@@ -4,23 +4,16 @@
 
 #include "ImageEngine.h"
 #include "Messages.h"
-#include <memory>
 #include "Log.h"
 #include "Global.h"
 #include "Local.h"
-#include "render/effect/ImageEffect.h"
-#include "OpenGL.h"
 #include "json/json.h"
 #include "utils/ImageDecoder.h"
 
 ImageEngine::ImageEngine(jobject object)
-    : sourceRender_(nullptr),
-      effectRender_(nullptr),
-      paintRender_(nullptr),
-      screenRender_(nullptr),
-      blendRender_(nullptr),
-      miniScreenRender_(nullptr) {
-  std::string name("pixelator thread");
+    : miniScreenRender_(nullptr), renderer(new Renderer()) {
+  std::string name("ImageEngineThread");
+  renderer->setRenderCallback(this);
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
   pixelator_.reset(JNIEnvironment::Current(), object);
@@ -30,22 +23,9 @@ ImageEngine::ImageEngine(jobject object)
 }
 
 ImageEngine::~ImageEngine() {
-  if (imageTexture_ > 0) {
-    glDeleteTextures(1, &imageTexture_);
-    imageTexture_ = 0;
-  }
-
-  delete paintRender_;
-  paintRender_ = nullptr;
-  delete effectRender_;
-  effectRender_ = nullptr;
-  delete sourceRender_;
-  sourceRender_ = nullptr;
-  delete screenRender_;
-  screenRender_ = nullptr;
-  delete blendRender_;
-  blendRender_ = nullptr;
   delete miniScreenRender_;
+  delete renderer;
+  renderer = nullptr;
   miniScreenRender_ = nullptr;
 }
 
@@ -96,6 +76,7 @@ void ImageEngine::onMiniSurfaceCreate(jobject surface) {
     handler_->sendMessage(msg);
   }
 }
+
 void ImageEngine::onMiniSurfaceChanged(int width, int height) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kMiniSurfaceChanged;
@@ -138,6 +119,7 @@ void ImageEngine::setEffect(const char *config) {
   msg->obj1 = tempConfig;
   handler_->sendMessage(msg);
 }
+
 void ImageEngine::updateEffect(const char *config) {
   if (config == nullptr) {
     return;
@@ -261,31 +243,33 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       break;
     }
     case PixelateMessage::kSetBrush: {
+      //todo 创建image子线程
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
-      paintRender_->setBrush(image);
+      renderer->setBrushImage(image);
       delete image;
       break;
     }
     case PixelateMessage::kSetDeeplabMask: {
+      //todo image创建在子线程
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
-      paintRender_->setDeeplabMask(image);
+      renderer->setMaskImage(image);
       delete image;
       break;
     }
     case PixelateMessage::ksetDeeplabMaskMode: {
       auto mode = msg->arg1;
-      paintRender_->setDeeplabMaskMode(mode);
+      renderer->setMaskMode(mode);
       break;
     }
     case PixelateMessage::kSetPaintSize: {
       auto paintSize = msg->arg1;
-      paintRender_->setPaintSize(paintSize);
+      renderer->setPaintSize(paintSize);
       break;
     }
     case PixelateMessage::kStartTouch: {
       float x = msg->arg3;
       float y = msg->arg4;
-      paintRender_->setTouchStartPoint(x, y);
+      renderer->startTouch(x, y);
       break;
     }
     case PixelateMessage::kStopTouch: {
@@ -302,47 +286,31 @@ void ImageEngine::handleMessage(thread::Message *msg) {
         miniScreenRender_->tranlate(cx, cy);
       }
       //没有选择特效不让绘制轨迹
-      if (effectRender_ == nullptr) {
+
+      bool ret = renderer->updateTouchBuffer(buffer, length, cx, cy);
+      if (ret != 0) {
         delete[] buffer;
         return;
       }
-      paintRender_->setCurrTouchPoint(cx, cy);
-      paintRender_->processPushBufferInternal(buffer, length);
       for (int i = 0; i < length; ++i) {
         touchData_.push_back(buffer[i]);
       }
-      paintRender_->draw(effectRender_->getTexture(),
-                         sourceRender_->getTextureWidth(),
-                         sourceRender_->getTextureHeight());
       delete[] buffer;
       break;
     }
 
     case PixelateMessage::kSetMatrix: {
       auto *buffer = reinterpret_cast<float *>(msg->obj1);
-      glm::mat4 matrix = glm::make_mat4(buffer);
-      screenRender_->setTransformMatrix(matrix);
-      if (miniScreenRender_ != nullptr) {
-        miniScreenRender_->setTransformMatrix(screenRender_->getTransformMatrix());
-      }
-      refreshTransform();
-      refreshFrameInternal();
+      renderer->setTransformMatrix(glm::make_mat4(buffer));
       delete[] buffer;
       break;
     }
     case PixelateMessage::kUpdateViewPort: {
       auto offset = msg->arg1;
-      screenRender_->updateViewPort(offset);
-      screenRender_->initMatrix(surfaceWidth_,
-                                surfaceHeight_,
-                                sourceRender_->getTextureWidth(),
-                                sourceRender_->getTextureHeight());
-      refreshTransform(false, true);
-      refreshFrameInternal();
+      renderer->setBottomOffset(offset);
       break;
     }
     case PixelateMessage::kRefreshFrame: {
-      refreshFrameInternal();
       break;
     }
     case PixelateMessage::kSave: {
@@ -366,7 +334,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       }
       auto window = reinterpret_cast<ANativeWindow *>(msg->obj1);
       miniScreenRender_->createEglSurface(eglCore_.get(), window);
-      miniScreenRender_->setTransformMatrix(screenRender_->getTransformMatrix());
+//      miniScreenRender_->setTransformMatrix(screenRender_->getTransformMatrix());
       break;
     }
     case PixelateMessage::kMiniSurfaceChanged: {
@@ -414,28 +382,14 @@ int ImageEngine::createEGLSurfaceInternal() {
     return -1;
   }
   eglCore_->makeCurrent(renderSurface_);
-
-  if (sourceRender_ == nullptr) {
-    sourceRender_ = new SourceRender();
-  }
-  if (paintRender_ == nullptr) {
-    paintRender_ = new PaintRender();
-  }
-  if (screenRender_ == nullptr) {
-    screenRender_ = new ScreenRender();
-  }
-  if (blendRender_ == nullptr) {
-    blendRender_ = new BlendRender();
-  }
   callJavaEGLWindowCreate();
-  refreshFrameInternal();
+  renderer->drawScreen();
   LOGI("leave %s", __func__);
   return 0;
 }
 
 int ImageEngine::surfaceChangedInternal(int width, int height) {
-  surfaceWidth_ = width;
-  surfaceHeight_ = height;
+  renderer->setSurfaceChanged(width, height);
   return 0;
 }
 
@@ -463,26 +417,16 @@ void ImageEngine::destroyEGLInternal() {
 
 int ImageEngine::insertImageInternal(const char *path, int rotate) {
   ImageDecoder imageDecoder;
-  auto ret = imageDecoder.decodeImage(imageTexture_, path, &imageWidth_, &imageHeight_);
-  sourceRender_->draw(imageTexture_,
-                      imageWidth_,
-                      imageHeight_,
-                      rotate);
-  if (effectRender_ != nullptr) {
-    effectRender_->draw(sourceRender_->getTexture(),
-                        sourceRender_->getTextureWidth(),
-                        sourceRender_->getTextureHeight());
-    paintRender_->draw(effectRender_->getTexture(),
-                       sourceRender_->getTextureWidth(),
-                       sourceRender_->getTextureHeight());
+  GLuint imageTexture = 0;
+  int width = 0;
+  int height = 0;
+  auto ret = imageDecoder.decodeImage(imageTexture, path, &width, &height);
+  if (ret == 0 && width > 0 && height > 0) {
+    renderer->setInputImage(imageTexture, width, height);
   }
-  screenRender_->setTransformMatrix(glm::mat4(1));
-  screenRender_->initMatrix(surfaceWidth_,
-                            surfaceHeight_,
-                            sourceRender_->getTextureWidth(),
-                            sourceRender_->getTextureHeight());
-  refreshTransform(true, false);
-  refreshFrameInternal();
+  if (imageTexture > 0) {
+    glDeleteTextures(1, &imageTexture);
+  }
   return 0;
 }
 
@@ -499,132 +443,45 @@ void ImageEngine::setEffectInternal(char *effect) {
     LOGE("%s parse json error $s", effect_json.c_str(), err.c_str());
     return;
   }
-  int type = root["type"].asInt();
-  auto config = root["config"];
-  LOGI("parse effect json: type = %d ", type);
-  switch (type) {
-    case TypeMosaic: {
-      delete effectRender_;
-      effectRender_ = new PixelationRender();
-      break;
-    }
-    case TypeImage: {
-      delete effectRender_;
-      std::chrono::milliseconds start = std::chrono::duration_cast< std::chrono::milliseconds >(
-          std::chrono::system_clock::now().time_since_epoch()
-      );
-      effectRender_ = new ImageEffect();
-      std::chrono::milliseconds end = std::chrono::duration_cast< std::chrono::milliseconds >(
-          std::chrono::system_clock::now().time_since_epoch()
-      );
-      LOGE("lijinxiang duration %d", end.count()-start.count());
-
-      break;
-    }
-    default: {
-      LOGE("%d effect type not avaliable", type);
-      return;
-    }
-  }
-
-  effectRender_->updateConfig(config);
-
-  if (sourceRender_ != nullptr) {
-
-    effectRender_->draw(sourceRender_->getTexture(),
-                        sourceRender_->getTextureWidth(),
-                        sourceRender_->getTextureHeight());
-    paintRender_->draw(effectRender_->getTexture(),
-                       sourceRender_->getTextureWidth(),
-                       sourceRender_->getTextureHeight());
-
-  }
+  renderer->setEffect(root);
 }
 
 void ImageEngine::updateEffectInternal(char *config) {
 
 }
 
-int ImageEngine::refreshFrameInternal() {
+void ImageEngine::bindScreen() {
   if (renderSurface_ != EGL_NO_SURFACE) {
     eglCore_->makeCurrent(renderSurface_);
   }
-  if (effectRender_ != nullptr) {
-    blendRender_->draw(sourceRender_->getTexture(),
-                       paintRender_->getTexture(),
-                       paintRender_->getRectTexture(),
-                       sourceRender_->getTextureWidth(),
-                       sourceRender_->getTextureHeight());
-    screenRender_->draw(blendRender_->getTexture(),
-                        sourceRender_->getTextureWidth(),
-                        sourceRender_->getTextureHeight(),
-                        surfaceWidth_,
-                        surfaceHeight_);
-  } else {
-    screenRender_->draw(sourceRender_->getTexture(),
-                        sourceRender_->getTextureWidth(),
-                        sourceRender_->getTextureHeight(),
-                        surfaceWidth_,
-                        surfaceHeight_);
-  }
-
-  eglCore_->swapBuffers(renderSurface_);
-  eglCore_->makeCurrent(EGL_NO_SURFACE);
-  if (miniScreenRender_ != nullptr) {
-    miniScreenRender_->draw(blendRender_->getTexture(),
-                            eglCore_.get(),
-                            blendRender_->getWidth(),
-                            blendRender_->getHeight());
-  }
-  return 0;
 }
 
-void ImageEngine::refreshTransform(bool reset, bool resetInit) {
-  paintRender_->setMatrix(screenRender_->getTransformMatrix());
-  paintRender_->translate(screenRender_->getTransformMatrix()[0][0]);
-  if (sourceRender_->getTextureHeight() <= 0) {
-    return;
-  }
-  glm::vec4 lt = vec4(0.f, 0.f, 0.f, 1.f);
-  glm::vec4
-      rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
-  lt = screenRender_->getTransformMatrix() * lt;
-  rb = screenRender_->getTransformMatrix() * rb;
-  if (miniScreenRender_ != nullptr) {
-    miniScreenRender_->setBounds(lt.x, lt.y, rb.x, rb.y);
-  }
-  callJavaFrameBoundsChanged(lt.x, lt.y, rb.x, rb.y, reset);
-  if (resetInit) {
-    lt = vec4(0.f, 0.f, 0.f, 1.f);
-    rb = vec4(sourceRender_->getTextureWidth(), sourceRender_->getTextureHeight(), 0.f, 1.f);
-    lt = screenRender_->getModelMatrix() * lt;
-    rb = screenRender_->getModelMatrix() * rb;
-    callJavaInitBoundsChanged(lt.x, lt.y, rb.x, rb.y);
-  }
+void ImageEngine::flushScreen() {
+  eglCore_->swapBuffers(renderSurface_);
+  eglCore_->makeCurrent(EGL_NO_SURFACE);
+}
+
+void ImageEngine::onTransformChanged(float left, float top, float right, float bottom, bool reset) {
+  callJavaFrameBoundsChanged(left, top, right, bottom, reset);
+}
+
+void ImageEngine::onInitBoundChanged(float left, float top, float right, float bottom) {
+  callJavaInitBoundsChanged(left, top, right, bottom);
+}
+
+void ImageEngine::saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) {
+  saveFrameBufferToBitmap(pixelator_.get(), frameBuffer->getFrameBuffer(), width, height);
 }
 
 void ImageEngine::stopTouchInternal() {
-  paintRender_->stopTouch();
-  refreshFrameInternal();
-  if (touchData_.empty())return;
-  auto *data = new float[touchData_.size()];
-  memcpy(data, touchData_.data(), touchData_.size() * sizeof(float));
-  undoStack_.push_back({data, (int) touchData_.size(), screenRender_->getTransformMatrix(),
-                        paintRender_->getPaintSize(), paintRender_->getPaintMode()});
-  touchData_.clear();
-
-  for (auto &element : redoStack_) {
-    delete[] element.data;
-  }
-  redoStack_.clear();
-  callJavaUndoRedoChanged();
+  renderer->stopTouch();
 }
 
 void ImageEngine::saveInternal() {
-  saveFrameBufferToBitmap(pixelator_.get(),
-                          blendRender_->getFrameBuffer(),
-                          blendRender_->getWidth(),
-                          blendRender_->getHeight());
+  auto frameBuffer = renderer->getBlendFrameBuffer();
+  if (frameBuffer->getFrameBuffer() > 0) {
+    saveFrameBuffer(frameBuffer, frameBuffer->getTextureWidth(), frameBuffer->getTextureHeight());
+  }
 }
 
 void ImageEngine::callJavaEGLContextCreate() {
@@ -727,15 +584,6 @@ void ImageEngine::redoInternal() {
     auto data = redoStack_.back();
     redoStack_.pop_back();
     undoStack_.push_back(data);
-    paintRender_->setMatrix(data.matrix);
-    paintRender_->translate(data.matrix[0][0]);
-    paintRender_->setPaintSize(data.paintSize);
-    paintRender_->setPaintType(data.paintMode);
-    paintRender_->processPushBufferInternal(data.data, data.length);
-    paintRender_->draw(effectRender_->getTexture(),
-                       sourceRender_->getTextureWidth(),
-                       sourceRender_->getTextureHeight());
-    refreshFrameInternal();
   }
 }
 
@@ -744,19 +592,6 @@ void ImageEngine::undoInternal() {
     auto data = undoStack_.back();
     undoStack_.pop_back();
     redoStack_.push_back(data);
-
-    paintRender_->clear();
-    for (auto &element : undoStack_) {
-      paintRender_->processPushBufferInternal(element.data, element.length);
-      paintRender_->setMatrix(element.matrix);
-      paintRender_->setPaintSize(element.paintSize);
-      paintRender_->translate(element.matrix[0][0]);
-      paintRender_->setPaintMode(element.paintMode);
-      paintRender_->draw(effectRender_->getTexture(),
-                         sourceRender_->getTextureWidth(),
-                         sourceRender_->getTextureHeight());
-    }
-    refreshFrameInternal();
     callJavaUndoRedoChanged();
   }
 }
@@ -774,12 +609,13 @@ void ImageEngine::stopTouch() {
   msg->what = PixelateMessage::kStopTouch;
   handler_->sendMessage(msg);
 }
+
 void ImageEngine::setPaintMode(int paintMode) {
-  paintRender_->setPaintMode(paintMode);
+  renderer->setPaintMode(paintMode);
 }
 
 void ImageEngine::setPaintType(int type) {
-  paintRender_->setPaintType(type);
+  renderer->setPaintType(type);
 }
 
 void ImageEngine::setDeeplabMask(jobject bitmap) {
@@ -794,18 +630,21 @@ void ImageEngine::setDeeplabMask(jobject bitmap) {
   msg->obj1 = image;
   handler_->sendMessage(msg);
 }
+
 void ImageEngine::setDeeplabMaskMode(int mode) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::ksetDeeplabMaskMode;
   msg->arg1 = mode;
   handler_->sendMessage(msg);
 }
+
 void ImageEngine::updateViewPort(int offset) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kUpdateViewPort;
   msg->arg1 = offset;
   handler_->sendMessage(msg);
 }
+
 void ImageEngine::destroy() {
   auto msg = new thread::Message();
   msg->what = EGLMessage::kDestroyEGL;
