@@ -19,11 +19,6 @@ typedef struct LineData {
 } LineModel;
 
 typedef enum {
-  TypeMosaic = 0,
-  TypeImage
-} EffectType;
-
-typedef enum {
   Eraser = 0,
   Paint
 } PaintMode;

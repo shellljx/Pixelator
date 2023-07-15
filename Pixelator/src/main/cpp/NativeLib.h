@@ -5,6 +5,7 @@
 #ifndef PIXELATE_PIXELATOR_JNI_H
 #define PIXELATE_PIXELATOR_JNI_H
 #define PIXELATOR "com/gmail/shellljx/pixelator/Pixelator"
+#define MINISCREEN "com/gmail/shellljx/pixelator/MiniScreen"
 
 #include <jni.h>
 
@@ -74,10 +75,6 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"onSurfaceCreate", "(JLandroid/view/Surface;)V", (void **) Android_Jni_surface_create},
     {"onSurfaceChanged", "(JII)V", (void **) Android_Jni_surface_changed},
     {"onSurfaceDestroy", "(J)V", (void **) Android_Jni_surface_destroy},
-    {"onMiniScreenSurfaceCreate", "(JLandroid/view/Surface;)V",
-     (void **) Android_Jni_mini_surface_create},
-    {"onMiniScreenSurfaceChanged", "(JII)V", (void **) Android_Jni_mini_surface_changed},
-    {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
     {"nativeAddImagePath", "(JLjava/lang/String;I)V", (void **) Android_Jni_add_image_path},
     {"nativeSetEffect", "(JLjava/lang/String;)V", (void **) Android_Jni_set_effect},
     {"nativeUpdateEffect", "(JLjava/lang/String;)V", (void **) Android_Jni_update_effect},
@@ -97,6 +94,13 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"nativeUpdateViewPort", "(JI)V", (void **) Android_Jni_update_viewport},
     {"nativeSave", "(J)V", (void **) Android_Jni_save},
     {"nativeDestroy", "(J)V", (void **) Android_Jni_destroy}
+};
+
+static JNINativeMethod miniscreenNativeMethods[] = {
+    {"onMiniScreenSurfaceCreate", "(JLandroid/view/Surface;)V",
+     (void **) Android_Jni_mini_surface_create},
+    {"onMiniScreenSurfaceChanged", "(JII)V", (void **) Android_Jni_mini_surface_changed},
+    {"onMiniScreenSurfaceDestroy", "(J)V", (void **) Android_Jni_mini_surface_destroy},
 };
 
 #endif //PIXELATE_PIXELATOR_JNI_H

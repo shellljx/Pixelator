@@ -18,7 +18,9 @@ set(JSON_HEADER ${CMAKE_SOURCE_DIR}/json)
 
 include_directories(${PIXELATOR_DIR})
 include_directories(${PIXELATOR_DIR}/thread)
+include_directories(${PIXELATOR_DIR}/base)
 include_directories(${PIXELATOR_DIR}/utils)
+include_directories(${PIXELATOR_DIR}/filter)
 include_directories(${STB_HEADER})
 include_directories(${OPENGL_DIR})
 include_directories(${GLM_DIR})
@@ -29,23 +31,20 @@ add_library( # Sets the name of the library.
 
         # Sets the library as a shared library.
         SHARED
+        base/Effect.cpp
+        base/ImageEffect.cpp
+        base/MosaicEffect.cpp
         filter/BaseFilter.cpp
         filter/GraffitiFilter.cpp
         filter/MatrixFilter.cpp
+        filter/MosaicFilter.cpp
         filter/RectFilter.cpp
         gl/FrameBuffer.cpp
         gl/Program.cpp
         json/json_reader.cpp
         json/json_value.cpp
         json/json_writer.cpp
-        render/effect/BaseEffectRender.cpp
-        render/effect/ImageEffect.cpp
-        render/effect/PixelationRender.cpp
-        render/BlendRender.cpp
-        render/MiniScreenRender.cpp
-        render/PaintRender.cpp
-        render/ScreenRender.cpp
-        render/SourceRender.cpp
+        render/Renderer.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp
         thread/Looper.cpp
