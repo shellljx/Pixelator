@@ -32,6 +32,7 @@ int ImageDecoder::decodeImage(GLuint &texture, const char *path, int *width, int
   }
   if (texture > 0) {
     glDeleteTextures(1, &texture);
+    texture = 0;
   }
   if (texture == 0) {
     glGenTextures(1, &texture);

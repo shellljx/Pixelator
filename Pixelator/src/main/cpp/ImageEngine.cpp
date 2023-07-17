@@ -235,12 +235,14 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kInsertImage: {
       auto path = reinterpret_cast<char *>(msg->obj1);
       auto rotate = msg->arg1;
+      bindScreen();
       insertImageInternal(path, rotate);
       delete[] path;
       break;
     }
     case PixelateMessage::kSetEffect: {
       auto config = reinterpret_cast<char *>(msg->obj1);
+      bindScreen();
       setEffectInternal(config);
       delete[] config;
       break;
@@ -254,6 +256,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kSetBrush: {
       //todo 创建image子线程
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
+      bindScreen();
       renderer->setBrushImage(image);
       delete image;
       break;
@@ -261,6 +264,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kSetDeeplabMask: {
       //todo image创建在子线程
       auto image = reinterpret_cast<ImageInfo *>(msg->obj1);
+      bindScreen();
       renderer->setMaskImage(image);
       delete image;
       break;
@@ -290,6 +294,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       int length = msg->arg1;
       float cx = msg->arg3;
       float cy = msg->arg4;
+      bindScreen();
       bool ret = renderer->updateTouchBuffer(buffer, length, cx, cy);
       if (ret != 0) {
         delete[] buffer;
