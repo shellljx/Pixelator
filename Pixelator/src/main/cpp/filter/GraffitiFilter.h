@@ -11,8 +11,8 @@
 class GraffitiFilter : public BaseFilter {
  public:
   ~GraffitiFilter();
-  void updateBrushTexture(const ImageInfo *image);
-  void updateMaskTexture(const ImageInfo *image);
+  void updateBrush(GLuint texture);
+  void updateMask(GLuint texture);
   void updatePoints(float *buffer, int length);
   void updatePaintSize(float size);
   void updateMaskMode(int mode);

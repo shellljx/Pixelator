@@ -56,10 +56,6 @@ static constexpr char FRAGMENT_SHADER[] = R"(
 )";
 
 GraffitiFilter::~GraffitiFilter() {
-  if (brushTexture > 0) {
-    glDeleteTextures(1, &brushTexture);
-    brushTexture = 0;
-  }
   if (maskTexture > 0) {
     glDeleteTextures(1, &maskTexture);
     maskTexture = 0;
@@ -76,56 +72,12 @@ GraffitiFilter::~GraffitiFilter() {
   }
 }
 
-void GraffitiFilter::updateBrushTexture(const ImageInfo *image) {
-  if (image == nullptr) {
-    return;
-  }
-  if (image->pixels_ != nullptr) {
-    if (brushTexture == 0) {
-      glGenTextures(1, &brushTexture);
-      glBindTexture(GL_TEXTURE_2D, brushTexture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width_, image->height_, 0,
-                   GL_RGBA, GL_UNSIGNED_BYTE,
-                   image->pixels_);
-    } else {
-      glBindTexture(GL_TEXTURE_2D, brushTexture);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width_, image->height_,
-                      GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-  }
+void GraffitiFilter::updateBrush(GLuint texture) {
+  brushTexture = texture;
 }
 
-void GraffitiFilter::updateMaskTexture(const ImageInfo *image) {
-  if (image == nullptr) {
-    return;
-  }
-  if (image->pixels_ != nullptr) {
-    if (maskTexture == 0) {
-      glGenTextures(1, &maskTexture);
-      glBindTexture(GL_TEXTURE_2D, maskTexture);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
-      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
-      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
-
-      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width_, image->height_, 0,
-                   GL_RGBA, GL_UNSIGNED_BYTE,
-                   image->pixels_);
-    } else {
-      glBindTexture(GL_TEXTURE_2D, maskTexture);
-      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width_, image->height_,
-                      GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
-    }
-    glBindTexture(GL_TEXTURE_2D, 0);
-  }
+void GraffitiFilter::updateMask(GLuint texture) {
+  maskTexture = texture;
 }
 
 void GraffitiFilter::updatePoints(float *buffer, int length) {

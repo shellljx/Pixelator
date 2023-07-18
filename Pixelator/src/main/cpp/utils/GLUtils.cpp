@@ -80,3 +80,29 @@ void textureCenterCrop(int width, int height, int targetWidth, int targetHeight,
     array[7] = (1 - finalHeight) / 2 + finalHeight;
   }
 }
+
+void createImageTexture(GLuint &texture, ImageInfo *image) {
+  if (image == nullptr) {
+    return;
+  }
+  if (image->pixels_ != nullptr) {
+    if (texture == 0) {
+      glGenTextures(1, &texture);
+      glBindTexture(GL_TEXTURE_2D, texture);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_CLAMP_TO_EDGE);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_LINEAR);
+      glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_LINEAR);
+      glPixelStorei(GL_UNPACK_ALIGNMENT, 1);
+
+      glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, image->width_, image->height_, 0,
+                   GL_RGBA, GL_UNSIGNED_BYTE,
+                   image->pixels_);
+    } else {
+      glBindTexture(GL_TEXTURE_2D, texture);
+      glTexSubImage2D(GL_TEXTURE_2D, 0, 0, 0, image->width_, image->height_,
+                      GL_RGBA, GL_UNSIGNED_BYTE, image->pixels_);
+    }
+    glBindTexture(GL_TEXTURE_2D, 0);
+  }
+}

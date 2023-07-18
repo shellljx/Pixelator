@@ -295,14 +295,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       float cx = msg->arg3;
       float cy = msg->arg4;
       bindScreen();
-      bool ret = renderer->updateTouchBuffer(buffer, length, cx, cy);
-      if (ret != 0) {
-        delete[] buffer;
-        return;
-      }
-      for (int i = 0; i < length; ++i) {
-        touchData_.push_back(buffer[i]);
-      }
+      renderer->updateTouchBuffer(buffer, length, cx, cy);
       delete[] buffer;
       break;
     }
@@ -473,7 +466,6 @@ void ImageEngine::bindScreen() {
 
 void ImageEngine::flushScreen() {
   eglCore_->swapBuffers(renderSurface_);
-  eglCore_->makeCurrent(EGL_NO_SURFACE);
 }
 
 void ImageEngine::bindMiniScreen() {
@@ -484,7 +476,6 @@ void ImageEngine::bindMiniScreen() {
 
 void ImageEngine::flushMiniScreen() {
   eglCore_->swapBuffers(miniSurface_);
-  eglCore_->makeCurrent(EGL_NO_SURFACE);
 }
 
 void ImageEngine::onTransformChanged(float left, float top, float right, float bottom, bool reset) {
@@ -493,6 +484,10 @@ void ImageEngine::onTransformChanged(float left, float top, float right, float b
 
 void ImageEngine::onInitBoundChanged(float left, float top, float right, float bottom) {
   callJavaInitBoundsChanged(left, top, right, bottom);
+}
+
+void ImageEngine::onGenerateDrawOp() {
+
 }
 
 void ImageEngine::saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) {
@@ -591,35 +586,20 @@ void ImageEngine::callJavaUndoRedoChanged() {
   if (pixelator_.empty()) {
     return;
   }
-  auto canUndo = !undoStack_.empty();
-  auto canRedo = !redoStack_.empty();
   JNIEnv *env = JNIEnvironment::Current();
   if (env != nullptr) {
     Local<jclass> sdkClass = {env, env->GetObjectClass(pixelator_.get())};
     jmethodID undoRedoChangedMethodId = env->GetMethodID(
         sdkClass.get(), "onUndoRedoChanged", "(ZZ)V"
     );
-    if (undoRedoChangedMethodId != nullptr) {
-      env->CallVoidMethod(pixelator_.get(), undoRedoChangedMethodId, canUndo, canRedo);
-    }
   }
 }
 
 void ImageEngine::redoInternal() {
-  if (!redoStack_.empty()) {
-    auto data = redoStack_.back();
-    redoStack_.pop_back();
-    undoStack_.push_back(data);
-  }
+
 }
 
 void ImageEngine::undoInternal() {
-  if (!undoStack_.empty()) {
-    auto data = undoStack_.back();
-    undoStack_.pop_back();
-    redoStack_.push_back(data);
-    callJavaUndoRedoChanged();
-  }
 }
 
 void ImageEngine::startTouch(float x, float y) {

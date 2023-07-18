@@ -3,6 +3,7 @@
 //
 
 #include "Renderer.h"
+#include <memory>
 #include "ImageDecoder.h"
 #include "glm/gtc/type_ptr.hpp"
 
@@ -12,6 +13,7 @@ Renderer::Renderer() {
   paintFrameBuffer = new FrameBuffer();
   blendFrameBuffer = new FrameBuffer();
   tempPaintFrameBuffer = new FrameBuffer();
+  undoRedoFrameBuffer = new FrameBuffer();
   defaultFilter = new BaseFilter();
   graffitiFilter = new GraffitiFilter();
   mosaicFilter = new MosaicFilter();
@@ -21,10 +23,23 @@ Renderer::Renderer() {
   glm::vec3 direction = glm::vec3(0.f, 0.f, 0.f);
   glm::vec3 up = glm::vec3(0.f, 1.f, 0.f);
   viewMatrix = glm::lookAt(position, direction, up);
+  renderContext = std::shared_ptr<RenderContext>(new RenderContext);
+  imageCache = std::shared_ptr<ImageCache>(new ImageCache);
+  recordRender = std::shared_ptr<RecordRenderer>(new RecordRenderer(renderContext, imageCache));
 }
 
 Renderer::~Renderer() {
   delete sourceFrameBuffer;
+  delete effectFrameBuffer;
+  delete paintFrameBuffer;
+  delete blendFrameBuffer;
+  delete tempPaintFrameBuffer;
+  delete undoRedoFrameBuffer;
+  delete defaultFilter;
+  delete graffitiFilter;
+  delete mosaicFilter;
+  delete matrixFilter;
+  delete rectFilter;
 }
 void Renderer::setRenderCallback(RenderCallback *callback) {
   renderCallback = callback;
@@ -70,35 +85,35 @@ void Renderer::setInputImage(GLuint texture, int width, int height) {
 
 void Renderer::setBrushImage(ImageInfo *image) {
   LOGI("enter func %s", __func__);
-  graffitiFilter->updateBrushTexture(image);
+  createImageTexture(renderContext->brushTexture, image);
 }
 
 void Renderer::setMaskImage(ImageInfo *image) {
   LOGI("enter func %s", __func__);
-  graffitiFilter->updateMaskTexture(image);
+  createImageTexture(renderContext->maskTexture, image);
 }
 
 void Renderer::setPaintType(int type) {
   LOGI("enter func %s", __func__);
-  paintType = type;
-  if (paintType == Graffiti) {
+  renderContext->paintType = type;
+  if (type == Graffiti) {
     tempPaintFrameBuffer->deleteFrameBuffer();
   }
 }
 
 void Renderer::setPaintMode(int mode) {
   LOGI("enter func %s", __func__);
-  paintMode = mode;
+  renderContext->paintMode = mode;
 }
 
 void Renderer::setPaintSize(int size) {
   LOGI("enter func %s", __func__);
-  paintSize = size;
+  renderContext->paintSize = size;
 }
 
 void Renderer::setMaskMode(int mode) {
   LOGI("enter func %s", __func__);
-  maskMode = mode;
+  renderContext->maskMode = mode;
 }
 
 void Renderer::setEffect(Json::Value &root) {
@@ -111,8 +126,8 @@ void Renderer::setEffect(Json::Value &root) {
   auto config = root["config"];
   if (type == TypeMosaic) {
     int rectSize = config["rectSize"].asInt();
-    delete effect;
-    effect = new MosaicEffect(TypeMosaic, rectSize);
+    renderContext->effectType = TypeMosaic;
+    currentEffect = std::make_shared<MosaicEffect>(TypeMosaic, rectSize);
     drawMosaicEffect();
   } else if (type == TypeImage) {
     if (config["url"].isNull()) {
@@ -120,18 +135,22 @@ void Renderer::setEffect(Json::Value &root) {
       return;
     }
     auto path = config["url"].asCString();
-    delete effect;
-    effect = new ImageEffect(TypeImage, path);
+    auto imageEffect = imageCache->get(path);
+    if (currentEffect != nullptr) {
+      currentEffect = imageEffect;
+      renderContext->effectType = TypeImage;
+      drawImageEffect(imageEffect->getTexture(), imageEffect->getWidth(), imageEffect->getHeight());
+      return;
+    }
     ImageDecoder decoder;
     GLuint imageTexture = 0;
     int width = 0;
     int height = 0;
     auto ret = decoder.decodeImage(imageTexture, path, &width, &height);
     if (ret == 0 && width > 0 && height > 0) {
+      renderContext->effectType = TypeImage;
       drawImageEffect(imageTexture, width, height);
-    }
-    if (imageTexture > 0) {
-      glDeleteTextures(1, &imageTexture);
+      currentEffect = std::make_shared<ImageEffect>(TypeImage, path, imageTexture, width, height);
     }
   }
 }
@@ -147,6 +166,7 @@ void Renderer::startTouch(float x, float y) {
   LOGI("enter func %s", __func__);
   touchStartX = x;
   touchStartY = y;
+  touchSequences.clear();
 }
 
 bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
@@ -157,7 +177,12 @@ bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
   }
   touchX = x;
   touchY = y;
-  graffitiFilter->updatePoints(buffer, length);
+  if (renderContext->paintType == Graffiti) {
+    graffitiFilter->updatePoints(buffer, length);
+  }
+  for (int i = 0; i < length; ++i) {
+    touchSequences.push_back(buffer[i]);
+  }
   //绘制
   drawPaint();
   drawBlend();
@@ -167,8 +192,53 @@ bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
 }
 
 void Renderer::stopTouch() {
+  if (currentEffect == nullptr) {
+    LOGI("%s not apply any effect", __func__);
+    return;
+  }
+  if (touchSequences.empty()) {
+    LOGI("%s touch sequences is empty", __func__);
+    return;
+  }
+  //处理 imageEffect 缓存
+  imageCache->add(currentEffect);
+  //处理 undo redo
+  float *touchData = nullptr;
+  int length = 0;
+  if (renderContext->paintType == Graffiti) {
+    length = touchSequences.size();
+    touchData = new float[length];
+    memcpy(touchData, touchSequences.data(), length * sizeof(float));
+  } else if (renderContext->paintType == Rect) {
+    length = 4;
+    touchData = new float[4]{touchStartX, touchStartY, touchX, touchY};
+  }
+  std::string srcPath;
+  if (currentEffect->type() == TypeImage) {
+    srcPath = std::dynamic_pointer_cast<ImageEffect>(currentEffect)->getSrcPath();
+  }
+  auto record = std::make_shared<DrawRecord>(DrawRecord{});
+  auto model = transformMatrix * modelMatrix;
+  record.get()->data = touchData;
+  record.get()->length = length;
+  record.get()->matrix = paintProjection * viewMatrix * glm::inverse(model);
+  record.get()->effectType = renderContext->effectType;
+  record.get()->paintType = renderContext->paintType;
+  record.get()->paintSize = renderContext->paintSize * 1.7f / model[0][0];
+  record.get()->paintMode = renderContext->paintMode;
+  record.get()->maskMode = renderContext->maskMode;
+  record.get()->srcPath = srcPath;
+  if (undoStack.size() >= 10) {
+    recordRender->saveCanvas(undoStack.begin()->get(), sourceFrameBuffer);
+    renderCallback->saveFrameBuffer(recordRender->getFrameBuffer(), sourceWidth, sourceHeight);
+    undoStack.erase(undoStack.begin());
+  }
+  undoStack.push_back(record);
+  redoStack.clear();
+  touchSequences.clear();
+
+  //如果有绘制的画笔缓存，在绘制完成时同步到画笔画布
   if (tempPaintFrameBuffer->getTexture() > 0) {
-    //如果有绘制的画笔缓存，在绘制完成时同步到画笔画布
     paintFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
     defaultFilter->initialize();
     defaultFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
@@ -181,6 +251,13 @@ void Renderer::stopTouch() {
   }
 }
 
+void Renderer::undo() {
+}
+
+void Renderer::redo() {
+
+}
+
 void Renderer::drawSourceTexture(GLuint texture, int width, int height) {
   LOGI("enter func %s", __func__);
   sourceFrameBuffer->createFrameBuffer(width, height);
@@ -191,6 +268,7 @@ void Renderer::drawSourceTexture(GLuint texture, int width, int height) {
 }
 
 void Renderer::drawPaint() {
+  auto paintType = renderContext->paintType;
   if (paintType == Graffiti) {
     drawGraffitiPaint();
   } else if (paintType == Rect) {
@@ -207,9 +285,11 @@ void Renderer::drawGraffitiPaint() {
   auto model = transformMatrix * modelMatrix;
   paintFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   graffitiFilter->initialize();
-  graffitiFilter->updatePaintSize(paintSize * 1.7f / model[0][0]);
-  graffitiFilter->updateMaskMode(maskMode);
-  graffitiFilter->updatePaintMode(paintMode);
+  graffitiFilter->updateBrush(renderContext->brushTexture);
+  graffitiFilter->updateMask(renderContext->maskTexture);
+  graffitiFilter->updatePaintSize(renderContext->paintSize * 1.7f / model[0][0]);
+  graffitiFilter->updateMaskMode(renderContext->maskMode);
+  graffitiFilter->updatePaintMode(renderContext->paintMode);
   auto matrix = paintProjection * viewMatrix * glm::inverse(model);
   FilterSource source = {effectFrameBuffer->getTexture(), nullptr, sourceWidth, sourceHeight};
   FilterTarget target = {paintFrameBuffer, matrix, nullptr, sourceWidth, sourceHeight, false};
@@ -245,7 +325,7 @@ void Renderer::drawMosaicEffect() {
   mosaicFilter->draw(&source, &target);
 }
 
-void Renderer::drawImageEffect(GLuint &texture, int width, int height) {
+void Renderer::drawImageEffect(GLuint texture, int width, int height) {
   LOGI("enter func %s", __func__);
   if (sourceWidth <= 0 || sourceHeight <= 0) {
     LOGE("%s source width or height is 0", __func__);

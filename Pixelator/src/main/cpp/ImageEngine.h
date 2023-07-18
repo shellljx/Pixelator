@@ -13,10 +13,6 @@
 #include <android/native_window.h>
 #include <android/native_window_jni.h>
 #include "Global.h"
-#include <detail/type_mat.hpp>
-#include <detail/type_mat4x4.hpp>
-#include <detail/type_vec2.hpp>
-#include <detail/type_vec3.hpp>
 #include <vector>
 #include <GLES3/gl3.h>
 #include "BitmapUtils.h"
@@ -63,6 +59,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void flushMiniScreen() override;
   void onTransformChanged(float left, float top, float right, float bottom, bool reset) override;
   void onInitBoundChanged(float left, float top, float right, float bottom) override;
+  void onGenerateDrawOp() override;
   void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) override;
   int createEGLInternal();
   int createEGLSurfaceInternal();
@@ -92,9 +89,6 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   ANativeWindow *miniScreenWindow_ = nullptr;
   EGLSurface miniSurface_ = EGL_NO_SURFACE;
   Global<jobject> pixelator_;
-  std::vector<LineData> undoStack_;
-  std::vector<LineData> redoStack_;
-  std::vector<float> touchData_;
   Renderer *renderer;
 };
 

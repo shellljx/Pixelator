@@ -12,6 +12,7 @@
 #include <glm.hpp>
 #include "glm/gtc/matrix_transform.hpp"
 #include "Log.h"
+#include "ImageInfo.h"
 
 void activeGLTexture(int unitIndex, GLuint target, GLuint texture);
 
@@ -21,5 +22,5 @@ glm::mat4 getCenterInsideMatrix(int screenWidth, int screenHeight, int width, in
 
 void textureCenterCrop(int width, int height, int targetWidth, int targetHeight, float *array);
 void getVertexCoordinate(int width, int height, float *array);
-
+void createImageTexture(GLuint &texture, ImageInfo *image);
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_GLUTILS_H_

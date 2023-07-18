@@ -31,7 +31,9 @@ add_library( # Sets the name of the library.
 
         # Sets the library as a shared library.
         SHARED
+        base/DrawOp.cpp
         base/Effect.cpp
+        base/ImageCache.cpp
         base/ImageEffect.cpp
         base/MosaicEffect.cpp
         filter/BaseFilter.cpp
@@ -44,6 +46,7 @@ add_library( # Sets the name of the library.
         json/json_reader.cpp
         json/json_value.cpp
         json/json_writer.cpp
+        render/RecordRenderer.cpp
         render/Renderer.cpp
         thread/Handler.cpp
         thread/HandlerThread.cpp
@@ -53,7 +56,6 @@ add_library( # Sets the name of the library.
         utils/GLUtils.cpp
         utils/ImageDecoder.cpp
         utils/TimeUtils.cpp
-        Effect.cpp
         EGLCore.cpp
         ImageEngine.cpp
         JNIEnvironment.cpp

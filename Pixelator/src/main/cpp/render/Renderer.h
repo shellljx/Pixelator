@@ -6,13 +6,13 @@
 #define PIXELATE_PIXELATOR_SRC_MAIN_CPP_RENDER_RENDERER_H_
 
 #include "BaseFilter.h"
+#include "RecordRenderer.h"
 #include "GraffitiFilter.h"
 #include "MosaicFilter.h"
 #include "MatrixFilter.h"
 #include "RectFilter.h"
 #include "json/json.h"
-#include "Models.h"
-#include "file.h"
+
 class RenderCallback {
  public:
   virtual void bindScreen() = 0;
@@ -21,6 +21,7 @@ class RenderCallback {
   virtual void flushMiniScreen() = 0;
   virtual void onTransformChanged(float left, float top, float right, float bottom, bool reset) = 0;
   virtual void onInitBoundChanged(float left, float top, float right, float bottom) = 0;
+  virtual void onGenerateDrawOp() = 0;
   virtual void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) = 0;
 };
 
@@ -43,6 +44,8 @@ class Renderer {
   void startTouch(float x, float y);
   bool updateTouchBuffer(float *buffer, int length, float x, float y);
   void stopTouch();
+  void undo();
+  void redo();
   void drawScreen();
   void drawMiniScreen();
   FrameBuffer *getBlendFrameBuffer() const;
@@ -53,7 +56,7 @@ class Renderer {
   void drawGraffitiPaint();
   void drawRectPaint();
   void drawMosaicEffect();
-  void drawImageEffect(GLuint &texture, int width, int height);
+  void drawImageEffect(GLuint texture, int width, int height);
   void drawBlend();
   void blendTexture(GLuint texture, bool revert);
   void clearPaintCache();
@@ -72,16 +75,19 @@ class Renderer {
   FrameBuffer *paintFrameBuffer;
   FrameBuffer *blendFrameBuffer;
   FrameBuffer *tempPaintFrameBuffer;
+  FrameBuffer *undoRedoFrameBuffer;
   BaseFilter *defaultFilter;
   GraffitiFilter *graffitiFilter;
   MosaicFilter *mosaicFilter;
   MatrixFilter *matrixFilter;
   RectFilter *rectFilter;
-  Effect *effect = nullptr;
-  int paintSize = 0;
-  int paintMode = Paint;
-  int paintType = Graffiti;
-  int maskMode = 0;
+  std::shared_ptr<RenderContext> renderContext = nullptr;
+  std::shared_ptr<RecordRenderer> recordRender = nullptr;
+  std::shared_ptr<ImageCache> imageCache;
+  std::shared_ptr<Effect> currentEffect = nullptr;
+  std::vector<std::shared_ptr<DrawRecord>> undoStack;
+  std::vector<std::shared_ptr<DrawRecord>> redoStack;
+  std::vector<float> touchSequences;
   int screenWidth = 0;
   int screenHeight = 0;
   int miniScreenWidth = 0;
