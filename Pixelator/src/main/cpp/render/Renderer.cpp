@@ -7,8 +7,8 @@
 #include "ImageDecoder.h"
 #include "glm/gtc/type_ptr.hpp"
 
-Renderer::Renderer() {
-  sourceFrameBuffer = new FrameBuffer();
+Renderer::Renderer(RenderCallback *callback) : renderCallback(callback) {
+  sourceFrameBuffer = std::shared_ptr<FrameBuffer>(new FrameBuffer);
   effectFrameBuffer = new FrameBuffer();
   paintFrameBuffer = new FrameBuffer();
   blendFrameBuffer = new FrameBuffer();
@@ -25,11 +25,11 @@ Renderer::Renderer() {
   viewMatrix = glm::lookAt(position, direction, up);
   renderContext = std::shared_ptr<RenderContext>(new RenderContext);
   imageCache = std::shared_ptr<ImageCache>(new ImageCache);
-  recordRender = std::shared_ptr<RecordRenderer>(new RecordRenderer(renderContext, imageCache));
+  recordRender = std::shared_ptr<RecordRenderer>(new RecordRenderer(renderContext, imageCache, renderCallback));
+  recordRender->setSourceFrameBuffer(sourceFrameBuffer);
 }
 
 Renderer::~Renderer() {
-  delete sourceFrameBuffer;
   delete effectFrameBuffer;
   delete paintFrameBuffer;
   delete blendFrameBuffer;
@@ -40,9 +40,6 @@ Renderer::~Renderer() {
   delete mosaicFilter;
   delete matrixFilter;
   delete rectFilter;
-}
-void Renderer::setRenderCallback(RenderCallback *callback) {
-  renderCallback = callback;
 }
 
 void Renderer::setSurfaceChanged(int width, int height) {
@@ -217,6 +214,7 @@ void Renderer::stopTouch() {
   if (currentEffect->type() == TypeImage) {
     srcPath = std::dynamic_pointer_cast<ImageEffect>(currentEffect)->getSrcPath();
   }
+  //uniqueptr
   auto record = std::make_shared<DrawRecord>(DrawRecord{});
   auto model = transformMatrix * modelMatrix;
   record.get()->data = touchData;
@@ -228,14 +226,9 @@ void Renderer::stopTouch() {
   record.get()->paintMode = renderContext->paintMode;
   record.get()->maskMode = renderContext->maskMode;
   record.get()->srcPath = srcPath;
-  if (undoStack.size() >= 10) {
-    recordRender->saveCanvas(undoStack.begin()->get(), sourceFrameBuffer);
-    renderCallback->saveFrameBuffer(recordRender->getFrameBuffer(), sourceWidth, sourceHeight);
-    undoStack.erase(undoStack.begin());
-  }
-  undoStack.push_back(record);
-  redoStack.clear();
+  recordRender->push(record);
   touchSequences.clear();
+  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
 
   //如果有绘制的画笔缓存，在绘制完成时同步到画笔画布
   if (tempPaintFrameBuffer->getTexture() > 0) {
@@ -252,10 +245,21 @@ void Renderer::stopTouch() {
 }
 
 void Renderer::undo() {
+  bool changed = recordRender->undo(paintFrameBuffer);
+  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
+  if (changed) {
+    drawBlend();
+    drawScreen();
+  }
 }
 
 void Renderer::redo() {
-
+  bool changed = recordRender->redo(paintFrameBuffer);
+  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
+  if (changed) {
+    drawBlend();
+    drawScreen();
+  }
 }
 
 void Renderer::drawSourceTexture(GLuint texture, int width, int height) {
@@ -263,7 +267,7 @@ void Renderer::drawSourceTexture(GLuint texture, int width, int height) {
   sourceFrameBuffer->createFrameBuffer(width, height);
   defaultFilter->initialize();
   FilterSource source = {texture, DEFAULT_TEXTURE_COORDINATE};
-  FilterTarget target = {sourceFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, width, height};
+  FilterTarget target = {sourceFrameBuffer.get(), {}, DEFAULT_VERTEX_COORDINATE, width, height};
   defaultFilter->draw(&source, &target);
 }
 
@@ -370,7 +374,7 @@ void Renderer::blendTexture(GLuint texture, bool revert) {
 
 void Renderer::notifyTransformChanged(bool reset) {
   LOGI("enter func %s", __func__);
-  if (renderCallback == nullptr || sourceWidth <= 0 || sourceHeight <= 0) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
     LOGE("%s source width or height is 0", __func__);
     return;
   }
@@ -384,7 +388,7 @@ void Renderer::notifyTransformChanged(bool reset) {
 
 void Renderer::notifyInitBoundChanged() {
   LOGI("enter func %s", __func__);
-  if (renderCallback == nullptr || sourceWidth <= 0 || sourceHeight <= 0) {
+  if (sourceWidth <= 0 || sourceHeight <= 0) {
     LOGE("%s source width or height is 0", __func__);
     return;
   }
@@ -397,7 +401,7 @@ void Renderer::notifyInitBoundChanged() {
 
 void Renderer::drawScreen() {
   LOGI("enter func %s", __func__);
-  if (renderCallback != nullptr && sourceWidth > 0 && sourceHeight > 0) {
+  if (sourceWidth > 0 && sourceHeight > 0) {
     renderCallback->bindScreen();
     float vertexCoordinate[9];
     getVertexCoordinate(sourceWidth, sourceHeight, vertexCoordinate);
@@ -411,7 +415,7 @@ void Renderer::drawScreen() {
 }
 
 void Renderer::drawMiniScreen() {
-  if (renderCallback != nullptr && sourceWidth > 0 && sourceHeight > 0) {
+  if (sourceWidth > 0 && sourceHeight > 0) {
     renderCallback->bindMiniScreen();
     float vertexCoordinate_[8] = {0.f, 0.f, sourceWidth * 1.f, 0.f, 0.f, sourceHeight * 1.f,
                                   sourceWidth * 1.f, sourceHeight * 1.f};

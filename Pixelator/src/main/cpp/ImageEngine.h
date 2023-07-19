@@ -59,7 +59,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void flushMiniScreen() override;
   void onTransformChanged(float left, float top, float right, float bottom, bool reset) override;
   void onInitBoundChanged(float left, float top, float right, float bottom) override;
-  void onGenerateDrawOp() override;
+  void onUndoRedoChanged(int undoSize, int redoSize) override;
   void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) override;
   int createEGLInternal();
   int createEGLSurfaceInternal();
@@ -79,7 +79,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void callJavaEGLWindowCreate();
   void callJavaFrameBoundsChanged(float left, float top, float right, float bottom, bool reset);
   void callJavaInitBoundsChanged(float left, float top, float right, float bottom);
-  void callJavaUndoRedoChanged();
+  void callJavaUndoRedoChanged(bool canUndo, bool canRedo);
  private:
   std::unique_ptr<thread::HandlerThread> handlerThread_ = nullptr;
   std::unique_ptr<thread::Handler> handler_ = nullptr;

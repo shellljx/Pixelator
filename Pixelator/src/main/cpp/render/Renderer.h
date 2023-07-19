@@ -13,21 +13,9 @@
 #include "RectFilter.h"
 #include "json/json.h"
 
-class RenderCallback {
- public:
-  virtual void bindScreen() = 0;
-  virtual void flushScreen() = 0;
-  virtual void bindMiniScreen() = 0;
-  virtual void flushMiniScreen() = 0;
-  virtual void onTransformChanged(float left, float top, float right, float bottom, bool reset) = 0;
-  virtual void onInitBoundChanged(float left, float top, float right, float bottom) = 0;
-  virtual void onGenerateDrawOp() = 0;
-  virtual void saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) = 0;
-};
-
 class Renderer {
  public:
-  explicit Renderer();
+  explicit Renderer(RenderCallback *callback);
   ~Renderer();
   void setSurfaceChanged(int width, int height);
   void setMiniSurfaceChanged(int width, int height);
@@ -49,7 +37,6 @@ class Renderer {
   void drawScreen();
   void drawMiniScreen();
   FrameBuffer *getBlendFrameBuffer() const;
-  void setRenderCallback(RenderCallback *callback);
  private:
   void drawSourceTexture(GLuint texture, int width, int height);
   void drawPaint();
@@ -70,7 +57,7 @@ class Renderer {
   glm::mat4 viewMatrix = glm::mat4(1);
   glm::mat4 modelMatrix = glm::mat4(1);
   glm::mat4 transformMatrix = glm::mat4(1);
-  FrameBuffer *sourceFrameBuffer;
+  std::shared_ptr<FrameBuffer> sourceFrameBuffer = nullptr;
   FrameBuffer *effectFrameBuffer;
   FrameBuffer *paintFrameBuffer;
   FrameBuffer *blendFrameBuffer;
@@ -85,8 +72,6 @@ class Renderer {
   std::shared_ptr<RecordRenderer> recordRender = nullptr;
   std::shared_ptr<ImageCache> imageCache;
   std::shared_ptr<Effect> currentEffect = nullptr;
-  std::vector<std::shared_ptr<DrawRecord>> undoStack;
-  std::vector<std::shared_ptr<DrawRecord>> redoStack;
   std::vector<float> touchSequences;
   int screenWidth = 0;
   int screenHeight = 0;

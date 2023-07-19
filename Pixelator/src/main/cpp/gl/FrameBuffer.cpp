@@ -51,6 +51,14 @@ void FrameBuffer::createFrameBuffer(int width, int height) {
   height_ = height;
 }
 
+void FrameBuffer::clear() {
+  if (frameBufferId_ > 0) {
+    glBindFramebuffer(GL_FRAMEBUFFER, frameBufferId_);
+    glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
+    glBindFramebuffer(GL_FRAMEBUFFER, GL_NONE);
+  }
+}
+
 GLuint FrameBuffer::getTexture() {
   return frameTextureId_;
 }
@@ -63,7 +71,7 @@ int FrameBuffer::getTextureHeight() {
   return height_;
 }
 
-GLuint FrameBuffer::getFrameBuffer() const{
+GLuint FrameBuffer::getFrameBuffer() const {
   return frameBufferId_;
 }
 

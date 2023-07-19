@@ -10,9 +10,8 @@
 #include "json/json.h"
 #include "utils/ImageDecoder.h"
 
-ImageEngine::ImageEngine(jobject object) : renderer(new Renderer()) {
+ImageEngine::ImageEngine(jobject object) : renderer(new Renderer(this)) {
   std::string name("ImageEngineThread");
-  renderer->setRenderCallback(this);
   handlerThread_ = std::unique_ptr<thread::HandlerThread>(thread::HandlerThread::Create(name));
   handler_ = std::make_unique<thread::Handler>(handlerThread_->getLooper(), this);
   pixelator_.reset(JNIEnvironment::Current(), object);
@@ -486,8 +485,8 @@ void ImageEngine::onInitBoundChanged(float left, float top, float right, float b
   callJavaInitBoundsChanged(left, top, right, bottom);
 }
 
-void ImageEngine::onGenerateDrawOp() {
-
+void ImageEngine::onUndoRedoChanged(int undoSize, int redoSize) {
+  callJavaUndoRedoChanged(undoSize > 0, redoSize > 0);
 }
 
 void ImageEngine::saveFrameBuffer(FrameBuffer *frameBuffer, int width, int height) {
@@ -582,7 +581,7 @@ void ImageEngine::callJavaInitBoundsChanged(float left, float top, float right, 
   }
 }
 
-void ImageEngine::callJavaUndoRedoChanged() {
+void ImageEngine::callJavaUndoRedoChanged(bool canUndo, bool canRedo) {
   if (pixelator_.empty()) {
     return;
   }
@@ -592,14 +591,20 @@ void ImageEngine::callJavaUndoRedoChanged() {
     jmethodID undoRedoChangedMethodId = env->GetMethodID(
         sdkClass.get(), "onUndoRedoChanged", "(ZZ)V"
     );
+    if (undoRedoChangedMethodId != nullptr) {
+      env->CallVoidMethod(pixelator_.get(), undoRedoChangedMethodId, canUndo, canRedo);
+    }
   }
 }
 
 void ImageEngine::redoInternal() {
-
+  bindScreen();
+  renderer->redo();
 }
 
 void ImageEngine::undoInternal() {
+  bindScreen();
+  renderer->undo();
 }
 
 void ImageEngine::startTouch(float x, float y) {

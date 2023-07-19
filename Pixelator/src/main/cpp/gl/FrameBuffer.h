@@ -20,6 +20,8 @@ class FrameBuffer {
    */
   void createFrameBuffer(int width, int height);
 
+  void clear();
+
   GLuint getTexture();
 
   int getTextureWidth();

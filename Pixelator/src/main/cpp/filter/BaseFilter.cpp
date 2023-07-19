@@ -94,7 +94,7 @@ void BaseFilter::onRunDrawTask() {
 
 void BaseFilter::draw(const FilterSource *source, const FilterTarget *target) {
   if (source == nullptr || target == nullptr || program <= 0) {
-    LOGE("filter can not saveCanvas, because source/target is null or program invalid");
+    LOGE("filter can not drawRecord, because source/target is null or program invalid");
     return;
   }
   onPreDraw();

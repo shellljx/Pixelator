@@ -21,7 +21,6 @@ std::shared_ptr<ImageEffect> ImageCache::get(const std::string &path) {
     if ((*it)->type() == TypeImage) {
       auto imageEffect = std::dynamic_pointer_cast<ImageEffect>(*it);
       if (imageEffect != nullptr && imageEffect->getSrcPath() == path) {
-        cache.erase(it);
         return imageEffect;
       }
     }
