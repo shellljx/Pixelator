@@ -133,7 +133,7 @@ void Renderer::setEffect(Json::Value &root) {
     }
     auto path = config["url"].asCString();
     auto imageEffect = imageCache->get(path);
-    if (currentEffect != nullptr) {
+    if (imageEffect != nullptr) {
       currentEffect = imageEffect;
       renderContext->effectType = TypeImage;
       drawImageEffect(imageEffect->getTexture(), imageEffect->getWidth(), imageEffect->getHeight());
@@ -189,6 +189,9 @@ bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
 }
 
 void Renderer::stopTouch() {
+  if (tempPaintFrameBuffer->getFrameBuffer() > 0) {
+    renderCallback->saveFrameBuffer(tempPaintFrameBuffer, tempPaintFrameBuffer->getTextureWidth(), tempPaintFrameBuffer->getTextureHeight());
+  }
   if (currentEffect == nullptr) {
     LOGI("%s not apply any effect", __func__);
     return;
@@ -228,7 +231,6 @@ void Renderer::stopTouch() {
   record.get()->srcPath = srcPath;
   recordRender->push(record);
   touchSequences.clear();
-  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
 
   //如果有绘制的画笔缓存，在绘制完成时同步到画笔画布
   if (tempPaintFrameBuffer->getTexture() > 0) {
@@ -246,7 +248,6 @@ void Renderer::stopTouch() {
 
 void Renderer::undo() {
   bool changed = recordRender->undo(paintFrameBuffer);
-  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
   if (changed) {
     drawBlend();
     drawScreen();
@@ -255,7 +256,6 @@ void Renderer::undo() {
 
 void Renderer::redo() {
   bool changed = recordRender->redo(paintFrameBuffer);
-  renderCallback->onUndoRedoChanged(recordRender->getUndoSize(), recordRender->getRedoSize());
   if (changed) {
     drawBlend();
     drawScreen();
@@ -302,16 +302,13 @@ void Renderer::drawGraffitiPaint() {
 
 void Renderer::drawRectPaint() {
   LOGI("enter func %s", __func__);
-  float vertexCoordinate_[] = {
-      0.f, sourceHeight * 1.f, sourceWidth * 1.f, sourceHeight * 1.f, 0.f, 0.f, sourceWidth * 1.f, 0.f
-  };
-  float textureCoordinate[] = {touchStartX, touchStartY, touchX, touchY};
   auto model = transformMatrix * modelMatrix;
   auto matrix = paintProjection * viewMatrix * glm::inverse(model);
   tempPaintFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   rectFilter->initialize();
-  FilterSource source = {effectFrameBuffer->getTexture(), textureCoordinate};
-  FilterTarget target = {tempPaintFrameBuffer, matrix, vertexCoordinate_, sourceWidth, sourceHeight, true};
+  rectFilter->updatePoint(touchStartX,touchStartY, touchX,touchY);
+  FilterSource source = {effectFrameBuffer->getTexture()};
+  FilterTarget target = {tempPaintFrameBuffer, matrix, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, true};
   rectFilter->draw(&source, &target);
 }
 

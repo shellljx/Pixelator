@@ -25,7 +25,7 @@ RecordRenderer::~RecordRenderer() {
   delete rectFilter;
 }
 
-int RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
+void RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
   if (undoStack.size() >= 10) {
     int width = sourceFrameBuffer->getTextureWidth();
     int height = sourceFrameBuffer->getTextureHeight();
@@ -35,7 +35,7 @@ int RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
   }
   undoStack.push_back(std::move(record));
   redoStack.clear();
-  return undoStack.size();
+  notifyUndoRedoState();
 }
 
 bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb) {
@@ -82,14 +82,11 @@ bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb)
       LOGE("%s record data length < 4, not rect effect");
       return false;
     }
-    float vertexCoordinate_[] = {
-        0.f, height * 1.f, width * 1.f, height * 1.f, 0.f, 0.f, width * 1.f, 0.f
-    };
     auto data = record->data;
-    float textureCoordinate[] = {data[0], data[1], data[2], data[3]};
     rectFilter->initialize();
-    FilterSource source = {effectFrameBuffer->getTexture(), textureCoordinate};
-    FilterTarget target = {targetFb, record->matrix, vertexCoordinate_, width, height, true};
+    rectFilter->updatePoint(data[0],data[1], data[2],data[3]);
+    FilterSource source = {effectFrameBuffer->getTexture()};
+    FilterTarget target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, true};
     rectFilter->draw(&source, &target);
   }
   return true;
@@ -103,7 +100,6 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
 
     paintFb->clear();
     if (cacheFrameBuffer->getTexture() > 0) {
-      renderCallback->saveFrameBuffer(cacheFrameBuffer, sourceFrameBuffer->getTextureWidth(),sourceFrameBuffer->getTextureHeight());
       defaultFilter->initialize();
       int sourceWidth = sourceFrameBuffer->getTextureWidth();
       int sourceHeight = sourceFrameBuffer->getTextureHeight();
@@ -111,11 +107,10 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
       FilterTarget target = {paintFb, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight};
       defaultFilter->draw(&source, &target);
     }
-    renderCallback->saveFrameBuffer(paintFb, sourceFrameBuffer->getTextureWidth(),sourceFrameBuffer->getTextureHeight());
     for (const auto &record : undoStack) {
       persistentRecord(record.get(), paintFb);
-      renderCallback->saveFrameBuffer(paintFb,sourceFrameBuffer->getTextureWidth(),sourceFrameBuffer->getTextureHeight());
     }
+    notifyUndoRedoState();
     return true;
   }
   return false;
@@ -129,6 +124,7 @@ bool RecordRenderer::redo(FrameBuffer *paintFb) {
     if (ret) {
       undoStack.push_back(data);
     }
+    notifyUndoRedoState();
     return true;
   }
   return false;
@@ -158,18 +154,14 @@ void RecordRenderer::blendTexture(GLuint texture, bool revert) {
   defaultFilter->draw(&source, &target);
   defaultFilter->disableBlend();
 }
+
+void RecordRenderer::notifyUndoRedoState() {
+  renderCallback->onUndoRedoChanged(!undoStack.empty(), !redoStack.empty());
+}
 void RecordRenderer::setSourceFrameBuffer(std::shared_ptr<FrameBuffer> fb) {
   sourceFrameBuffer = std::move(fb);
 }
 
 FrameBuffer *RecordRenderer::getFrameBuffer() {
   return cacheFrameBuffer;
-}
-
-int RecordRenderer::getUndoSize() {
-  return undoStack.size();
-}
-
-int RecordRenderer::getRedoSize() {
-  return redoStack.size();
 }

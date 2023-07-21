@@ -85,4 +85,6 @@ void FrameBuffer::deleteFrameBuffer() {
     GL_CHECK(glDeleteTextures(1, &frameTextureId_));
     frameTextureId_ = 0;
   }
+  width_ = 0;
+  height_ = 0;
 }

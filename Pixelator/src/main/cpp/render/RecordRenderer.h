@@ -18,17 +18,16 @@ class RecordRenderer {
  public:
   explicit RecordRenderer(std::shared_ptr<RenderContext> context, std::shared_ptr<ImageCache> cache, RenderCallback *callback);
   ~RecordRenderer();
-  int push(std::shared_ptr<DrawRecord> record);
+  void push(std::shared_ptr<DrawRecord> record);
   bool persistentRecord(DrawRecord *record, FrameBuffer *targetFb);
   void setSourceFrameBuffer(std::shared_ptr<FrameBuffer> fb);
   bool undo(FrameBuffer *paintFb);
   bool redo(FrameBuffer *paintFb);
   FrameBuffer *getFrameBuffer();
-  int getUndoSize();
-  int getRedoSize();
  private:
   void blendCache(FrameBuffer *targetFb);
   void blendTexture(GLuint texture, bool revert);
+  void notifyUndoRedoState();
  private:
   std::vector<std::shared_ptr<DrawRecord>> undoStack;
   std::vector<std::shared_ptr<DrawRecord>> redoStack;

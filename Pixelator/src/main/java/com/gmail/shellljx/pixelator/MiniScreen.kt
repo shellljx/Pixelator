@@ -3,8 +3,8 @@ package com.gmail.shellljx.pixelator
 import android.view.Surface
 
 /**
- * @Author: lijinxiang
- * @Email: lijinxiang@shizhuang-inc.com
+ * @Author: shell
+ * @Email: shellljx@gmail.com
  * @Date: 2023/7/15
  * @Description:
  */

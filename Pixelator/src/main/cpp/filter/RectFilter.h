@@ -9,6 +9,9 @@
 
 class RectFilter : public BaseFilter {
 
+ public:
+  void updatePoint(float startX, float startY, float endX, float endY);
+
  private:
   std::string onBuildVertexShader() override;
   std::string onBuildFragmentShader() override;
@@ -18,6 +21,11 @@ class RectFilter : public BaseFilter {
   GLint textureSizeHandler = -1;
   GLint startPointHandler = -1;
   GLint endPointHandler = -1;
+
+  float startx = 0.f;
+  float starty = 0.f;
+  float endx = 0.f;
+  float endy = 0.f;
 };
 
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_FILTER_RECTFILTER_H_
