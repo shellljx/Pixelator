@@ -5,6 +5,9 @@
     <string name="lock_background">背景保护</string>
     <string name="lock_portrait">人像保护</string>
 
-    <string name="paint_type_eraser">橡皮擦模式</string>
-    <string name="paint_type_paint">画笔模式</string>
+    <string name="paint_mode_eraser">橡皮擦模式</string>
+    <string name="paint_mode_paint">画笔模式</string>
+
+    <string name="paint_type_graffiti">轨迹画笔</string>
+    <string name="paint_type_rect">矩形选框</string>
 </resources>

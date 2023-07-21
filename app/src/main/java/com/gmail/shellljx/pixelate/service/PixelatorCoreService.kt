@@ -204,6 +204,14 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return mPaintSize
     }
 
+    override fun getPaintType(): Int {
+        return mPaintType
+    }
+
+    override fun getPaintMode(): Int {
+        return mPaintMode
+    }
+
     override fun getImagePath(): String? {
         return mImagePath
     }
@@ -303,6 +311,10 @@ interface IPixelatorCoreService : IService {
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
+    @PaintType
+    fun getPaintType(): Int
+    @PaintMode
+    fun getPaintMode(): Int
     fun getImagePath(): String?
     fun save()
     fun addPaintSizeObserver(observer: PaintSizeObserver)

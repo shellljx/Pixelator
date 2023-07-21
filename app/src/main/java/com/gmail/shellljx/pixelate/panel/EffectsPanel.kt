@@ -5,6 +5,7 @@ import android.graphics.Rect
 import android.net.Uri
 import android.view.*
 import android.widget.Toast
+import androidx.annotation.StringRes
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
@@ -89,14 +90,19 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleMoveObserver(this)
         mCoreService?.addUndoRedoStateObserver(this)
 
-        var b = true
         mPaintView?.setOnClickListener {
-            if (b) {
-                mCoreService?.setPaintType(Graffiti)
-            } else {
+            if (mCoreService?.getPaintType() == Graffiti) {
                 mCoreService?.setPaintType(Rect)
+                showToast(R.string.paint_type_rect)
+            } else {
+                mCoreService?.setPaintType(Graffiti)
+                showToast(R.string.paint_type_graffiti)
             }
-            b = !b
+            if (mCoreService?.getPaintType() == Graffiti) {
+                mEffectService?.removDrawBox()
+            } else {
+                mEffectService?.addDrawBox()
+            }
         }
         mLockView?.setOnClickListener {
             val maskMode = mMaskService?.getMaskMode() ?: return@setOnClickListener
@@ -117,7 +123,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             it.isSelected = !it.isSelected
             val type = if (it.isSelected) ERASER else PAINT
             mCoreService?.setPaintMode(type)
-            val id = if (it.isSelected) R.string.paint_type_eraser else R.string.paint_type_paint
+            val id = if (it.isSelected) R.string.paint_mode_eraser else R.string.paint_mode_paint
             Toast.makeText(context, context.getString(id), Toast.LENGTH_SHORT).show()
         }
         mUndoView?.setOnClickListener {
@@ -141,6 +147,10 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val startPosition = effectItems.size
         effectItems.addAll(effectList)
         mEffectsAdapter.notifyItemRangeInserted(startPosition, effectList.size)
+    }
+
+    private fun showToast(@StringRes id: Int) {
+        Toast.makeText(mContainer.getContext(), mContainer.getContext().getString(id), Toast.LENGTH_SHORT).show()
     }
 
     private fun getMaskModePosition(@MaskMode maskMode: Int): Int {

@@ -1,17 +1,23 @@
 package com.gmail.shellljx.pixelate.service
 
 import android.animation.*
+import android.graphics.PointF
+import android.view.MotionEvent
+import android.view.View
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.view.PaintBoxView
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.EffectType
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnTapObserver
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
+import com.gmail.shellljx.wrapper.service.render.IRenderLayer
 
-class EffectService : IEffectService, OnTapObserver {
+class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private val effectList = arrayListOf<EffectItem>()
     private val effectChangedObservers = arrayListOf<EffectChangedObserver>()
@@ -19,6 +25,23 @@ class EffectService : IEffectService, OnTapObserver {
     private var mTransformService: ITransformService? = null
     private var mPanelToken: PanelToken? = null
     private var mViewPortAnimator = ValueAnimator.ofInt(200.dp(), 0)
+    private var mDrawBoxView: PaintBoxView? = null
+
+    private val mDrawBoxLayer = object : IRenderLayer {
+        override fun view(): View {
+            var view = mDrawBoxView
+            if (view == null) {
+                view = PaintBoxView(mContainer.getContext())
+                mDrawBoxView = view
+            }
+            return view
+        }
+
+        override fun level(): Int {
+            return 0
+        }
+    }
+
     override fun onStart() {
         effectList.add(EffectItem(0, EffectType.TypeMosaic, "/sdcard/PixelatorResources/0.jpg", ""))
         effectList.add(EffectItem(1, EffectType.TypeImage, "/sdcard/PixelatorResources/1.jpg", "/sdcard/PixelatorResources/1.jpg"))
@@ -46,6 +69,7 @@ class EffectService : IEffectService, OnTapObserver {
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
         mTransformService = mContainer.getServiceManager().getService(TransformService::class.java)
         mContainer.getRenderService()?.getRenderHeight()
+        mContainer.getGestureService()?.addSingleMoveObserver(this)
     }
 
     private val mAnimatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
@@ -81,6 +105,27 @@ class EffectService : IEffectService, OnTapObserver {
         return false
     }
 
+    override fun onSingleDown(event: MotionEvent): Boolean {
+        if (mDrawBoxView?.isAttachedToWindow == true) {
+            mDrawBoxView?.setStartPoint(event.x, event.y)
+        }
+        return false
+    }
+
+    override fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF): Boolean {
+        if (mDrawBoxView?.isAttachedToWindow == true) {
+            mDrawBoxView?.setEndPoint(current.x, current.y)
+        }
+        return false
+    }
+
+    override fun onSingleUp(event: MotionEvent): Boolean {
+        if (mDrawBoxView?.isAttachedToWindow == true) {
+            mDrawBoxView?.clear()
+        }
+        return false
+    }
+
     private fun tryUpdateViewPort(reverse: Boolean) {
         if (reverse) {
             mViewPortAnimator.reverse()
@@ -91,6 +136,14 @@ class EffectService : IEffectService, OnTapObserver {
 
     override fun showPanel() {
         mPanelToken = mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
+    }
+
+    override fun addDrawBox() {
+        mContainer.getRenderService()?.addRenderLayer(mDrawBoxLayer)
+    }
+
+    override fun removDrawBox() {
+        mContainer.getRenderService()?.removeRenderLayer(mDrawBoxLayer)
     }
 
     override fun getEffects(): List<EffectItem> {
@@ -104,6 +157,8 @@ class EffectService : IEffectService, OnTapObserver {
 
 interface IEffectService : IService {
     fun showPanel()
+    fun addDrawBox()
+    fun removDrawBox()
     fun getEffects(): List<EffectItem>
     fun addEffectChangedObserver(observer: EffectChangedObserver)
 }
