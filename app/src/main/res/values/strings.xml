@@ -8,6 +8,7 @@
     <string name="paint_mode_eraser">橡皮擦模式</string>
     <string name="paint_mode_paint">画笔模式</string>
 
-    <string name="paint_type_graffiti">轨迹画笔</string>
-    <string name="paint_type_rect">矩形选框</string>
+    <string name="paint_type_graffiti">涂鸦</string>
+    <string name="paint_type_rect">矩形</string>
+    <string name="paint_type_circle">圆形</string>
 </resources>

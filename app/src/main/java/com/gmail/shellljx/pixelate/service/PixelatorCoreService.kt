@@ -6,6 +6,7 @@ import android.view.MotionEvent
 import android.view.Surface
 import androidx.core.graphics.toRect
 import com.gmail.shellljx.pixelator.*
+import com.gmail.shellljx.pixelator.PaintType.Companion.Graffiti
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService

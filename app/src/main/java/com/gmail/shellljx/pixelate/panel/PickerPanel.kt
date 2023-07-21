@@ -42,6 +42,9 @@ class PickerPanel(context: Context) : AbsPanel(context), OptionPickListener {
         view ?: return
         mPickView = view.findViewById(R.id.pickview)
         mPickView.setOptionPickListener(this)
+        view.setOnClickListener {
+            mContainer.getPanelService()?.hidePanel(mToken)
+        }
     }
 
     override fun onPayloadUpdate(any: Any) {
@@ -56,6 +59,10 @@ class PickerPanel(context: Context) : AbsPanel(context), OptionPickListener {
             mPayload?.callback?.invoke(position)
             mContainer.getPanelService()?.hidePanel(mToken)
         }
+    }
+
+    override fun onCancelPick() {
+        mContainer.getPanelService()?.hidePanel(mToken)
     }
 
     data class PickPayload(val data: List<PickItem>, val selectPosition: Int, val callback: (Int) -> Unit)

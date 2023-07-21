@@ -47,8 +47,9 @@
 
         <ImageView
             android:id="@+id/iv_eraser"
-            android:layout_width="23dp"
-            android:layout_height="23dp"
+            android:layout_width="24dp"
+            android:layout_height="24dp"
+            android:layout_marginTop="1dp"
             android:layout_gravity="center_vertical"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_eraser"

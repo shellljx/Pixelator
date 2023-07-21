@@ -4,6 +4,7 @@ import android.content.Context
 import android.graphics.Rect
 import android.net.Uri
 import android.view.*
+import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.StringRes
 import androidx.recyclerview.widget.GridLayoutManager
@@ -48,7 +49,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
-    private val mPaintView by lazy { getView()?.findViewById<View>(R.id.iv_paint) }
+    private val mPaintView by lazy { getView()?.findViewById<ImageView>(R.id.iv_paint) }
     private val mLockView by lazy { getView()?.findViewById<View>(R.id.iv_lock) }
     private val mEraserView by lazy { getView()?.findViewById<View>(R.id.iv_eraser) }
     private val mUndoView by lazy { getView()?.findViewById<View>(R.id.iv_undo) }
@@ -62,6 +63,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         PickItem(-1, context.getString(R.string.lock_portrait)),
         PickItem(-1, context.getString(R.string.lock_background)),
         PickItem(-1, context.getString(R.string.lock_off))
+    )
+    private val mPaintItems = arrayListOf(
+        PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
+        PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect)),
+        PickItem(R.drawable.ic_circle, context.getString(R.string.paint_type_circle))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -91,17 +97,18 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mCoreService?.addUndoRedoStateObserver(this)
 
         mPaintView?.setOnClickListener {
-            if (mCoreService?.getPaintType() == Graffiti) {
-                mCoreService?.setPaintType(Rect)
-                showToast(R.string.paint_type_rect)
-            } else {
-                mCoreService?.setPaintType(Graffiti)
-                showToast(R.string.paint_type_graffiti)
-            }
-            if (mCoreService?.getPaintType() == Graffiti) {
-                mEffectService?.removDrawBox()
-            } else {
-                mEffectService?.addDrawBox()
+            val paintType = mCoreService?.getPaintType() ?: return@setOnClickListener
+            mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
+                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mPaintItems, getPaintTypePosition(paintType)) {
+                    val type = when (it) {
+                        0 -> PaintType.Graffiti
+                        1 -> PaintType.Rect
+                        else -> PaintType.Circle
+                    }
+                    mCoreService?.setPaintType(type)
+                    mPaintView?.setImageResource(mPaintItems[it].icon)
+                    Toast.makeText(mContainer.getContext(), mPaintItems[it].text, Toast.LENGTH_SHORT).show()
+                })
             }
         }
         mLockView?.setOnClickListener {
@@ -149,14 +156,18 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mEffectsAdapter.notifyItemRangeInserted(startPosition, effectList.size)
     }
 
-    private fun showToast(@StringRes id: Int) {
-        Toast.makeText(mContainer.getContext(), mContainer.getContext().getString(id), Toast.LENGTH_SHORT).show()
-    }
-
     private fun getMaskModePosition(@MaskMode maskMode: Int): Int {
         return when (maskMode) {
             MaskMode.PERSON -> 0
             MaskMode.BACKGROUND -> 1
+            else -> 2
+        }
+    }
+
+    private fun getPaintTypePosition(@PaintType type: Int): Int {
+        return when (type) {
+            PaintType.Graffiti -> 0
+            PaintType.Rect -> 1
             else -> 2
         }
     }

@@ -24,7 +24,7 @@ import kotlin.math.floor
  * @Description:
  */
 class PickView @JvmOverloads constructor(
-        context: Context, attrs: AttributeSet? = null
+    context: Context, attrs: AttributeSet? = null
 ) : FrameLayout(context, attrs) {
 
     private lateinit var overlayContent: ViewGroup
@@ -95,6 +95,8 @@ class PickView @JvmOverloads constructor(
                     val position = getClickedOptionPosition(x, y)
                     if (position >= 0) {
                         selectPosition(position, true, byUser = true)
+                    } else {
+                        optionPickListener?.onCancelPick()
                     }
                 } else {
                     optionPickListener?.onPickOption(selectedPosition, true)
@@ -162,8 +164,9 @@ class PickView @JvmOverloads constructor(
         val view = LayoutInflater.from(context).inflate(R.layout.layout_wheel_item, optionGroup, false)
         val textView = view.findViewById<TextView>(R.id.tv_text)
         val iconView = view.findViewById<ImageView>(R.id.icon)
-        if (item.icon <= 0) {
-            iconView.isVisible = false
+        iconView.isVisible = item.icon > 0
+        if (item.icon > 0) {
+            iconView.setImageResource(item.icon)
         }
         textView.text = item.text
         return view
@@ -209,4 +212,5 @@ class PickItem(val icon: Int, val text: String)
 
 interface OptionPickListener {
     fun onPickOption(position: Int, byUser: Boolean)
+    fun onCancelPick()
 }
