@@ -84,10 +84,12 @@ bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb)
     }
     auto data = record->data;
     rectFilter->initialize();
-    rectFilter->updatePoint(data[0],data[1], data[2],data[3]);
+    rectFilter->updatePoint(data[0], data[1], data[2], data[3]);
     FilterSource source = {effectFrameBuffer->getTexture()};
-    FilterTarget target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, true};
+    FilterTarget target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, false};
+    rectFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     rectFilter->draw(&source, &target);
+    rectFilter->disableBlend();
   }
   return true;
 }
@@ -109,6 +111,7 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
     }
     for (const auto &record : undoStack) {
       persistentRecord(record.get(), paintFb);
+      renderCallback->saveFrameBuffer(paintFb, sourceFrameBuffer->getTextureWidth(), sourceFrameBuffer->getTextureHeight());
     }
     notifyUndoRedoState();
     return true;

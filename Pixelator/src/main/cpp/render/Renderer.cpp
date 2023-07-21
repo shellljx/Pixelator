@@ -189,9 +189,6 @@ bool Renderer::updateTouchBuffer(float *buffer, int length, float x, float y) {
 }
 
 void Renderer::stopTouch() {
-  if (tempPaintFrameBuffer->getFrameBuffer() > 0) {
-    renderCallback->saveFrameBuffer(tempPaintFrameBuffer, tempPaintFrameBuffer->getTextureWidth(), tempPaintFrameBuffer->getTextureHeight());
-  }
   if (currentEffect == nullptr) {
     LOGI("%s not apply any effect", __func__);
     return;
@@ -243,6 +240,7 @@ void Renderer::stopTouch() {
     };
     defaultFilter->draw(&source, &target);
     defaultFilter->disableBlend();
+    tempPaintFrameBuffer->deleteFrameBuffer();
   }
 }
 
