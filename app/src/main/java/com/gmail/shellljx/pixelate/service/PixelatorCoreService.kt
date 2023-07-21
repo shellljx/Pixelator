@@ -138,6 +138,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         mImageSdk.setDeeplabMaskMode(mode)
     }
 
+    override fun setCanvasHide(hide: Boolean) {
+        mImageSdk.setCanvasHide(hide)
+    }
+
     override fun loadImage(path: String) {
         runTaskOrPendding {
             mImageSdk.addImagePath(path, getRotate(path))
@@ -300,6 +304,7 @@ interface IPixelatorCoreService : IService {
     fun setPaintType(@PaintType paintType: Int)
     fun setDeeplabMask(bitmap: Bitmap)
     fun setDeeplabMode(@MaskMode mode: Int)
+    fun setCanvasHide(hide: Boolean)
     fun loadImage(path: String)
     fun refreshFrame()
     fun setEffect(config: String)

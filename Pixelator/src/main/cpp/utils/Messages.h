@@ -22,6 +22,7 @@ enum PixelateMessage {
   kSetDeeplabMask,
   ksetDeeplabMaskMode,
   kSetPaintSize,
+  kSetCanvasHide,
   kTouchEvent,
   kStartTouch,
   kStopTouch,

@@ -97,6 +97,11 @@ void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size) 
   engine->setPaintSize(size);
 }
 
+void Android_Jni_setCanvasHide(JNIEnv *env, jobject object, jlong id, jboolean hide) {
+  auto engine = reinterpret_cast<ImageEngine *>(id);
+  engine->setCanvasHide(hide);
+}
+
 void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jobject object,
                                  jlong id,

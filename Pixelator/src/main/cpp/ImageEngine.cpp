@@ -148,6 +148,13 @@ void ImageEngine::setPaintSize(int size) {
   handler_->sendMessage(msg);
 }
 
+void ImageEngine::setCanvasHide(bool hide) {
+  auto msg = new thread::Message();
+  msg->what = PixelateMessage::kSetCanvasHide;
+  msg->flag1 = hide;
+  handler_->sendMessage(msg);
+}
+
 void ImageEngine::pushTouchBuffer(float *buffer, int length, float cx, float cy) {
   auto msg = new thread::Message();
   msg->what = PixelateMessage::kTouchEvent;
@@ -276,6 +283,11 @@ void ImageEngine::handleMessage(thread::Message *msg) {
     case PixelateMessage::kSetPaintSize: {
       auto paintSize = msg->arg1;
       renderer->setPaintSize(paintSize);
+      break;
+    }
+    case PixelateMessage::kSetCanvasHide: {
+      auto hide = msg->flag1;
+      renderer->setCanvasHide(hide);
       break;
     }
     case PixelateMessage::kStartTouch: {

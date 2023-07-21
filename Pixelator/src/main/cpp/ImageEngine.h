@@ -52,6 +52,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void destroy();
   void startTouch(float x, float y);
   void setPaintType(int type);
+  void setCanvasHide(bool hide);
  private:
   void bindScreen() override;
   void flushScreen() override;

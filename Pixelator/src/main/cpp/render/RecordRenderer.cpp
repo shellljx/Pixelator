@@ -43,16 +43,19 @@ bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb)
   int width = sourceFrameBuffer->getTextureWidth();
   int height = sourceFrameBuffer->getTextureHeight();
   effectFrameBuffer->createFrameBuffer(width, height);
-  if (record->effectType == TypeMosaic) {
-    //合并原图和最新cache
-    blendCache(targetFb);
-
+  int lastEffectType = undoRedoContext->effectType;
+  std::string lastSrcPath = undoRedoContext->srcPath;
+  undoRedoContext->effectType = record->effectType;
+  undoRedoContext->srcPath = record->srcPath;
+  if (lastEffectType != record->effectType && record->effectType == TypeMosaic) {
+    //用已经绘制的内容和原图合并成新的特效原素材生成马赛克特效
+    makeNewScene(targetFb);
     mosaicFilter->initialize();
     //要用最新的纹理来生成马赛克
     FilterSource source = {blendFrameBuffer->getTexture(), nullptr};
     FilterTarget target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, width, height};
     mosaicFilter->draw(&source, &target);
-  } else if (record->effectType == TypeImage) {
+  } else if (lastSrcPath != record->srcPath && record->effectType == TypeImage) {
     //effect is image
     auto image = imageCache->get(record->srcPath);
     if (image == nullptr) {
@@ -101,6 +104,7 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
     redoStack.push_back(data);
 
     paintFb->clear();
+    undoRedoContext = std::make_unique<UndoRedoContext>();
     if (cacheFrameBuffer->getTexture() > 0) {
       defaultFilter->initialize();
       int sourceWidth = sourceFrameBuffer->getTextureWidth();
@@ -111,7 +115,6 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
     }
     for (const auto &record : undoStack) {
       persistentRecord(record.get(), paintFb);
-      renderCallback->saveFrameBuffer(paintFb, sourceFrameBuffer->getTextureWidth(), sourceFrameBuffer->getTextureHeight());
     }
     notifyUndoRedoState();
     return true;
@@ -133,7 +136,7 @@ bool RecordRenderer::redo(FrameBuffer *paintFb) {
   return false;
 }
 
-void RecordRenderer::blendCache(FrameBuffer *targetFb) {
+void RecordRenderer::makeNewScene(FrameBuffer *targetFb) {
   int sourceWidth = sourceFrameBuffer->getTextureWidth();
   int sourceHeight = sourceFrameBuffer->getTextureHeight();
   blendFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);

@@ -45,6 +45,8 @@ void Android_Jni_setPaintType(JNIEnv *env, jobject object, jlong id, jint paintT
 
 void Android_Jni_setPaintSize(JNIEnv *env, jobject object, jlong id, jint size);
 
+void Android_Jni_setCanvasHide(JNIEnv *env, jobject object, jlong id, jboolean hide);
+
 void Android_Jni_pushTouchBuffer(JNIEnv *env,
                                  jobject object,
                                  jlong id,
@@ -84,6 +86,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"nativeSetPaintMode", "(JI)V", (void **) Android_Jni_setPaintMode},
     {"nativeSetPaintType", "(JI)V", (void **) Android_Jni_setPaintType},
     {"setPaintSize", "(JI)V", (void **) Android_Jni_setPaintSize},
+    {"setCanvasHide", "(JZ)V", (void **) Android_Jni_setCanvasHide},
     {"pushTouchBuffer", "(J[FFF)V", (void **) Android_Jni_pushTouchBuffer},
     {"nativeStopTouch", "(J)V", (void **) Android_Jni_nativeStopTouch},
     {"nativeStartTouch", "(JFF)V", (void **) Android_Jni_nativeStartTouch},

@@ -27,6 +27,7 @@ class Renderer {
   void setPaintMode(int mode);
   void setPaintSize(int size);
   void setMaskMode(int mode);
+  void setCanvasHide(bool hide);
   void setEffect(Json::Value &root);
   void setTransformMatrix(const float *buffer);
   void startTouch(float x, float y);

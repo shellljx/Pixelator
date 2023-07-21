@@ -1,6 +1,9 @@
 package com.gmail.shellljx.pixelator
 
 import androidx.annotation.IntDef
+import com.gmail.shellljx.pixelator.PaintType.Companion.Circle
+import com.gmail.shellljx.pixelator.PaintType.Companion.Graffiti
+import com.gmail.shellljx.pixelator.PaintType.Companion.Rect
 
 /**
  * @Author: shell
@@ -9,12 +12,15 @@ import androidx.annotation.IntDef
  * @Description:
  */
 
-const val Graffiti = 0
-const val Rect = 1
-
 @IntDef(
-    Graffiti, Rect
+    Graffiti, Rect, Circle
 )
 @Target(AnnotationTarget.FIELD, AnnotationTarget.FUNCTION, AnnotationTarget.VALUE_PARAMETER)
 @Retention(AnnotationRetention.SOURCE)
-annotation class PaintType
+annotation class PaintType {
+    companion object {
+        const val Graffiti = 0
+        const val Rect = 1
+        const val Circle = 2
+    }
+}

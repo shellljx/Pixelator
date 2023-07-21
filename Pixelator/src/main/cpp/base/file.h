@@ -48,6 +48,11 @@ struct RenderContext {
   }
 };
 
+struct UndoRedoContext {
+  int effectType = -1;
+  std::string srcPath;
+};
+
 class Effect {
  public:
   Effect(EffectType type);

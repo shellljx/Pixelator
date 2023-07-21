@@ -113,6 +113,16 @@ void Renderer::setMaskMode(int mode) {
   renderContext->maskMode = mode;
 }
 
+void Renderer::setCanvasHide(bool hide) {
+  if (!blendFrameBuffer->isCreated()) return;
+  if (hide) {
+    blendTexture(sourceFrameBuffer->getTexture(), false);
+  } else {
+    drawBlend();
+  }
+  drawScreen();
+}
+
 void Renderer::setEffect(Json::Value &root) {
   LOGI("enter func %s", __func__);
   if (root["type"].isNull() || root["config"].isNull()) {
@@ -304,7 +314,7 @@ void Renderer::drawRectPaint() {
   auto matrix = paintProjection * viewMatrix * glm::inverse(model);
   tempPaintFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   rectFilter->initialize();
-  rectFilter->updatePoint(touchStartX,touchStartY, touchX,touchY);
+  rectFilter->updatePoint(touchStartX, touchStartY, touchX, touchY);
   FilterSource source = {effectFrameBuffer->getTexture()};
   FilterTarget target = {tempPaintFrameBuffer, matrix, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, true};
   rectFilter->draw(&source, &target);

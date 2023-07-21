@@ -105,6 +105,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                         1 -> PaintType.Rect
                         else -> PaintType.Circle
                     }
+                    if (type == PaintType.Graffiti) {
+                        mEffectService?.removDrawBox()
+                    } else {
+                        mEffectService?.addDrawBox()
+                    }
                     mCoreService?.setPaintType(type)
                     mPaintView?.setImageResource(mPaintItems[it].icon)
                     Toast.makeText(mContainer.getContext(), mPaintItems[it].text, Toast.LENGTH_SHORT).show()

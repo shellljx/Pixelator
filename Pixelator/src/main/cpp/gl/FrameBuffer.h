@@ -32,6 +32,8 @@ class FrameBuffer {
 
   void deleteFrameBuffer();
 
+  bool isCreated();
+
  private:
   GLuint frameBufferId_ = 0;
   GLuint frameTextureId_ = 0;

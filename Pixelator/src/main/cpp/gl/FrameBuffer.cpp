@@ -88,3 +88,7 @@ void FrameBuffer::deleteFrameBuffer() {
   width_ = 0;
   height_ = 0;
 }
+
+bool FrameBuffer::isCreated() {
+  return frameBufferId_ > 0 && frameTextureId_ > 0;
+}

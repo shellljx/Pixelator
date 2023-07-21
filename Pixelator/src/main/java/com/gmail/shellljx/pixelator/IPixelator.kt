@@ -28,6 +28,7 @@ interface IPixelator {
     fun setPaintType(@PaintType paintType: Int)
 
     fun setPaintSize(size: Int)
+    fun setCanvasHide(hide: Boolean)
 
     fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float)
 

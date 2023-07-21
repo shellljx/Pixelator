@@ -25,13 +25,14 @@ class RecordRenderer {
   bool redo(FrameBuffer *paintFb);
   FrameBuffer *getFrameBuffer();
  private:
-  void blendCache(FrameBuffer *targetFb);
+  void makeNewScene(FrameBuffer *targetFb);
   void blendTexture(GLuint texture, bool revert);
   void notifyUndoRedoState();
  private:
   std::vector<std::shared_ptr<DrawRecord>> undoStack;
   std::vector<std::shared_ptr<DrawRecord>> redoStack;
   std::shared_ptr<RenderContext> renderContext;
+  std::unique_ptr<UndoRedoContext> undoRedoContext;
   std::shared_ptr<ImageCache> imageCache;
   RenderCallback *renderCallback;
   std::shared_ptr<FrameBuffer> sourceFrameBuffer = nullptr;

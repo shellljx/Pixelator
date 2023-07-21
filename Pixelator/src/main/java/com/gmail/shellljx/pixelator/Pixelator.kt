@@ -87,6 +87,12 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    override fun setCanvasHide(hide: Boolean) {
+        if (mId != 0L) {
+            setCanvasHide(mId, hide)
+        }
+    }
+
     override fun pushTouchBuffer(buffer: FloatArray, cx: Float, cy: Float) {
         if (buffer.isEmpty()) return
         if (mId != 0L) {
@@ -220,6 +226,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun nativeSetPaintMode(id: Long, mode: Int)
     private external fun nativeSetPaintType(id: Long, type: Int)
     private external fun setPaintSize(id: Long, size: Int)
+    private external fun setCanvasHide(id: Long, hide: Boolean)
     private external fun pushTouchBuffer(id: Long, floatArray: FloatArray, cx: Float, cy: Float)
     private external fun nativeStartTouch(id: Long, x: Float, y: Float)
     private external fun nativeStopTouch(id: Long)
