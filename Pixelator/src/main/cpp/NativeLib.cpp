@@ -158,9 +158,11 @@ void Android_Jni_redo(JNIEnv *env, jobject object, jlong id) {
   engine->redo();
 }
 
-void Android_Jni_save(JNIEnv *env, jobject object, jlong id) {
+void Android_Jni_save(JNIEnv *env, jobject object, jlong id, jstring jpath) {
   auto pixelator = reinterpret_cast<ImageEngine *>(id);
-  pixelator->save();
+  auto path = env->GetStringUTFChars(jpath, JNI_FALSE);
+  pixelator->save(path);
+  env->ReleaseStringUTFChars(jpath, path);
 }
 
 void Android_Jni_destroy(JNIEnv *env, jobject object, jlong id) {

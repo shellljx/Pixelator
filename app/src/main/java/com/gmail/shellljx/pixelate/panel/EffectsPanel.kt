@@ -45,6 +45,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
     private var mMaskService: IMaskLockService? = null
+    @PaintType private var restorePaintType: Int = PaintType.Graffiti
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
@@ -65,8 +66,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     )
     private val mPaintItems = arrayListOf(
         PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
-        PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect)),
-        PickItem(R.drawable.ic_circle, context.getString(R.string.paint_type_circle))
+        PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -95,7 +95,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleMoveObserver(this)
         mCoreService?.addUndoRedoStateObserver(this)
 
+        mPaintView?.isSelected = true
         mPaintView?.setOnClickListener {
+            if (mPaintView?.isSelected != true) return@setOnClickListener
             val paintType = mCoreService?.getPaintType() ?: return@setOnClickListener
             mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
                 mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mPaintItems, getPaintTypePosition(paintType)) {
@@ -132,8 +134,15 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
         mEraserView?.setOnClickListener {
             it.isSelected = !it.isSelected
-            val type = if (it.isSelected) ERASER else PAINT
-            mCoreService?.setPaintMode(type)
+            val mode = if (it.isSelected) ERASER else PAINT
+            mCoreService?.setPaintMode(mode)
+            if (it.isSelected) {
+                savePaintType()
+                mCoreService?.setPaintType(PaintType.Graffiti)
+            } else {
+                restorePaintType()
+            }
+            mPaintView?.isSelected = !it.isSelected
             val id = if (it.isSelected) R.string.paint_mode_eraser else R.string.paint_mode_paint
             Toast.makeText(context, context.getString(id), Toast.LENGTH_SHORT).show()
         }
@@ -151,6 +160,18 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     override fun onAttach() {
         mEffectService?.let {
             setEffectItems(it.getEffects())
+        }
+    }
+
+    private fun savePaintType() {
+        restorePaintType = mCoreService?.getPaintType() ?: PaintType.Graffiti
+        mEffectService?.removDrawBox()
+    }
+
+    private fun restorePaintType() {
+        mCoreService?.setPaintType(restorePaintType)
+        if (restorePaintType == PaintType.Rect) {
+            mEffectService?.addDrawBox()
         }
     }
 

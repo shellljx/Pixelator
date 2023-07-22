@@ -1,18 +1,20 @@
 package com.gmail.shellljx.pixelate
 
 import android.app.Activity.RESULT_OK
-import android.content.Context
-import android.content.Intent
+import android.content.*
 import android.net.Uri
 import android.os.Bundle
 import android.provider.MediaStore
 import android.view.*
+import android.widget.Toast
 import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.*
+import com.gmail.shellljx.pixelate.utils.FileUtils.syncImageToGallery
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.AbsDelegate
+import java.io.*
 
 class PixelatorFragment : Fragment(), IImageDelegate {
     companion object {
@@ -114,8 +116,15 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         activity?.startActivityForResult(intent, OPEN_GALLERY_REQUEST_CODE)
     }
 
+    override fun saveSuccess(path: String) {
+        syncImageToGallery(requireContext(), path)
+        File(path).delete()
+        Toast.makeText(requireContext(), getString(R.string.save_image_success), Toast.LENGTH_SHORT).show()
+    }
 }
 
 interface IImageDelegate : AbsDelegate {
     fun openAlbum()
+
+    fun saveSuccess(path: String)
 }

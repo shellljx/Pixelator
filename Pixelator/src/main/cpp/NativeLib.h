@@ -68,7 +68,7 @@ void Android_Jni_undo(JNIEnv *env, jobject object, jlong id);
 
 void Android_Jni_redo(JNIEnv *env, jobject object, jlong id);
 
-void Android_Jni_save(JNIEnv *env, jobject object, jlong id);
+void Android_Jni_save(JNIEnv *env, jobject object, jlong id, jstring jpath);
 
 void Android_Jni_destroy(JNIEnv *env, jobject object, jlong id);
 
@@ -95,7 +95,7 @@ static JNINativeMethod pixelatorNativeMethods[] = {
     {"nativeRedo", "(J)V", (void **) Android_Jni_redo},
     {"nativeSetMatrix", "(J[F)V", (void **) Android_Jni_set_matrix},
     {"nativeUpdateViewPort", "(JI)V", (void **) Android_Jni_update_viewport},
-    {"nativeSave", "(J)V", (void **) Android_Jni_save},
+    {"nativeSave", "(JLjava/lang/String;)V", (void **) Android_Jni_save},
     {"nativeDestroy", "(J)V", (void **) Android_Jni_destroy}
 };
 

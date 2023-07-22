@@ -146,9 +146,9 @@ class Pixelator private constructor() : IPixelator {
         return mMiniScreen
     }
 
-    override fun save() {
+    override fun save(path: String) {
         if (mId != 0L) {
-            nativeSave(mId)
+            nativeSave(mId, path)
         }
     }
 
@@ -197,6 +197,13 @@ class Pixelator private constructor() : IPixelator {
         }
     }
 
+    private fun onSaveSuccess(path: String) {
+        System.out.println("lijinxiang $path")
+        mainHandler.post {
+            mRenderListener?.onSaveSuccess(path)
+        }
+    }
+
     private fun onRenderError(code: Int, msg: String) {
         mainHandler.post {
             mRenderListener?.onRenderError(code, msg)
@@ -235,7 +242,7 @@ class Pixelator private constructor() : IPixelator {
     private external fun refreshFrame(id: Long)
     private external fun nativeUndo(id: Long)
     private external fun nativeRedo(id: Long)
-    private external fun nativeSave(id: Long)
+    private external fun nativeSave(id: Long, path: String)
     private external fun nativeDestroy(id: Long)
 
     companion object {

@@ -9,6 +9,13 @@
 #include "Local.h"
 #include "json/json.h"
 #include "utils/ImageDecoder.h"
+#ifndef STBI_IMAGE
+#define STBI_IMAGE
+#define STB_IMAGE_WRITE_STATIC
+#define STB_IMAGE_WRITE_IMPLEMENTATION
+#include "stb_image_write.h"
+#include "stb_image.h"
+#endif
 
 ImageEngine::ImageEngine(jobject object) : renderer(new Renderer(this)) {
   std::string name("ImageEngineThread");
@@ -178,9 +185,13 @@ void ImageEngine::refreshFrame() {
   handler_->sendMessage(msg);
 }
 
-void ImageEngine::save() {
+void ImageEngine::save(const char *path) {
+  auto length = strlen(path) + 1;
+  auto tempPath = new char[length];
+  snprintf(tempPath, length, "%s%c", path, 0);
   auto msg = new thread::Message();
   msg->what = kSave;
+  msg->obj1 = tempPath;
   handler_->sendMessage(msg);
 }
 
@@ -326,7 +337,9 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       break;
     }
     case PixelateMessage::kSave: {
-      saveInternal();
+      auto path = reinterpret_cast<char *>(msg->obj1);
+      saveInternal(path);
+      delete[] path;
       break;
     }
     case PixelateMessage::kUndo: {
@@ -509,10 +522,25 @@ void ImageEngine::stopTouchInternal() {
   renderer->stopTouch();
 }
 
-void ImageEngine::saveInternal() {
+void ImageEngine::saveInternal(const char *path) {
   auto frameBuffer = renderer->getBlendFrameBuffer();
   if (frameBuffer->getFrameBuffer() > 0) {
-    saveFrameBuffer(frameBuffer, frameBuffer->getTextureWidth(), frameBuffer->getTextureHeight());
+    int width = frameBuffer->getTextureWidth();
+    int height = frameBuffer->getTextureHeight();
+    auto buffer = new uint8_t[width * height * 4];
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, frameBuffer->getFrameBuffer());
+    glReadPixels(0, 0, width, height, GL_RGBA, GL_UNSIGNED_BYTE, buffer);
+    glBindFramebuffer(GL_READ_FRAMEBUFFER, GL_NONE);
+    stbi_write_jpg(path, width, height, 4, buffer, 100);
+    memset(buffer, 0, 4 * width * height);
+    delete[] buffer;
+    auto env = JNIEnvironment::Current();
+    Local<jclass> sdkClass = {env, env->GetObjectClass(pixelator_.get())};
+    jmethodID frameSavedMethodId = env->GetMethodID(sdkClass.get(), "onSaveSuccess",
+                                                    "(Ljava/lang/String;)V");
+    jstring pathStringJava = env->NewStringUTF(path);
+    env->CallVoidMethod(pixelator_.get(), frameSavedMethodId, pathStringJava);
+    env->DeleteLocalRef(pathStringJava);
   }
 }
 

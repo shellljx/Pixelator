@@ -37,7 +37,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void pushTouchBuffer(float *buffer, int length, float cx, float cy);
   void setMatrix(float *matrix);
   void refreshFrame();
-  void save();
+  void save(const char *path);
   void redo();
   void undo();
   void handleMessage(thread::Message *msg) override;
@@ -73,7 +73,7 @@ class ImageEngine : public thread::HandlerCallback, RenderCallback {
   void setEffectInternal(char *effect);
   void updateEffectInternal(char *config);
   void stopTouchInternal();
-  void saveInternal();
+  void saveInternal(const char *path);
   void redoInternal();
   void undoInternal();
   void callJavaEGLContextCreate();

@@ -49,6 +49,6 @@ interface IPixelator {
     fun getMiniScreen(): IMiniScreen
 
     fun setRenderListener(listener: IRenderListener)
-    fun save()
+    fun save(path: String)
     fun destroy()
 }

@@ -8,6 +8,7 @@ interface IRenderListener {
     fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float, reset: Boolean)
     fun onInitBoundsChanged(left: Float, top: Float, right: Float, bottom: Float)
     fun onFrameSaved(bitmap: Bitmap)
+    fun onSaveSuccess(path: String)
     fun onRenderError(code: Int, msg: String)
     fun onUndoRedoChanged(canUndo: Boolean, canRedo: Boolean)
 }

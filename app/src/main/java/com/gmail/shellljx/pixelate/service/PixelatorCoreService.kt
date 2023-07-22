@@ -5,6 +5,8 @@ import android.media.ExifInterface
 import android.view.MotionEvent
 import android.view.Surface
 import androidx.core.graphics.toRect
+import com.gmail.shellljx.pixelate.IImageDelegate
+import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.pixelator.PaintType.Companion.Graffiti
 import com.gmail.shellljx.wrapper.*
@@ -12,6 +14,7 @@ import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.utils.PointUtils
+import java.io.File
 import java.util.LinkedList
 
 class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTapObserver {
@@ -63,6 +66,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
 
         override fun onFrameSaved(bitmap: Bitmap) {
+        }
+
+        override fun onSaveSuccess(path: String) {
+            val delegate = mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)
+            delegate?.saveSuccess(path)
         }
 
         override fun onRenderError(code: Int, msg: String) {
@@ -222,7 +230,11 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     }
 
     override fun save() {
-        mImageSdk.save()
+        val dir = File("${mContainer.getContext().cacheDir.absolutePath}/save/")
+        if (!dir.exists()) {
+            dir.mkdirs()
+        }
+        mImageSdk.save("${dir.absolutePath}/img_${System.currentTimeMillis()}.jpg")
     }
 
     override fun addPaintSizeObserver(observer: PaintSizeObserver) {

@@ -11,4 +11,6 @@
     <string name="paint_type_graffiti">涂鸦</string>
     <string name="paint_type_rect">矩形</string>
     <string name="paint_type_circle">圆形</string>
+
+    <string name="save_image_success">已经保存到相册</string>
 </resources>

@@ -33,7 +33,7 @@
             android:padding="1.5dp"
             android:scaleType="centerCrop"
             android:src="@drawable/ic_graffiti"
-            app:tint="#515151" />
+            app:tint="@drawable/selector_button_paint_bg" />
 
         <ImageView
             android:id="@+id/iv_lock"
