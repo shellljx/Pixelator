@@ -35,11 +35,15 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     }
 
     override fun addRenderLayer(layer: IRenderLayer) {
-        mRenderContainer?.bindCustomRenderLayer(layer, marginBottom)
+        if (!mCustomRenderLayers.contains(layer)) {
+            mRenderContainer?.bindCustomRenderLayer(layer, marginBottom)
+            mCustomRenderLayers.add(layer)
+        }
     }
 
     override fun removeRenderLayer(layer: IRenderLayer) {
         mRenderContainer?.removeView(layer.view())
+        mCustomRenderLayers.remove(layer)
     }
 
     private fun initRenderLayer(): IRenderLayer {
