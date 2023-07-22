@@ -29,8 +29,11 @@ void RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
   if (undoStack.size() >= 10) {
     int width = sourceFrameBuffer->getTextureWidth();
     int height = sourceFrameBuffer->getTextureHeight();
+    if (pushContext == nullptr) {
+      pushContext = std::make_unique<UndoRedoContext>();
+    }
     cacheFrameBuffer->createFrameBuffer(width, height);
-    persistentRecord(undoStack.begin()->get(), cacheFrameBuffer);
+    persistentRecord(pushContext.get(), undoStack.begin()->get(), cacheFrameBuffer);
     undoStack.erase(undoStack.begin());
   }
   undoStack.push_back(std::move(record));
@@ -38,15 +41,15 @@ void RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
   notifyUndoRedoState();
 }
 
-bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb) {
+bool RecordRenderer::persistentRecord(UndoRedoContext *context, DrawRecord *record, FrameBuffer *targetFb) {
   //首次绘制要把原图绘制上
   int width = sourceFrameBuffer->getTextureWidth();
   int height = sourceFrameBuffer->getTextureHeight();
   effectFrameBuffer->createFrameBuffer(width, height);
-  int lastEffectType = undoRedoContext->effectType;
-  std::string lastSrcPath = undoRedoContext->srcPath;
-  undoRedoContext->effectType = record->effectType;
-  undoRedoContext->srcPath = record->srcPath;
+  int lastEffectType = context->effectType;
+  std::string lastSrcPath = context->srcPath;
+  context->effectType = record->effectType;
+  context->srcPath = record->srcPath;
   if (lastEffectType != record->effectType && record->effectType == TypeMosaic) {
     //用已经绘制的内容和原图合并成新的特效原素材生成马赛克特效
     makeNewScene(targetFb);
@@ -87,6 +90,8 @@ bool RecordRenderer::persistentRecord(DrawRecord *record, FrameBuffer *targetFb)
     }
     auto data = record->data;
     rectFilter->initialize();
+    rectFilter->updateMaskTexture(renderContext->maskTexture);
+    rectFilter->updateMaskMode(record->maskMode);
     rectFilter->updatePoint(data[0], data[1], data[2], data[3]);
     FilterSource source = {effectFrameBuffer->getTexture()};
     FilterTarget target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, false};
@@ -104,7 +109,9 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
     redoStack.push_back(data);
 
     paintFb->clear();
-    undoRedoContext = std::make_unique<UndoRedoContext>();
+    if (undoRedoContext == nullptr) {
+      undoRedoContext = std::make_unique<UndoRedoContext>();
+    }
     if (cacheFrameBuffer->getTexture() > 0) {
       defaultFilter->initialize();
       int sourceWidth = sourceFrameBuffer->getTextureWidth();
@@ -114,7 +121,7 @@ bool RecordRenderer::undo(FrameBuffer *paintFb) {
       defaultFilter->draw(&source, &target);
     }
     for (const auto &record : undoStack) {
-      persistentRecord(record.get(), paintFb);
+      persistentRecord(undoRedoContext.get(), record.get(), paintFb);
     }
     notifyUndoRedoState();
     return true;
@@ -126,7 +133,10 @@ bool RecordRenderer::redo(FrameBuffer *paintFb) {
   if (!redoStack.empty()) {
     auto data = redoStack.back();
     redoStack.pop_back();
-    auto ret = persistentRecord(data.get(), paintFb);
+    if (undoRedoContext == nullptr) {
+      undoRedoContext = std::make_unique<UndoRedoContext>();
+    }
+    auto ret = persistentRecord(undoRedoContext.get(), data.get(), paintFb);
     if (ret) {
       undoStack.push_back(data);
     }

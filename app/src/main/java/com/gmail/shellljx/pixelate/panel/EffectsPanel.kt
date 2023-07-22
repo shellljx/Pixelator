@@ -6,7 +6,6 @@ import android.net.Uri
 import android.view.*
 import android.widget.ImageView
 import android.widget.Toast
-import androidx.annotation.StringRes
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter

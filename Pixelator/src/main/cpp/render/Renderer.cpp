@@ -315,6 +315,8 @@ void Renderer::drawRectPaint() {
   tempPaintFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   rectFilter->initialize();
   rectFilter->updatePoint(touchStartX, touchStartY, touchX, touchY);
+  rectFilter->updateMaskTexture(renderContext->maskTexture);
+  rectFilter->updateMaskMode(renderContext->maskMode);
   FilterSource source = {effectFrameBuffer->getTexture()};
   FilterTarget target = {tempPaintFrameBuffer, matrix, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, true};
   rectFilter->draw(&source, &target);

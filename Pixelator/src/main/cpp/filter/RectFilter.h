@@ -11,7 +11,8 @@ class RectFilter : public BaseFilter {
 
  public:
   void updatePoint(float startX, float startY, float endX, float endY);
-
+  void updateMaskMode(int mode);
+  void updateMaskTexture(GLuint texture);
  private:
   std::string onBuildVertexShader() override;
   std::string onBuildFragmentShader() override;
@@ -21,7 +22,11 @@ class RectFilter : public BaseFilter {
   GLint textureSizeHandler = -1;
   GLint startPointHandler = -1;
   GLint endPointHandler = -1;
+  GLint maskModeHandler = -1;
+  GLint maskHandler = -1;
 
+  GLuint maskTexture = 0;
+  int maskMode = 0;
   float startx = 0.f;
   float starty = 0.f;
   float endx = 0.f;
