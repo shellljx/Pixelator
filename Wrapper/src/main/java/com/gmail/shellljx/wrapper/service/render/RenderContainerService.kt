@@ -2,9 +2,10 @@ package com.gmail.shellljx.wrapper.service.render
 
 import android.content.Context
 import android.view.*
+import androidx.annotation.Keep
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
-
+@Keep
 class RenderContainerService : IRenderContainerService, LifecycleObserver {
     private lateinit var mContainer: IContainer
     private var mRenderContext: IRenderContext? = null

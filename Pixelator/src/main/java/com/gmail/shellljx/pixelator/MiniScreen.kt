@@ -1,6 +1,7 @@
 package com.gmail.shellljx.pixelator
 
 import android.view.Surface
+import androidx.annotation.Keep
 
 /**
  * @Author: shell
@@ -8,6 +9,7 @@ import android.view.Surface
  * @Date: 2023/7/15
  * @Description:
  */
+@Keep
 class MiniScreen(private val id: Long) : IMiniScreen {
 
     override fun onSurfaceCreated(surface: Surface) {

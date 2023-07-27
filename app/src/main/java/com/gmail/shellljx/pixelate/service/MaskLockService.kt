@@ -4,6 +4,7 @@ import android.graphics.*
 import android.os.*
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.Keep
 import androidx.core.graphics.toRect
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
@@ -37,6 +38,7 @@ import java.util.concurrent.TimeUnit
  * @Date: 2023/6/7
  * @Description:
  */
+@Keep
 class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserver, OnContentBoundsObserver, OnTapObserver {
     companion object {
         private const val PATH_SMALL_SRC = "/assets/small/"

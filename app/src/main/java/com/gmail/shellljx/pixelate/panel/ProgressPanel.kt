@@ -2,6 +2,7 @@ package com.gmail.shellljx.pixelate.panel
 
 import android.content.Context
 import android.view.View
+import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
@@ -12,6 +13,7 @@ import com.gmail.shellljx.wrapper.service.panel.AbsPanel
  * @Date: 2023/6/24
  * @Description:
  */
+@Keep
 class ProgressPanel(context: Context) : AbsPanel(context) {
 
     override val tag: String

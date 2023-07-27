@@ -2,6 +2,7 @@ package com.gmail.shellljx.pixelate.panel
 
 import android.content.Context
 import android.view.*
+import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.view.OptionPickListener
 import com.gmail.shellljx.pixelate.view.PickItem
@@ -16,6 +17,7 @@ import com.gmail.shellljx.wrapper.service.panel.PanelConfig
  * @Date: 2023/6/21
  * @Description:
  */
+@Keep
 class PickerPanel(context: Context) : AbsPanel(context), OptionPickListener {
 
     override val tag: String

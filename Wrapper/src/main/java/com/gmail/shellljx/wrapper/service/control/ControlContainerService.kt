@@ -1,6 +1,7 @@
 package com.gmail.shellljx.wrapper.service.control
 
 import android.content.Context
+import androidx.annotation.Keep
 import androidx.lifecycle.Lifecycle
 import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
@@ -8,6 +9,7 @@ import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
 import com.gmail.shellljx.wrapper.widget.IWidget
 
+@Keep
 class ControlContainerService : IControlContainerService, LifecycleObserver {
     private lateinit var mContainer: IContainer
     private var mControlContainer: ControlContainer? = null

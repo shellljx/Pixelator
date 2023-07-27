@@ -6,6 +6,7 @@ import android.net.Uri
 import android.view.*
 import android.widget.ImageView
 import android.widget.Toast
+import androidx.annotation.Keep
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
@@ -28,7 +29,7 @@ import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
-
+@Keep
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName

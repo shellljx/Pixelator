@@ -3,6 +3,7 @@ package com.gmail.shellljx.pixelate.panel
 import android.content.Context
 import android.graphics.PointF
 import android.view.*
+import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.*
@@ -10,7 +11,7 @@ import com.gmail.shellljx.pixelate.view.CircleView
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
-
+@Keep
 class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callback, OnSingleMoveObserver, PaintSizeObserver {
     override val tag: String
         get() = "MiniScreenPanel"

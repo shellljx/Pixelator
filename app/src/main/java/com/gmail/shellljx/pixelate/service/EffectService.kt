@@ -4,6 +4,7 @@ import android.animation.*
 import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
@@ -16,7 +17,7 @@ import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnTapObserver
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
-
+@Keep
 class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private val effectList = arrayListOf<EffectItem>()

@@ -4,7 +4,9 @@ import android.graphics.Bitmap
 import android.os.Handler
 import android.os.Looper
 import android.view.Surface
+import androidx.annotation.Keep
 
+@Keep
 class Pixelator private constructor() : IPixelator {
 
     private var mId = 0L

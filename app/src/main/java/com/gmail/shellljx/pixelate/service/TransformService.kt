@@ -3,6 +3,7 @@ package com.gmail.shellljx.pixelate.service
 import android.animation.*
 import android.graphics.*
 import android.view.MotionEvent
+import androidx.annotation.Keep
 import androidx.core.graphics.contains
 import com.gmail.shellljx.pixelate.RectfEvaluator
 import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
@@ -12,6 +13,7 @@ import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import kotlin.math.sqrt
 
+@Keep
 class TransformService : ITransformService, OnTapObserver, OnTransformObserver, OnSingleMoveObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null

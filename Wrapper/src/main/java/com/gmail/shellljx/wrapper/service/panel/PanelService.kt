@@ -3,6 +3,7 @@ package com.gmail.shellljx.wrapper.service.panel
 import android.content.Context
 import android.view.View
 import androidx.annotation.AnimRes
+import androidx.annotation.Keep
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
 import com.gmail.shellljx.wrapper.service.gesture.*
@@ -10,6 +11,7 @@ import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.*
 
+@Keep
 class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
     companion object {
         private const val TAG = "PanelService"

@@ -1,8 +1,9 @@
 package com.gmail.shellljx.wrapper.service
 
+import androidx.annotation.Keep
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
-
+@Keep
 class DelegateService : IDelegateService {
     private val mDelegateMap = hashMapOf<String, AbsDelegate>()
     override fun onStart() {

@@ -1,6 +1,6 @@
 package com.gmail.shellljx.wrapper.service
 
-import android.util.Log
+import androidx.annotation.Keep
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
@@ -8,7 +8,7 @@ import kotlinx.coroutines.*
 import java.util.logging.Level
 import java.util.logging.Logger
 import kotlin.coroutines.CoroutineContext
-
+@Keep
 class LifecycleService : ILifecycleService, LifecycleOwner, CoroutineExceptionHandler {
     override val key: CoroutineContext.Key<*>
         get() = CoroutineExceptionHandler

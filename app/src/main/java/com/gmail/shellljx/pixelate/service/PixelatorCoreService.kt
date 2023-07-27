@@ -4,6 +4,7 @@ import android.graphics.*
 import android.media.ExifInterface
 import android.view.MotionEvent
 import android.view.Surface
+import androidx.annotation.Keep
 import androidx.core.graphics.toRect
 import com.gmail.shellljx.pixelate.IImageDelegate
 import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
@@ -17,6 +18,7 @@ import com.gmail.shellljx.wrapper.utils.PointUtils
 import java.io.File
 import java.util.LinkedList
 
+@Keep
 class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTapObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null

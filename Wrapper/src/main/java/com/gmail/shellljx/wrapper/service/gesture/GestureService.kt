@@ -4,10 +4,12 @@ import android.content.Context
 import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
+import androidx.annotation.Keep
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
 import com.gmail.shellljx.wrapper.service.gesture.GesturePriorityProcessor.Companion.GESTURE_PRIORITY_NORMAL
 
+@Keep
 class GestureService : IGestureService, GestureContaienr.GestureListener {
     private lateinit var mContainer: IContainer
     private var mGestureContaienr: GestureContaienr? = null

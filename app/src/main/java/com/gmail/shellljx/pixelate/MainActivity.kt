@@ -4,21 +4,24 @@ import android.Manifest
 import android.app.Activity
 import android.content.Intent
 import android.content.pm.PackageManager
-import android.graphics.*
-import android.media.ExifInterface
+import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
 import android.util.DisplayMetrics
-import android.view.*
+import android.view.View
+import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
-import com.gmail.shellljx.pixelate.view.*
-import java.io.*
+import com.google.android.gms.ads.MobileAds
 
 class MainActivity : AppCompatActivity() {
     private var fragment: PixelatorFragment? = null
+    private var adInited = false
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
+        MobileAds.initialize(this) {
+            adInited = true
+        }
         fragment = PixelatorFragment()
         supportFragmentManager.beginTransaction().replace(R.id.content, fragment!!).commit()
         getwcreenheight()
@@ -39,49 +42,6 @@ class MainActivity : AppCompatActivity() {
                 // 未授予读写权限，发起权限请求
                 requestPermissions(permissions, REQUEST_PERMISSION_CODE)
             }
-        }
-    }
-
-    private fun saveBitmap(bitmap: Bitmap) {
-        val file = File("/sdcard/DCIM/Camera/lijinxiang.png")
-
-// 创建文件输出流
-        var outStream: FileOutputStream? = null
-        try {
-            outStream = FileOutputStream(file)
-
-            // 将Bitmap压缩为PNG格式，并将其写入文件输出流
-            bitmap.compress(Bitmap.CompressFormat.PNG, 100, outStream)
-
-            // 刷新并关闭输出流
-            outStream.flush()
-            outStream.close()
-
-            // 保存成功
-            // 进行其他操作或显示成功消息
-        } catch (e: IOException) {
-            e.printStackTrace()
-            // 处理IO异常
-        } finally {
-            // 确保关闭输出流
-            outStream?.close()
-        }
-    }
-
-    private fun getRotate(path: String): Int {
-        return try {
-            val exifInterface = ExifInterface(path)
-            when (exifInterface.getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
-            )) {
-                ExifInterface.ORIENTATION_ROTATE_90 -> 90
-                ExifInterface.ORIENTATION_ROTATE_180 -> 180
-                ExifInterface.ORIENTATION_ROTATE_270 -> 270
-                else -> 0
-            }
-        } catch (e: Exception) {
-            0
         }
     }
 
@@ -115,20 +75,6 @@ class MainActivity : AppCompatActivity() {
             activity.window.statusBarColor = Color.TRANSPARENT
         } else {
             activity.window.addFlags(WindowManager.LayoutParams.FLAG_TRANSLUCENT_STATUS)
-        }
-    }
-
-    private fun setRootView(activity: Activity) {
-        val parent = activity.findViewById<View>(android.R.id.content) as ViewGroup
-        var i = 0
-        val count = parent.childCount
-        while (i < count) {
-            val childView = parent.getChildAt(i)
-            if (childView is ViewGroup) {
-                childView.setFitsSystemWindows(true)
-                childView.clipToPadding = true
-            }
-            i++
         }
     }
 
