@@ -1,0 +1,39 @@
+{
+  "project_info": {
+    "project_number": "905071050875",
+    "project_id": "pixelateme-c834d",
+    "storage_bucket": "pixelateme-c834d.appspot.com"
+  },
+  "client": [
+    {
+      "client_info": {
+        "mobilesdk_app_id": "1:905071050875:android:f0041ee258e09549be62de",
+        "android_client_info": {
+          "package_name": "com.gmail.shellljx.pixelate"
+        }
+      },
+      "oauth_client": [
+        {
+          "client_id": "905071050875-9snhho196ffaoe8edo4b3r88eg0ld4ve.apps.googleusercontent.com",
+          "client_type": 3
+        }
+      ],
+      "api_key": [
+        {
+          "current_key": "AIzaSyDuP3JBwbcl1e_MtCgS50afhtQVaq8Dhy8"
+        }
+      ],
+      "services": {
+        "appinvite_service": {
+          "other_platform_oauth_client": [
+            {
+              "client_id": "905071050875-9snhho196ffaoe8edo4b3r88eg0ld4ve.apps.googleusercontent.com",
+              "client_type": 3
+            }
+          ]
+        }
+      }
+    }
+  ],
+  "configuration_version": "1"
+}

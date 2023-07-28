@@ -1,6 +1,8 @@
 plugins {
     id 'com.android.application'
     id 'org.jetbrains.kotlin.android'
+    id 'com.google.gms.google-services'
+    id 'com.google.firebase.crashlytics'
 }
 
 android {
@@ -13,7 +15,7 @@ android {
         targetSdk 33
         versionCode 2
         versionName "1.0.0"
-
+        multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
 
@@ -22,6 +24,16 @@ android {
             minifyEnabled true
             shrinkResources true
             consumerProguardFiles "consumer-rules.pro"
+            // Add this extension
+            firebaseCrashlytics {
+                // Enable processing and uploading of native symbols to Firebase servers.
+                // By default, this is disabled to improve build speeds.
+                // This flag must be enabled to see properly-symbolicated native
+                // stack traces in the Crashlytics dashboard.
+                nativeSymbolUploadEnabled true
+                strippedNativeLibsDir 'build/intermediates/stripped_native_libs/release/out/lib'
+                unstrippedNativeLibsDir 'build/intermediates/merged_native_libs/release/out/lib'
+            }
         }
     }
     compileOptions {
@@ -36,7 +48,12 @@ android {
 dependencies {
 
     implementation 'com.google.android.gms:play-services-ads:22.2.0'
-    implementation 'androidx.core:core-ktx:1.7.0'
+    implementation platform('com.google.firebase:firebase-bom:32.2.0')
+    implementation 'com.google.firebase:firebase-crashlytics-ndk'
+    implementation 'com.google.firebase:firebase-crashlytics-ktx'
+    implementation 'com.google.firebase:firebase-analytics-ktx'
+    implementation "androidx.multidex:multidex:2.0.1"
+    implementation 'androidx.core:core-ktx:1.10.1'
     implementation 'androidx.appcompat:appcompat:1.4.1'
     implementation 'com.google.android.material:material:1.5.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.3'
