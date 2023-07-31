@@ -1,6 +1,8 @@
 <resources>
     <string name="app_name">PixelateMe</string>
 
+    <string name="setting">设置</string>
+    <string name="cancel">取消</string>
     <string name="lock_off">关闭</string>
     <string name="lock_background">背景保护</string>
     <string name="lock_portrait">人像保护</string>
@@ -13,4 +15,8 @@
     <string name="paint_type_circle">圆形</string>
 
     <string name="save_image_success">已经保存到相册</string>
+    <string name="title_request_permission">请求权限</string>
+    <string name="request_permission_failed">请求权限失败</string>
+    <string name="request_read_file_permission_desc">为了选择图片用来编辑，需要访问存储权限。请点击“设置”来授予权限。</string>
+
 </resources>

@@ -4,10 +4,13 @@ import android.content.Context
 import android.util.AttributeSet
 import android.view.View
 import android.view.View.OnClickListener
+import com.gmail.shellljx.pixelate.IImageDelegate
+import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
 import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.service.IDelegateService
 import com.gmail.shellljx.wrapper.widget.IWidget
 
 class SaveWidget @JvmOverloads constructor(
@@ -33,7 +36,7 @@ class SaveWidget @JvmOverloads constructor(
         if (key == WidgetEvents.MSG_TRANSLATE_PROGRESS) {
             val progress = (args[0] as? Float) ?: 0f
             translationX = progress * 100.dp()
-            alpha = 1- progress
+            alpha = 1 - progress
             requestLayout()
         }
     }
@@ -43,6 +46,6 @@ class SaveWidget @JvmOverloads constructor(
     }
 
     override fun onClick(v: View?) {
-        mCoreService?.save()
+        mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)?.saveImage()
     }
 }

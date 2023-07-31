@@ -1,9 +1,7 @@
 package com.gmail.shellljx.pixelate
 
-import android.Manifest
 import android.app.Activity
 import android.content.Intent
-import android.content.pm.PackageManager
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
@@ -26,23 +24,23 @@ class MainActivity : AppCompatActivity() {
         supportFragmentManager.beginTransaction().replace(R.id.content, fragment!!).commit()
         getwcreenheight()
         setTransparent()
-        val REQUEST_PERMISSION_CODE = 1
-        val permissions = arrayOf(
-            Manifest.permission.READ_EXTERNAL_STORAGE,
-            Manifest.permission.WRITE_EXTERNAL_STORAGE
-        )
-        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-            // 检查权限是否已被授予
-            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-            ) {
-                // 已经授予了读写权限
-                // 可以进行读写操作
-            } else {
-                // 未授予读写权限，发起权限请求
-                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
-            }
-        }
+//        val REQUEST_PERMISSION_CODE = 1
+//        val permissions = arrayOf(
+//            Manifest.permission.READ_EXTERNAL_STORAGE,
+//            Manifest.permission.WRITE_EXTERNAL_STORAGE
+//        )
+//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+//            // 检查权限是否已被授予
+//            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
+//                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
+//            ) {
+//                // 已经授予了读写权限
+//                // 可以进行读写操作
+//            } else {
+//                // 未授予读写权限，发起权限请求
+//                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
+//            }
+//        }
     }
 
     private fun getwcreenheight() {
@@ -60,7 +58,7 @@ class MainActivity : AppCompatActivity() {
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
         super.onActivityResult(requestCode, resultCode, data)
-        fragment?.onActivityResult(requestCode, resultCode, data)
+        //fragment?.onActivityResult(requestCode, resultCode, data)
     }
 
     private fun transparentStatusBar(activity: Activity) {
