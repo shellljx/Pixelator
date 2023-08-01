@@ -9,5 +9,6 @@
         android:layout_width="match_parent"
         fresco:roundedCornerRadius="4dp"
         android:layout_height="match_parent"
+        fresco:failureImageScaleType="centerCrop"
         fresco:placeholderImage="@drawable/ic_lock" />
 </androidx.constraintlayout.widget.ConstraintLayout>

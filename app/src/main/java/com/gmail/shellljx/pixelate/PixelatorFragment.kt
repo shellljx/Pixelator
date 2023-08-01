@@ -13,13 +13,16 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import com.gmail.shellljx.imagePicker.MediaLoader
 import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.panel.MediasPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.utils.FileUtils.syncImageToGallery
 import com.gmail.shellljx.pixelate.utils.PermissionUtils
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.AbsDelegate
+import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class PixelatorFragment : Fragment(), IImageDelegate {
     companion object {
@@ -144,9 +147,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
             Manifest.permission.READ_EXTERNAL_STORAGE
         }
         if (PermissionUtils.permissionGranted(requireContext(), permission)) {
-            val intent = Intent(Intent.ACTION_PICK, null)
-            intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
-            activity?.startActivityForResult(intent, OPEN_GALLERY_REQUEST_CODE)
+            mContainer.getPanelService()?.showPanel(MediasPanel::class.java)
         } else if (shouldShowRequestPermissionRationale(permission)) {
             showGotoSettings(R.string.request_read_file_permission_desc)
         } else {
