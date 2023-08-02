@@ -6,7 +6,6 @@ import android.content.Context
 import android.graphics.*
 import android.net.Uri
 import android.view.*
-import android.view.animation.AccelerateInterpolator
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.backends.pipeline.Fresco
@@ -23,6 +22,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
+import com.google.errorprone.annotations.Keep
 
 /**
  * @Author: shell
@@ -30,16 +30,20 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
  * @Date: 2023/8/1
  * @Description:
  */
+@Keep
 class MediasPanel(context: Context) : AbsPanel(context) {
 
     private lateinit var mContainer: IContainer
     private lateinit var mMediaContainer: View
     private lateinit var mMediaListView: RecyclerView
+    private lateinit var mAlbumView: View
+    private lateinit var mCloseView: View
     private val mMediaAdapter = MediaAdapter()
     private val mMediaBuckets = arrayListOf<MediaLoader.MediaBucket>()
+    private var isMediaFadeIn = true
 
     override val tag: String
-        get() = EffectsPanel::class.java.simpleName
+        get() = MediasPanel::class.java.simpleName
 
     override val panelConfig: PanelConfig
         get() {
@@ -59,9 +63,10 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         view ?: return
         mMediaContainer = view.findViewById(R.id.container)
         mMediaListView = view.findViewById(R.id.rv_medias)
+        mAlbumView = view.findViewById(R.id.tv_album)
+        mCloseView = view.findViewById(R.id.iv_close)
         mMediaListView.layoutManager = GridLayoutManager(context, 3)
         mMediaListView.adapter = mMediaAdapter
-        mMediaListView.addItemDecoration(GridSpacingItemDecoration(3, 2.dp(), true))
         val behavior = BottomSheetBehavior.from(mMediaContainer)
         behavior.addBottomSheetCallback(object : BottomSheetCallback() {
             override fun onStateChanged(bottomSheet: View, newState: Int) {
@@ -73,10 +78,20 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
             }
         })
+        mAlbumView.setOnClickListener {
+            mContainer.getPanelService()?.showPanel(AlbumPanel::class.java)
+        }
+        view.setOnClickListener {
+            mContainer.getPanelService()?.hidePanel(mToken)
+        }
+        mCloseView.setOnClickListener {
+            mContainer.getPanelService()?.hidePanel(mToken)
+        }
     }
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
+        isMediaFadeIn = true
         MediaLoader.load(context) {
             mMediaBuckets.clear()
             mMediaBuckets.addAll(it)
@@ -128,7 +143,12 @@ class MediasPanel(context: Context) : AbsPanel(context) {
 
         override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
             val position = holder.adapterPosition
-            if (position >= 9) return
+            if (position >= 9) {
+                isMediaFadeIn = false
+            }
+            if (!isMediaFadeIn) {
+                return
+            }
             holder.itemView.pivotX = holder.itemView.width * 0.3f
             holder.itemView.pivotY = holder.itemView.height * 0.3f
             holder.itemView.scaleX = 0f
@@ -175,58 +195,5 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     inner class MediaHolder(root: View) : RecyclerView.ViewHolder(root) {
         val coverView = itemView.findViewById<SimpleDraweeView>(R.id.iv_cover)
 
-    }
-
-    class GridSpacingItemDecoration(private val spanCount: Int, private val spacing: Int, private val includeEdge: Boolean) : RecyclerView.ItemDecoration() {
-
-        private val mLinePaint = Paint()
-
-        init {
-            mLinePaint.color = Color.parseColor("#dbdbdb")
-            mLinePaint.style = Paint.Style.FILL
-            mLinePaint.strokeWidth = 2.dp().toFloat()
-        }
-
-        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
-            val position = parent.getChildAdapterPosition(view)
-            val column = position % spanCount
-
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount
-                outRect.right = (column + 1) * spacing / spanCount
-
-                if (position < spanCount) {
-                    outRect.top = spacing
-                }
-                outRect.bottom = spacing
-            } else {
-                outRect.left = column * spacing / spanCount
-                outRect.right = spacing - (column + 1) * spacing / spanCount
-                if (position >= spanCount) {
-                    outRect.top = spacing
-                }
-            }
-        }
-
-        override fun onDrawOver(c: Canvas, parent: RecyclerView, state: RecyclerView.State) {
-            super.onDrawOver(c, parent, state)
-            for (index in 0 until parent.childCount) {
-                val child = parent.getChildAt(index)
-                val position = parent.getChildAdapterPosition(child)
-                val column = position % spanCount
-
-                val lCenter = child.left - 1.dp().toFloat()
-                val lStart = child.top.toFloat()
-                c.drawLine(lCenter, lStart, lCenter, lStart + child.height, mLinePaint)
-                if (column == spanCount - 1) {
-                    val rCenter = child.right + 1.dp().toFloat()
-                    val rStart = child.top.toFloat()
-                    c.drawLine(rCenter, rStart, rCenter, rStart + child.height, mLinePaint)
-                }
-                val hStart = child.left.toFloat() - 2.dp()
-                val hCenter = child.top.toFloat() - 1.dp().toFloat()
-                c.drawLine(hStart, hCenter, hStart + child.width + 2.dp(), hCenter, mLinePaint)
-            }
-        }
     }
 }
