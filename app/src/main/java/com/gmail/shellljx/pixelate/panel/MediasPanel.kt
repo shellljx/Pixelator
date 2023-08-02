@@ -1,6 +1,7 @@
 package com.gmail.shellljx.pixelate.panel
 
 import android.animation.*
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.*
 import android.net.Uri
@@ -74,18 +75,26 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         })
     }
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
         MediaLoader.load(context) {
             mMediaBuckets.clear()
             mMediaBuckets.addAll(it)
-            mMediaAdapter.notifyItemRangeInserted(0, it.size)
+            mMediaAdapter.notifyDataSetChanged()
         }
     }
 
-    override fun onResume() {
+    override fun onDetach() {
         val behavior = BottomSheetBehavior.from(mMediaContainer)
         behavior.state = STATE_COLLAPSED
+    }
+
+    override fun onResume() {
         mMediaListView.scrollToPosition(0)
+        mMediaContainer.alpha = 0f
+        val alphaAnimator: Animator = ObjectAnimator.ofFloat(mMediaContainer, "alpha", 0f, 1f)
+        alphaAnimator.duration = 400
+        alphaAnimator.start()
     }
 
     inner class MediaAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
@@ -130,8 +139,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             val scaleYAnimator: Animator = ObjectAnimator.ofFloat(holder.itemView, "scaleY", 0f, 1f)
             val animatorSet = AnimatorSet()
             animatorSet.playTogether(alphaAnimator, scaleXAnimator, scaleYAnimator)
-            animatorSet.duration = 100
-            animatorSet.startDelay = 20 * getDelayFactor(position)
+            animatorSet.duration = 200
+            animatorSet.startDelay = 50 * getDelayFactor(position)
             animatorSet.addListener(object : AnimatorListenerAdapter() {
                 override fun onAnimationEnd(animation: Animator) {
                     removeAnimator(position)
