@@ -141,7 +141,6 @@ class PixelatorFragment : Fragment(), IImageDelegate {
     }
 
     override fun openAlbum() {
-        mCoreService?.loadImage("/sdcard/DCIM/20211213174103734.png")
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {

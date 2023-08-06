@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.*
 import android.net.Uri
 import android.view.*
+import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.backends.pipeline.Fresco
@@ -23,6 +24,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCa
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import com.google.errorprone.annotations.Keep
+import kotlinx.coroutines.launch
 
 /**
  * @Author: shell
@@ -40,6 +42,7 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     private lateinit var mCloseView: View
     private val mMediaAdapter = MediaAdapter()
     private val mMediaBuckets = arrayListOf<MediaLoader.MediaBucket>()
+    private val mMediaLoader = MediaLoader()
     private var isMediaFadeIn = true
 
     override val tag: String
@@ -92,10 +95,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
         isMediaFadeIn = true
-        MediaLoader.load(context) {
-            mMediaBuckets.clear()
-            mMediaBuckets.addAll(it)
-            mMediaAdapter.notifyDataSetChanged()
+        lifecycleScope.launch {
+            mMediaLoader.loadAlbum(context)
         }
     }
 
@@ -121,24 +122,23 @@ class MediasPanel(context: Context) : AbsPanel(context) {
 
         override fun getItemCount(): Int {
             if (mMediaBuckets.size == 0) return 0
-            return mMediaBuckets.get(0).resources.size
+            return 0
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-            val media = mMediaBuckets.get(0).resources.get(position)
-            if (holder is MediaHolder) {
-                val size = (mMediaListView.width - 8.dp()) / 3
-                val lp = holder.itemView.layoutParams
-                lp?.height = size
-                holder.itemView.layoutParams = lp
-                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + media.path))
-                requestBuilder.resizeOptions = ResizeOptions(size, size)
-                val controlBuilder = Fresco.newDraweeControllerBuilder()
-                controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
-                controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
-                controlBuilder.oldController = holder.coverView.controller
-                holder.coverView.controller = controlBuilder.build()
-            }
+//            if (holder is MediaHolder) {
+//                val size = (mMediaListView.width - 8.dp()) / 3
+//                val lp = holder.itemView.layoutParams
+//                lp?.height = size
+//                holder.itemView.layoutParams = lp
+//                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + media.path))
+//                requestBuilder.resizeOptions = ResizeOptions(size, size)
+//                val controlBuilder = Fresco.newDraweeControllerBuilder()
+//                controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
+//                controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
+//                controlBuilder.oldController = holder.coverView.controller
+//                holder.coverView.controller = controlBuilder.build()
+//            }
         }
 
         override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
