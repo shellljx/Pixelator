@@ -190,6 +190,9 @@ class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
     override fun onStop() {
         mPanelContainer?.release()
         mContainer.getLifeCycleService()?.addObserver(this)
+        mPanelTokenMap.values.forEach {
+            it.panel.destroy()
+        }
     }
 }
 

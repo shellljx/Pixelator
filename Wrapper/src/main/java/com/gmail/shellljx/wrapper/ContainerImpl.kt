@@ -30,6 +30,7 @@ class ContainerImpl internal constructor(
         //加载必需的核心service
         initCoreServices()
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
     override fun onCreateView(container: ViewGroup?, savedInstanceState: Bundle?): View? {
@@ -45,18 +46,22 @@ class ContainerImpl internal constructor(
 
     override fun onStart() {
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_START)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
 
     override fun onResume() {
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
     override fun onPause() {
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     }
 
     override fun onStop() {
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     }
 
     private fun initCoreServices() {
@@ -135,6 +140,7 @@ class ContainerImpl internal constructor(
 
     override fun onDestroy() {
         mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         mVEServiceManager.destroy()
     }
 

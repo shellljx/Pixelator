@@ -1,5 +1,6 @@
 package com.gmail.shellljx.wrapper
 
+import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.service.control.ControlContainerService
 import com.gmail.shellljx.wrapper.service.gesture.GestureService
@@ -16,11 +17,28 @@ class ServiceManagerImpl(private val veContainer: IContainer) : IServiceManager 
 
     private val mServiceRecords = HashMap<String, VEServiceRecord>()
     private val mBusinessServices = arrayListOf<Class<out IService>>()
+    private val mLifecycleRegistry = LifecycleRegistry(this)
+    private val mViewmodelStore by lazy { ViewModelStore() }
+
+    init {
+        lifecycle.addObserver(object : LifecycleEventObserver {
+            override fun onStateChanged(source: LifecycleOwner, event: Lifecycle.Event) {
+                if (event == Lifecycle.Event.ON_DESTROY) {
+                    viewModelStore.clear()
+                }
+            }
+        })
+    }
+
     override fun registerBusinessService(businessServices: List<Class<out IService>>) {
         mBusinessServices.addAll(businessServices.filter { !mBusinessServices.contains(it) })
         mBusinessServices.forEach {
             startService(it)
         }
+    }
+
+    override fun handleLifecycleEvent(event: Lifecycle.Event) {
+        mLifecycleRegistry.handleLifecycleEvent(event)
     }
 
     override fun <T : IService> startService(clazz: Class<T>) {
@@ -75,6 +93,12 @@ class ServiceManagerImpl(private val veContainer: IContainer) : IServiceManager 
             return
         }
         record.instance?.onStop()
+    }
+
+    override fun getLifecycle() = mLifecycleRegistry
+
+    override fun getViewModelStore(): ViewModelStore {
+        return mViewmodelStore
     }
 
     override fun destroy() {

@@ -47,6 +47,8 @@ interface IPanel {
      */
     fun detach()
 
+    fun destroy()
+
     /**
      * 是否已经添加到视图树上
      */

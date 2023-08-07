@@ -10,8 +10,9 @@ import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.IContainer
 
 @Keep
-abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
+abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner, ViewModelStoreOwner {
     private val mLifecycleRegistry by lazy { LifecycleRegistry(this) }
+    private lateinit var mContainer: IContainer
     lateinit var mToken: PanelToken
     private var mPanelView: View? = null
     private var mIsAttached = false
@@ -22,6 +23,7 @@ abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
         }
 
     override fun bindVEContainer(container: IContainer) {
+        mContainer = container
         onBindVEContainer(container)
         mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
@@ -70,6 +72,11 @@ abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
         onDetach()
     }
 
+    override fun destroy() {
+        mLifecycleRegistry.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
+        onDestroy()
+    }
+
     override fun isAttached(): Boolean {
         return mIsAttached
     }
@@ -82,11 +89,16 @@ abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner {
         return mLifecycleRegistry
     }
 
+    override fun getViewModelStore(): ViewModelStore {
+        return mContainer.getServiceManager().viewModelStore
+    }
+
     open fun onPayloadUpdate(any: Any) {}
     open fun onAttach() {}
     open fun onResume() {}
     open fun onPause() {}
     open fun onDetach() {}
+    open fun onDestroy() {}
     open fun onEnterAnimationStart() {}
     open fun onExitAnimationStart() {}
     abstract fun onBindVEContainer(container: IContainer)

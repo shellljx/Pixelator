@@ -1,11 +1,15 @@
 package com.gmail.shellljx.wrapper
 
-interface IServiceManager {
+import androidx.lifecycle.*
+
+interface IServiceManager : LifecycleOwner, ViewModelStoreOwner {
     /**
      * 注册所有的业务service，如果没有注册的service在运行时 getService 将返回 null
      * @param businessServices 所有的业务 service
      */
     fun registerBusinessService(businessServices: List<Class<out IService>>)
+
+    fun handleLifecycleEvent(event: Lifecycle.Event)
 
     /**
      * 启动一个 service
