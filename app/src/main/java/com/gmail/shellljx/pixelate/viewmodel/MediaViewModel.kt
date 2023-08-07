@@ -1,29 +1,52 @@
-package com.gmail.shellljx.imagePicker
+package com.gmail.shellljx.pixelate.viewmodel
 
-import android.content.*
+import android.content.ContentResolver
+import android.content.Context
 import android.database.Cursor
 import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
-import kotlinx.coroutines.*
+import androidx.lifecycle.MutableLiveData
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.withContext
 import java.io.File
 
 /**
  * @Author: shell
  * @Email: shellljx@gmail.com
- * @Date: 2023/7/31
+ * @Date: 2023/8/7
  * @Description:
  */
-
-class MediaLoader {
+class MediaViewModel : BaseViewModel() {
 
     companion object {
-        private const val PAGE_SIZE = 2
+        private const val PAGE_SIZE = 30
     }
 
-    private var page = 1
+    private var page = 0
+    val mediasLiveData = MutableLiveData<List<MediaResource>>()
+    val bucketLiveData = MutableLiveData<List<MediaBucket>>()
 
-    suspend fun load(context: Context, bucketId: String? = null): List<MediaResource> {
+    fun fetchMedias(context: Context, bucketId: String? = null) {
+        launchSafely {
+            val medias = loadMedias(context, bucketId)
+            if (medias.isNotEmpty()) {
+                mediasLiveData.postValue(medias)
+            }
+        }
+    }
+
+    fun fetchBuckets(context: Context) {
+        launchSafely {
+            val buckets = loadAlbum(context)
+            if (buckets.isNotEmpty()) {
+                bucketLiveData.postValue(buckets)
+            }
+        }
+    }
+
+    private suspend fun loadMedias(context: Context, bucketId: String? = null): List<MediaResource> {
+        page = 0
         return withContext(Dispatchers.IO) {
             createMediaCursor(context, bucketId).use { cursor ->
                 cursor?.let { queryMedias(it) } ?: emptyList()
@@ -126,7 +149,7 @@ class MediaLoader {
         }
     }
 
-    suspend fun loadAlbum(context: Context): List<MediaBucket> {
+    private suspend fun loadAlbum(context: Context): List<MediaBucket> {
         return withContext(Dispatchers.IO) {
             val dataColumn = MediaStore.MediaColumns.DATA
             val bucketIdColumn = MediaStore.MediaColumns.BUCKET_ID

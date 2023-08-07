@@ -6,16 +6,16 @@ import android.content.Context
 import android.graphics.*
 import android.net.Uri
 import android.view.*
-import androidx.lifecycle.lifecycleScope
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
-import com.gmail.shellljx.imagePicker.MediaLoader
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.extension.viewModels
+import com.gmail.shellljx.pixelate.viewmodel.MediaViewModel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
@@ -24,7 +24,6 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCa
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_HIDDEN
 import com.google.errorprone.annotations.Keep
-import kotlinx.coroutines.launch
 
 /**
  * @Author: shell
@@ -41,8 +40,10 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     private lateinit var mAlbumView: View
     private lateinit var mCloseView: View
     private val mMediaAdapter = MediaAdapter()
-    private val mMediaBuckets = arrayListOf<MediaLoader.MediaBucket>()
-    private val mMediaLoader = MediaLoader()
+    private val mBuckets = arrayListOf<MediaViewModel.MediaBucket>()
+    private val mMedias = arrayListOf<MediaViewModel.MediaResource>()
+    private val viewModel: MediaViewModel by viewModels()
+    private var mBucketId: String? = null
     private var isMediaFadeIn = true
 
     override val tag: String
@@ -82,7 +83,7 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             }
         })
         mAlbumView.setOnClickListener {
-            mContainer.getPanelService()?.showPanel(AlbumPanel::class.java)
+            mContainer.getPanelService()?.showPanel(AlbumPanel::class.java, mBuckets)
         }
         view.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
@@ -95,9 +96,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
         isMediaFadeIn = true
-        lifecycleScope.launch {
-            mMediaLoader.loadAlbum(context)
-        }
+        viewModel.fetchMedias(context, mBucketId)
+        viewModel.fetchBuckets(context)
     }
 
     override fun onDetach() {
@@ -121,24 +121,24 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         }
 
         override fun getItemCount(): Int {
-            if (mMediaBuckets.size == 0) return 0
-            return 0
+            return mMedias.size
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
-//            if (holder is MediaHolder) {
-//                val size = (mMediaListView.width - 8.dp()) / 3
-//                val lp = holder.itemView.layoutParams
-//                lp?.height = size
-//                holder.itemView.layoutParams = lp
-//                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + media.path))
-//                requestBuilder.resizeOptions = ResizeOptions(size, size)
-//                val controlBuilder = Fresco.newDraweeControllerBuilder()
-//                controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
-//                controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
-//                controlBuilder.oldController = holder.coverView.controller
-//                holder.coverView.controller = controlBuilder.build()
-//            }
+            val media = mMedias[position]
+            if (holder is MediaHolder) {
+                val size = (mMediaListView.width - 8.dp()) / 3
+                val lp = holder.itemView.layoutParams
+                lp?.height = size
+                holder.itemView.layoutParams = lp
+                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + media.path))
+                requestBuilder.resizeOptions = ResizeOptions(size, size)
+                val controlBuilder = Fresco.newDraweeControllerBuilder()
+                controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
+                controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
+                controlBuilder.oldController = holder.coverView.controller
+                holder.coverView.controller = controlBuilder.build()
+            }
         }
 
         override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {

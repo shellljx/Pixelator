@@ -1,5 +1,6 @@
 package com.gmail.shellljx.pixelate.panel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.view.*
@@ -11,6 +12,8 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.R
+import com.gmail.shellljx.pixelate.extension.viewModels
+import com.gmail.shellljx.pixelate.viewmodel.MediaViewModel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
@@ -28,6 +31,8 @@ class AlbumPanel(context: Context) : AbsPanel(context) {
     private lateinit var mContainer: IContainer
     private var mAlbumListView: RecyclerView? = null
     private val mAdapter = AlbumAdapter()
+    private val viewModel: MediaViewModel by viewModels()
+    private val mBuckets = arrayListOf<MediaViewModel.MediaBucket>()
 
     override val tag: String
         get() = AlbumPanel::class.java.simpleName
@@ -43,6 +48,7 @@ class AlbumPanel(context: Context) : AbsPanel(context) {
 
     override fun getLayoutId() = R.layout.layout_album_panel
 
+    @SuppressLint("NotifyDataSetChanged")
     override fun onViewCreated(view: View?) {
         view ?: return
         mAlbumListView = view.findViewById(R.id.recycleview)
@@ -50,6 +56,11 @@ class AlbumPanel(context: Context) : AbsPanel(context) {
         mAlbumListView?.adapter = mAdapter
         view.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
+        }
+        viewModel.bucketLiveData.observe(this) {
+            mBuckets.clear()
+            mBuckets.addAll(it)
+            mAdapter.notifyDataSetChanged()
         }
     }
 
@@ -60,20 +71,21 @@ class AlbumPanel(context: Context) : AbsPanel(context) {
         }
 
         override fun getItemCount(): Int {
-            return 10
+            return mBuckets.size
         }
 
         override fun onBindViewHolder(holder: RecyclerView.ViewHolder, position: Int) {
+            val bucket = mBuckets[position]
             if (holder is AlbumHolder) {
-                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + "/sdcard/DCIM/20211213174105209.png"))
+                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + bucket.cover))
                 requestBuilder.resizeOptions = ResizeOptions(100, 100)
                 val controlBuilder = Fresco.newDraweeControllerBuilder()
                 controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
                 controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
                 controlBuilder.oldController = holder.coverView.controller
                 holder.coverView.controller = controlBuilder.build()
-                holder.titleView.text = "相册"
-                holder.countView.text = "123"
+                holder.titleView.text = bucket.name
+                holder.countView.text = bucket.count.toString()
             }
         }
     }

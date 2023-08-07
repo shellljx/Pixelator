@@ -13,7 +13,6 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
-import com.gmail.shellljx.imagePicker.MediaLoader
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.MediasPanel
 import com.gmail.shellljx.pixelate.service.*
@@ -22,7 +21,6 @@ import com.gmail.shellljx.pixelate.utils.PermissionUtils
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.AbsDelegate
-import com.google.android.material.bottomsheet.BottomSheetDialog
 
 class PixelatorFragment : Fragment(), IImageDelegate {
     companion object {
