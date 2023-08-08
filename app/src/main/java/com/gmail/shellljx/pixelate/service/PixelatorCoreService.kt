@@ -38,7 +38,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
-    private val mImageLoadedObservers = arrayListOf<OnImageLoadedObserver>()
+    private val mImageObservers = arrayListOf<OnImageObserver>()
     private val mUndoRedoStateObservers = arrayListOf<UndoRedoStateObserver>()
 
     private val mRenderListener = object : IRenderListener {
@@ -73,6 +73,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         override fun onSaveSuccess(path: String) {
             val delegate = mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)
             delegate?.saveSuccess(path)
+            mImageObservers.forEach {
+                it.onImageSaved(path)
+            }
         }
 
         override fun onRenderError(code: Int, msg: String) {
@@ -156,7 +159,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         runTaskOrPendding {
             mImageSdk.addImagePath(path, getRotate(path))
             mImagePath = path
-            mImageLoadedObservers.forEach { it.onImageLoaded(path) }
+            mImageObservers.forEach { it.onImageLoaded(path) }
         }
     }
 
@@ -251,9 +254,9 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
     }
 
-    override fun addImageLoadedObserver(observer: OnImageLoadedObserver) {
-        if (!mImageLoadedObservers.contains(observer)) {
-            mImageLoadedObservers.add(observer)
+    override fun addImageObserver(observer: OnImageObserver) {
+        if (!mImageObservers.contains(observer)) {
+            mImageObservers.add(observer)
         }
     }
 
@@ -339,7 +342,7 @@ interface IPixelatorCoreService : IService {
     fun save()
     fun addPaintSizeObserver(observer: PaintSizeObserver)
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)
-    fun addImageLoadedObserver(observer: OnImageLoadedObserver)
+    fun addImageObserver(observer: OnImageObserver)
     fun addUndoRedoStateObserver(observer: UndoRedoStateObserver)
 }
 
@@ -351,8 +354,9 @@ interface OnContentBoundsObserver {
     fun onContentBoundsChanged(bound: Rect)
 }
 
-interface OnImageLoadedObserver {
-    fun onImageLoaded(path: String)
+interface OnImageObserver {
+    fun onImageLoaded(path: String) {}
+    fun onImageSaved(path: String) {}
 }
 
 interface UndoRedoStateObserver {

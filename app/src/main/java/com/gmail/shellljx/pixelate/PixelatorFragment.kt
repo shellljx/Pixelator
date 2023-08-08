@@ -15,7 +15,7 @@ import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.MediasPanel
-import com.gmail.shellljx.pixelate.panel.SavePanel
+import com.gmail.shellljx.pixelate.panel.SaveResultPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.utils.FileUtils.syncImageToGallery
 import com.gmail.shellljx.pixelate.utils.PermissionUtils
@@ -185,7 +185,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
 
     override fun saveSuccess(path: String) {
         syncImageToGallery(requireContext(), path)
-        mContainer.getPanelService()?.showPanel(SavePanel::class.java, path)
+        mContainer.getPanelService()?.showPanel(SaveResultPanel::class.java, path)
         Toast.makeText(requireContext(), getString(R.string.save_image_success), Toast.LENGTH_SHORT).show()
     }
 }

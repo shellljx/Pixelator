@@ -17,6 +17,7 @@
     <string name="album_all">全部</string>
     <string name="choose_album">选择相册</string>
     <string name="save_image_success">已经保存到相册</string>
+    <string name="open_new_image">再编辑一张</string>
     <string name="title_request_permission">请求权限</string>
     <string name="request_permission_failed">请求权限失败</string>
     <string name="request_read_file_permission_desc">为了选择图片用来编辑，需要访问存储权限。请点击“设置”来授予权限。</string>

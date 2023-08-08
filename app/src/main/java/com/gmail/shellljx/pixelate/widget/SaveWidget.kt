@@ -7,17 +7,19 @@ import android.view.View.OnClickListener
 import com.gmail.shellljx.pixelate.IImageDelegate
 import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
 import com.gmail.shellljx.pixelate.extension.dp
-import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
-import com.gmail.shellljx.pixelate.service.PixelatorCoreService
+import com.gmail.shellljx.pixelate.panel.ProgressPanel
+import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.IDelegateService
+import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.widget.IWidget
 
 class SaveWidget @JvmOverloads constructor(
     context: Context, attrs: AttributeSet? = null
-) : androidx.appcompat.widget.AppCompatTextView(context, attrs), IWidget, OnClickListener {
+) : androidx.appcompat.widget.AppCompatTextView(context, attrs), IWidget, OnClickListener, OnImageObserver {
     private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
+    private var mProgressToken: PanelToken? = null
 
     init {
         setOnClickListener(this)
@@ -30,6 +32,7 @@ class SaveWidget @JvmOverloads constructor(
 
     override fun onWidgetActive() {
         mContainer.getControlService()?.registerWidgetMessage(this, WidgetEvents.MSG_TRANSLATE_PROGRESS)
+        mCoreService?.addImageObserver(this)
     }
 
     override fun onWidgetMessage(key: String, vararg args: Any) {
@@ -46,6 +49,13 @@ class SaveWidget @JvmOverloads constructor(
     }
 
     override fun onClick(v: View?) {
+        mProgressToken = mContainer.getPanelService()?.showPanel(ProgressPanel::class.java)
         mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)?.saveImage()
+    }
+
+    override fun onImageSaved(path: String) {
+        mProgressToken?.let {
+            mContainer.getPanelService()?.hidePanel(it)
+        }
     }
 }

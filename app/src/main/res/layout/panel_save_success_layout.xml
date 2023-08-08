@@ -1,33 +1,71 @@
 <?xml version="1.0" encoding="utf-8"?>
-<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
-    xmlns:app="http://schemas.android.com/tools"
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
     android:layout_width="match_parent"
-    android:layout_height="match_parent">
+    android:layout_height="match_parent"
+    android:background="#77000000">
 
-    <com.facebook.drawee.view.SimpleDraweeView
-        android:id="@+id/iv_blur_bg"
-        android:layout_width="match_parent"
-        android:layout_height="300dp"
-        android:padding="1dp"
-        fresco:failureImageScaleType="centerCrop"
-        fresco:layout_constraintLeft_toLeftOf="parent"
-        fresco:layout_constraintTop_toTopOf="parent" />
+    <androidx.constraintlayout.widget.ConstraintLayout
+        android:layout_width="320dp"
+        android:layout_height="230dp"
+        android:layout_gravity="center"
+        android:background="@drawable/bg_white_round_rect">
 
-    <View
-        android:layout_width="match_parent"
-        android:layout_height="0dp"
-        android:background="@color/white"
-        fresco:layout_constraintLeft_toLeftOf="parent"
-        fresco:layout_constraintTop_toBottomOf="@id/iv_blur_bg" />
+        <TextView
+            android:id="@+id/tv_tip"
+            android:layout_width="280dp"
+            android:layout_height="wrap_content"
+            android:layout_marginTop="12dp"
+            android:ellipsize="end"
+            android:gravity="center"
+            android:lines="1"
+            android:maxWidth="150dp"
+            android:text="@string/save_image_success"
+            android:textColor="@color/color_2c2c2c"
+            android:textSize="16sp"
+            fresco:layout_constraintLeft_toLeftOf="parent"
+            fresco:layout_constraintRight_toRightOf="parent"
+            fresco:layout_constraintTop_toTopOf="parent" />
 
-    <ImageView
-        android:layout_width="18dp"
-        android:layout_height="18dp"
-        android:layout_margin="20dp"
-        android:src="@drawable/ic_close"
-        app:tint="@color/white"
-        fresco:layout_constraintLeft_toLeftOf="parent"
-        fresco:layout_constraintTop_toTopOf="parent" />
+        <com.facebook.drawee.view.SimpleDraweeView
+            android:id="@+id/iv_img"
+            android:layout_width="100dp"
+            android:layout_height="100dp"
+            android:layout_margin="20dp"
+            android:padding="1dp"
+            fresco:failureImageScaleType="centerCrop"
+            fresco:layout_constraintLeft_toLeftOf="parent"
+            fresco:layout_constraintTop_toBottomOf="@id/tv_tip"
+            fresco:roundedCornerRadius="8dp" />
 
-</androidx.constraintlayout.widget.ConstraintLayout>
+        <TextView
+            android:id="@+id/tv_newone"
+            android:layout_width="140dp"
+            android:layout_height="wrap_content"
+            android:background="@drawable/bg_next_one_button"
+            android:gravity="center"
+            android:paddingTop="12dp"
+            android:paddingBottom="12dp"
+            android:text="@string/open_new_image"
+            android:textColor="@color/white"
+            android:textSize="14sp"
+            fresco:layout_constraintBottom_toBottomOf="@id/iv_img"
+            fresco:layout_constraintEnd_toEndOf="parent"
+            fresco:layout_constraintStart_toEndOf="@id/iv_img"
+            fresco:layout_constraintTop_toTopOf="@id/iv_img" />
+
+        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
+            android:id="@+id/adView"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:layout_marginBottom="12dp"
+            android:background="@color/white"
+            ads:adSize="BANNER"
+            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
+            ads:layout_constraintBottom_toBottomOf="parent"
+            ads:layout_constraintLeft_toLeftOf="parent"
+            ads:layout_constraintRight_toRightOf="parent" />
+
+
+    </androidx.constraintlayout.widget.ConstraintLayout>
+</FrameLayout>

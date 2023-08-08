@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
  * @Description:
  */
 @Keep
-class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserver, OnContentBoundsObserver, OnTapObserver {
+class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, OnContentBoundsObserver, OnTapObserver {
     companion object {
         private const val PATH_SMALL_SRC = "/assets/small/"
         private const val PATH_REMOVED_BG = "/assets/removed/"
@@ -65,7 +65,7 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageLoadedObserv
         mContainer.getLifeCycleService()?.addObserver(this)
         mCoreService?.addContentBoundsObserver(this)
         mContainer.getGestureService()?.addTapObserver(this)
-        mCoreService?.addImageLoadedObserver(this)
+        mCoreService?.addImageObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
