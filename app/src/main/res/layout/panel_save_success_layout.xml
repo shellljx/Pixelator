@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    xmlns:app="http://schemas.android.com/tools"
+    xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    android:layout_width="match_parent"
+    android:layout_height="match_parent">
+
+    <com.facebook.drawee.view.SimpleDraweeView
+        android:id="@+id/iv_blur_bg"
+        android:layout_width="match_parent"
+        android:layout_height="300dp"
+        android:padding="1dp"
+        fresco:failureImageScaleType="centerCrop"
+        fresco:layout_constraintLeft_toLeftOf="parent"
+        fresco:layout_constraintTop_toTopOf="parent" />
+
+    <View
+        android:layout_width="match_parent"
+        android:layout_height="0dp"
+        android:background="@color/white"
+        fresco:layout_constraintLeft_toLeftOf="parent"
+        fresco:layout_constraintTop_toBottomOf="@id/iv_blur_bg" />
+
+    <ImageView
+        android:layout_width="18dp"
+        android:layout_height="18dp"
+        android:layout_margin="20dp"
+        android:src="@drawable/ic_close"
+        app:tint="@color/white"
+        fresco:layout_constraintLeft_toLeftOf="parent"
+        fresco:layout_constraintTop_toTopOf="parent" />
+
+</androidx.constraintlayout.widget.ConstraintLayout>

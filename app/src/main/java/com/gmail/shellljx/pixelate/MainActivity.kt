@@ -5,50 +5,27 @@ import android.content.Intent
 import android.graphics.Color
 import android.os.Build
 import android.os.Bundle
-import android.util.DisplayMetrics
 import android.view.View
 import android.view.WindowManager
 import androidx.appcompat.app.AppCompatActivity
+import androidx.lifecycle.ViewModelProvider
+import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.google.android.gms.ads.MobileAds
+import com.google.android.gms.ads.initialization.AdapterStatus
 
 class MainActivity : AppCompatActivity() {
     private var fragment: PixelatorFragment? = null
-    private var adInited = false
+    private val mainViewModel by lazy { ViewModelProvider(this, defaultViewModelProviderFactory)[MainViewModel::class.java] }
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_main)
         MobileAds.initialize(this) {
-            adInited = true
+            val adState = it.adapterStatusMap["com.google.android.gms.ads.MobileAds"]
+            mainViewModel.adStateLiveData.postValue(adState?.initializationState == AdapterStatus.State.READY)
         }
         fragment = PixelatorFragment()
         supportFragmentManager.beginTransaction().replace(R.id.content, fragment!!).commit()
-        getwcreenheight()
         setTransparent()
-//        val REQUEST_PERMISSION_CODE = 1
-//        val permissions = arrayOf(
-//            Manifest.permission.READ_EXTERNAL_STORAGE,
-//            Manifest.permission.WRITE_EXTERNAL_STORAGE
-//        )
-//        if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
-//            // 检查权限是否已被授予
-//            if (checkSelfPermission(Manifest.permission.READ_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED &&
-//                checkSelfPermission(Manifest.permission.WRITE_EXTERNAL_STORAGE) == PackageManager.PERMISSION_GRANTED
-//            ) {
-//                // 已经授予了读写权限
-//                // 可以进行读写操作
-//            } else {
-//                // 未授予读写权限，发起权限请求
-//                requestPermissions(permissions, REQUEST_PERMISSION_CODE)
-//            }
-//        }
-    }
-
-    private fun getwcreenheight() {
-        val manager = this.windowManager
-        val outMetrics = DisplayMetrics()
-        manager.defaultDisplay.getMetrics(outMetrics)
-        val width2 = outMetrics.widthPixels
-        val height2 = outMetrics.heightPixels
     }
 
     fun setTransparent() {

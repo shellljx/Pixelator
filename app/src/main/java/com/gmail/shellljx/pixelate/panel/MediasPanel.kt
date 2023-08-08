@@ -14,14 +14,17 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.R
-import com.gmail.shellljx.pixelate.extension.dp
-import com.gmail.shellljx.pixelate.extension.viewModels
+import com.gmail.shellljx.pixelate.extension.*
 import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
 import com.gmail.shellljx.pixelate.service.PixelatorCoreService
+import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.pixelate.viewmodel.MediaViewModel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
+import com.google.android.gms.ads.AdListener
+import com.google.android.gms.ads.AdRequest
+import com.google.android.gms.ads.AdView
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import com.google.android.material.bottomsheet.BottomSheetBehavior.BottomSheetCallback
 import com.google.android.material.bottomsheet.BottomSheetBehavior.STATE_COLLAPSED
@@ -37,16 +40,17 @@ import com.google.errorprone.annotations.Keep
 @Keep
 class MediasPanel(context: Context) : AbsPanel(context) {
 
-    private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private lateinit var mMediaContainer: View
     private lateinit var mMediaListView: RecyclerView
     private lateinit var mAlbumView: TextView
     private lateinit var mAlbumSelectView: View
     private lateinit var mCloseView: View
+    private lateinit var mAdView: AdView
     private val mMediaAdapter = MediaAdapter()
     private val mMedias = arrayListOf<MediaViewModel.MediaResource>()
     private val viewModel: MediaViewModel by viewModels()
+    private val mainViewModel: MainViewModel by activityViewModels()
     private var isMediaFadeIn = true
 
     override val tag: String
@@ -73,6 +77,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         mAlbumView = view.findViewById(R.id.tv_album)
         mAlbumSelectView = view.findViewById(R.id.album_select)
         mCloseView = view.findViewById(R.id.iv_close)
+        mAdView = view.findViewById(R.id.adView)
+        mAdView.adListener = mAdLoadListener
         mMediaListView.layoutManager = GridLayoutManager(context, 3)
         mMediaListView.adapter = mMediaAdapter
         val behavior = BottomSheetBehavior.from(mMediaContainer)
@@ -107,6 +113,12 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             mMedias.addAll(it)
             mMediaAdapter.notifyItemRangeInserted(start, it.size)
         }
+        mainViewModel.adStateLiveData.observe(this){
+            if (it){
+                val adRequest: AdRequest = AdRequest.Builder().build()
+                mAdView.loadAd(adRequest)
+            }
+        }
         mAlbumSelectView.setOnClickListener {
             mContainer.getPanelService()?.showPanel(AlbumPanel::class.java)
             mContainer.getPanelService()?.hidePanel(mToken)
@@ -116,6 +128,11 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         }
         mCloseView.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
+        }
+    }
+
+    private val mAdLoadListener = object : AdListener() {
+        override fun onAdImpression() {
         }
     }
 

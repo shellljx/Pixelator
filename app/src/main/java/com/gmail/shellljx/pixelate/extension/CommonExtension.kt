@@ -5,6 +5,8 @@ import androidx.annotation.MainThread
 import androidx.lifecycle.*
 import com.gmail.shellljx.pixelate.utils.DensityUtils
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.service.AbsService
+import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import kotlinx.coroutines.*
 import java.io.File
 import java.io.FileOutputStream
@@ -40,6 +42,22 @@ suspend fun Bitmap.writeToPngFile(targetPath: String, quality: Int): Boolean {
         }
     }
 }
+
+@MainThread
+inline fun <T, reified VM : ViewModel> T.activityViewModels(
+    noinline ownerProducer: () -> ViewModelStoreOwner = { this },
+    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+) where T : AbsService = createViewModelLazy(VM::class, { ownerProducer().viewModelStore }, factoryProducer)
+
+@MainThread
+inline fun <reified T, reified VM : ViewModel> T.activityViewModels(
+    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+) where T : AbsPanel = createViewModelLazy(VM::class, { (context as ViewModelStoreOwner).viewModelStore }, factoryProducer)
+
+@MainThread
+inline fun <reified T, reified VM : ViewModel> T.activityViewModels(
+    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+) where T : AbsService = createViewModelLazy(VM::class, { (getContext() as ViewModelStoreOwner).viewModelStore }, factoryProducer)
 
 @MainThread
 inline fun <T, reified VM : ViewModel> T.viewModels(

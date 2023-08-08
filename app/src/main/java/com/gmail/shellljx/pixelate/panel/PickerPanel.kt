@@ -29,7 +29,6 @@ class PickerPanel(context: Context) : AbsPanel(context), OptionPickListener {
             return config
         }
 
-    private lateinit var mContainer: IContainer
     private lateinit var mPickView: PickView
     private var mPayload: PickPayload? = null
     override fun onBindVEContainer(container: IContainer) {

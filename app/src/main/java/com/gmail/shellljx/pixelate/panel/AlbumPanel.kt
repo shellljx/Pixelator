@@ -28,7 +28,6 @@ import com.google.errorprone.annotations.Keep
 @Keep
 class AlbumPanel(context: Context) : AbsPanel(context) {
 
-    private lateinit var mContainer: IContainer
     private var mAlbumListView: RecyclerView? = null
     private val mAdapter = AlbumAdapter()
     private val viewModel: MediaViewModel by viewModels()

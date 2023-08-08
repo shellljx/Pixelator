@@ -16,7 +16,6 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
     override val tag: String
         get() = "MiniScreenPanel"
 
-    private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var miniScreen: SurfaceView? = null
     private var pointView: CircleView? = null

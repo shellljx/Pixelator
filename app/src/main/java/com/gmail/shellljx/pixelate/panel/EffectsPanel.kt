@@ -42,7 +42,6 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             return config
         }
 
-    private lateinit var mContainer: IContainer
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
     private var mMaskService: IMaskLockService? = null
