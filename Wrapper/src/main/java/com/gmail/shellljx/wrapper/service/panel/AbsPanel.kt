@@ -12,7 +12,7 @@ import com.gmail.shellljx.wrapper.IContainer
 @Keep
 abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner, ViewModelStoreOwner {
     private val mLifecycleRegistry by lazy { LifecycleRegistry(this) }
-    private lateinit var mContainer: IContainer
+    protected lateinit var mContainer: IContainer
     lateinit var mToken: PanelToken
     private var mPanelView: View? = null
     private var mIsAttached = false

@@ -1,5 +1,6 @@
 package com.gmail.shellljx.wrapper.service
 
+import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelStoreOwner
 import com.gmail.shellljx.wrapper.IContainer
@@ -21,4 +22,8 @@ abstract class AbsService : IService, LifecycleOwner, ViewModelStoreOwner {
     override fun getLifecycle() = mVEContainer.getServiceManager().lifecycle
 
     override fun getViewModelStore() = mVEContainer.getServiceManager().viewModelStore
+
+    fun getContext(): Context {
+        return mVEContainer.getContext()
+    }
 }
