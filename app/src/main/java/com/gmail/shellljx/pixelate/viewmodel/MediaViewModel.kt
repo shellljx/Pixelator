@@ -7,6 +7,7 @@ import android.os.Build
 import android.os.Bundle
 import android.provider.MediaStore
 import androidx.lifecycle.MutableLiveData
+import com.gmail.shellljx.pixelate.R
 import kotlinx.coroutines.Dispatchers
 import kotlinx.coroutines.withContext
 import java.io.File
@@ -20,19 +21,36 @@ import java.io.File
 class MediaViewModel : BaseViewModel() {
 
     companion object {
-        private const val PAGE_SIZE = 30
+        private const val PAGE_SIZE = 50
     }
 
     private var page = 0
+    var bucket: MediaBucket? = null
+        set(value) {
+            page = 0
+            field = value
+        }
     val mediasLiveData = MutableLiveData<List<MediaResource>>()
     val bucketLiveData = MutableLiveData<List<MediaBucket>>()
+    @Volatile
+    var loading = false
+        private set
+    @Volatile
+    var hasMore = true
+        private set
 
-    fun fetchMedias(context: Context, bucketId: String? = null) {
+    fun fetchMedias(context: Context, forceReset: Boolean = false) {
+        if (forceReset) {
+            page = 0
+        }
+        loading = true
         launchSafely {
-            val medias = loadMedias(context, bucketId)
+            val medias = loadMedias(context, bucket?.id)
             if (medias.isNotEmpty()) {
                 mediasLiveData.postValue(medias)
+                page++
             }
+            loading = false
         }
     }
 
@@ -46,7 +64,6 @@ class MediaViewModel : BaseViewModel() {
     }
 
     private suspend fun loadMedias(context: Context, bucketId: String? = null): List<MediaResource> {
-        page = 0
         return withContext(Dispatchers.IO) {
             createMediaCursor(context, bucketId).use { cursor ->
                 cursor?.let { queryMedias(it) } ?: emptyList()
@@ -82,6 +99,7 @@ class MediaViewModel : BaseViewModel() {
             )
             list.add(mediaResource)
         }
+        hasMore = list.size >= PAGE_SIZE
         return list
     }
 
@@ -196,16 +214,17 @@ class MediaViewModel : BaseViewModel() {
                     sortOrder
                 )
             }.use { cursor ->
-                cursor?.let { queryBuckets(it) } ?: emptyList()
+                cursor?.let { queryBuckets(context, it) } ?: emptyList()
             }
         }
     }
 
-    private fun queryBuckets(cursor: Cursor): List<MediaBucket> {
+    private fun queryBuckets(context: Context, cursor: Cursor): List<MediaBucket> {
         val dataColumn = MediaStore.MediaColumns.DATA
         val bucketIdColumn = MediaStore.MediaColumns.BUCKET_ID
         val bucketDisplayNameColumn = MediaStore.MediaColumns.BUCKET_DISPLAY_NAME
         val buckets = hashMapOf<String, MediaBucket>()
+        var allBucket: MediaBucket? = null
         while (cursor.moveToNext()) {
             val data = cursor.getString(dataColumn, "")
             if (data.isBlank() || !File(data).exists()) {
@@ -213,6 +232,11 @@ class MediaViewModel : BaseViewModel() {
             }
             val bucketId = cursor.getString(bucketIdColumn, "")
             val bucketName = cursor.getString(bucketDisplayNameColumn, "")
+            if (allBucket == null) {
+                allBucket = MediaBucket(null, context.getString(R.string.album_all), data, 1)
+            } else {
+                allBucket.count++
+            }
             buckets[bucketId]?.let {
                 it.count++
             } ?: run {
@@ -224,7 +248,11 @@ class MediaViewModel : BaseViewModel() {
                 )
             }
         }
-        return buckets.values.toList()
+        val list = buckets.values.toMutableList()
+        allBucket?.let {
+            list.add(0, it)
+        }
+        return list
     }
 
     private fun Cursor.getLong(columnName: String, default: Long): Long {
@@ -257,7 +285,7 @@ class MediaViewModel : BaseViewModel() {
     )
 
     data class MediaBucket(
-        val id: String,
+        val id: String?,
         val name: String,
         val cover: String,
         var count: Int

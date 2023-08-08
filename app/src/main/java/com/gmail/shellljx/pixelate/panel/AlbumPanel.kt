@@ -64,9 +64,18 @@ class AlbumPanel(context: Context) : AbsPanel(context) {
         }
     }
 
+    override fun onDetach() {
+        mContainer.getPanelService()?.showPanel(MediasPanel::class.java)
+    }
+
     inner class AlbumAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val holder = AlbumHolder(LayoutInflater.from(context).inflate(R.layout.layout_album_item, parent, false))
+            holder.itemView.setOnClickListener {
+                val bucket = mBuckets[holder.adapterPosition]
+                viewModel.bucket = bucket
+                mContainer.getPanelService()?.hidePanel(mToken)
+            }
             return holder
         }
 

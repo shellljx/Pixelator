@@ -6,6 +6,7 @@ import android.content.Context
 import android.graphics.*
 import android.net.Uri
 import android.view.*
+import android.widget.TextView
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import com.facebook.drawee.backends.pipeline.Fresco
@@ -15,6 +16,8 @@ import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.extension.viewModels
+import com.gmail.shellljx.pixelate.service.IPixelatorCoreService
+import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.pixelate.viewmodel.MediaViewModel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
@@ -35,15 +38,15 @@ import com.google.errorprone.annotations.Keep
 class MediasPanel(context: Context) : AbsPanel(context) {
 
     private lateinit var mContainer: IContainer
+    private var mCoreService: IPixelatorCoreService? = null
     private lateinit var mMediaContainer: View
     private lateinit var mMediaListView: RecyclerView
-    private lateinit var mAlbumView: View
+    private lateinit var mAlbumView: TextView
+    private lateinit var mAlbumSelectView: View
     private lateinit var mCloseView: View
     private val mMediaAdapter = MediaAdapter()
-    private val mBuckets = arrayListOf<MediaViewModel.MediaBucket>()
     private val mMedias = arrayListOf<MediaViewModel.MediaResource>()
     private val viewModel: MediaViewModel by viewModels()
-    private var mBucketId: String? = null
     private var isMediaFadeIn = true
 
     override val tag: String
@@ -51,12 +54,12 @@ class MediasPanel(context: Context) : AbsPanel(context) {
 
     override val panelConfig: PanelConfig
         get() {
-            val config = PanelConfig()
-            return config
+            return PanelConfig()
         }
 
     override fun onBindVEContainer(container: IContainer) {
         mContainer = container
+        mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
     }
 
     override fun getLayoutId(): Int {
@@ -68,6 +71,7 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         mMediaContainer = view.findViewById(R.id.container)
         mMediaListView = view.findViewById(R.id.rv_medias)
         mAlbumView = view.findViewById(R.id.tv_album)
+        mAlbumSelectView = view.findViewById(R.id.album_select)
         mCloseView = view.findViewById(R.id.iv_close)
         mMediaListView.layoutManager = GridLayoutManager(context, 3)
         mMediaListView.adapter = mMediaAdapter
@@ -82,8 +86,30 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             override fun onSlide(bottomSheet: View, slideOffset: Float) {
             }
         })
-        mAlbumView.setOnClickListener {
-            mContainer.getPanelService()?.showPanel(AlbumPanel::class.java, mBuckets)
+
+        mMediaListView.addOnScrollListener(object : RecyclerView.OnScrollListener() {
+            override fun onScrolled(recyclerView: RecyclerView, dx: Int, dy: Int) {
+                super.onScrolled(recyclerView, dx, dy)
+                val layoutManager = mMediaListView.layoutManager as? GridLayoutManager
+                layoutManager ?: return
+                val totalItemCount: Int = layoutManager.itemCount
+                val lastVisibleItemPosition: Int = layoutManager.findLastVisibleItemPosition()
+
+                // 判断是否滑动到最后两行
+                if (totalItemCount - lastVisibleItemPosition <= 4 && !viewModel.loading && viewModel.hasMore) {
+                    viewModel.fetchMedias(context)
+                }
+            }
+        })
+
+        viewModel.mediasLiveData.observe(this) {
+            val start = mMedias.size
+            mMedias.addAll(it)
+            mMediaAdapter.notifyItemRangeInserted(start, it.size)
+        }
+        mAlbumSelectView.setOnClickListener {
+            mContainer.getPanelService()?.showPanel(AlbumPanel::class.java)
+            mContainer.getPanelService()?.hidePanel(mToken)
         }
         view.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
@@ -96,7 +122,10 @@ class MediasPanel(context: Context) : AbsPanel(context) {
     @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
         isMediaFadeIn = true
-        viewModel.fetchMedias(context, mBucketId)
+        mAlbumView.text = viewModel.bucket?.name ?: context.getString(R.string.album_all)
+        mMedias.clear()
+        mMediaAdapter.notifyDataSetChanged()
+        viewModel.fetchMedias(context, true)
         viewModel.fetchBuckets(context)
     }
 
@@ -107,16 +136,18 @@ class MediasPanel(context: Context) : AbsPanel(context) {
 
     override fun onResume() {
         mMediaListView.scrollToPosition(0)
-        mMediaContainer.alpha = 0f
-        val alphaAnimator: Animator = ObjectAnimator.ofFloat(mMediaContainer, "alpha", 0f, 1f)
-        alphaAnimator.duration = 400
-        alphaAnimator.start()
     }
 
     inner class MediaAdapter : RecyclerView.Adapter<RecyclerView.ViewHolder>() {
         private val mAnimators = hashMapOf<Int, AnimatorSet>()
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): RecyclerView.ViewHolder {
             val holder = MediaHolder(LayoutInflater.from(context).inflate(R.layout.layout_media_item, parent, false))
+            holder.itemView.setOnClickListener {
+                val position = holder.adapterPosition
+                val media = mMedias[position]
+                mCoreService?.loadImage(media.path)
+                mContainer.getPanelService()?.hidePanel(mToken)
+            }
             return holder
         }
 
@@ -132,7 +163,7 @@ class MediasPanel(context: Context) : AbsPanel(context) {
                 lp?.height = size
                 holder.itemView.layoutParams = lp
                 val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + media.path))
-                requestBuilder.resizeOptions = ResizeOptions(size, size)
+                requestBuilder.resizeOptions = ResizeOptions(size / 2, size / 2)
                 val controlBuilder = Fresco.newDraweeControllerBuilder()
                 controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
                 controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
@@ -142,6 +173,7 @@ class MediasPanel(context: Context) : AbsPanel(context) {
         }
 
         override fun onViewAttachedToWindow(holder: RecyclerView.ViewHolder) {
+            if (itemCount < 9) return
             val position = holder.adapterPosition
             if (position >= 9) {
                 isMediaFadeIn = false

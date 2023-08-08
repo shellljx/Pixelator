@@ -14,6 +14,8 @@
     <string name="paint_type_rect">矩形</string>
     <string name="paint_type_circle">圆形</string>
 
+    <string name="album_all">全部</string>
+    <string name="choose_album">选择相册</string>
     <string name="save_image_success">已经保存到相册</string>
     <string name="title_request_permission">请求权限</string>
     <string name="request_permission_failed">请求权限失败</string>

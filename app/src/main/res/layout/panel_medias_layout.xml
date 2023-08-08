@@ -16,37 +16,46 @@
             android:id="@+id/rv_medias"
             android:layout_width="match_parent"
             android:layout_height="match_parent"
+            android:background="@color/white"
             android:clipToPadding="true"
             android:paddingTop="50dp"
             android:paddingBottom="50dp" />
 
         <LinearLayout
-            android:layout_gravity="top"
             android:layout_width="match_parent"
             android:layout_height="50dp"
+            android:layout_gravity="top"
             android:background="@color/white"
             android:orientation="horizontal">
 
-            <TextView
-                android:id="@+id/tv_album"
+            <LinearLayout
+                android:id="@+id/album_select"
                 android:layout_width="wrap_content"
                 android:layout_height="match_parent"
-                android:layout_marginStart="12dp"
-                android:ellipsize="end"
-                android:gravity="center_vertical"
-                android:lines="1"
-                android:maxWidth="100dp"
-                android:text="全部"
-                android:textColor="@color/color_2c2c2c"
-                android:textSize="18sp" />
+                android:orientation="horizontal"
+                android:paddingStart="12dp"
+                android:paddingEnd="12dp">
 
-            <ImageView
-                android:layout_width="16dp"
-                android:layout_height="16dp"
-                android:layout_gravity="center_vertical"
-                android:layout_marginStart="4dp"
-                android:src="@drawable/ic_expand"
-                app:tint="@color/color_2c2c2c" />
+                <TextView
+                    android:id="@+id/tv_album"
+                    android:layout_width="wrap_content"
+                    android:layout_height="match_parent"
+                    android:ellipsize="end"
+                    android:gravity="center_vertical"
+                    android:lines="1"
+                    android:maxWidth="150dp"
+                    android:textColor="@color/color_2c2c2c"
+                    android:textSize="18sp" />
+
+                <ImageView
+                    android:layout_width="16dp"
+                    android:layout_height="16dp"
+                    android:layout_gravity="center_vertical"
+                    android:layout_marginStart="4dp"
+                    android:src="@drawable/ic_expand"
+                    app:tint="@color/color_2c2c2c" />
+
+            </LinearLayout>
 
             <Space
                 android:layout_width="0dp"
@@ -63,6 +72,17 @@
                 app:tint="@color/color_2c2c2c" />
 
         </LinearLayout>
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:background="@color/color_e6e6e6" />
+
+        <View
+            android:layout_width="match_parent"
+            android:layout_height="1dp"
+            android:layout_marginTop="50dp"
+            android:background="@color/color_e6e6e6" />
 
         <LinearLayout
             android:layout_width="match_parent"
