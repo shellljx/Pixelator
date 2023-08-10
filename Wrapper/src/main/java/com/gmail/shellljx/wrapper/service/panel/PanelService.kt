@@ -6,13 +6,14 @@ import androidx.annotation.AnimRes
 import androidx.annotation.Keep
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.*
 import java.lang.Exception
 import java.lang.IllegalStateException
 import java.util.*
 
 @Keep
-class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
+class PanelService(container: IContainer) : AbsService(container), IPanelService, LifecycleObserver, OnTapObserver {
     companion object {
         private const val TAG = "PanelService"
     }
@@ -23,7 +24,7 @@ class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
     private val mPanelTokenMap = hashMapOf<PanelToken, PanelRecord>()
     private val mPanelStack = Stack<PanelRecord>()
     override fun onStart() {
-        mContainer.getLifeCycleService()?.addObserver(this)
+        lifecycle.addObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -189,7 +190,7 @@ class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
 
     override fun onStop() {
         mPanelContainer?.release()
-        mContainer.getLifeCycleService()?.addObserver(this)
+        lifecycle.removeObserver(this)
         mPanelTokenMap.values.forEach {
             it.panel.destroy()
         }
@@ -197,9 +198,9 @@ class PanelService : IPanelService, LifecycleObserver, OnTapObserver {
 }
 
 private class PanelRecord(
-    val panel: AbsPanel,
-    val token: PanelToken,
-    val config: PanelConfig
+        val panel: AbsPanel,
+        val token: PanelToken,
+        val config: PanelConfig
 )
 
 class PanelToken(internal val clazz: Class<out AbsPanel>) {

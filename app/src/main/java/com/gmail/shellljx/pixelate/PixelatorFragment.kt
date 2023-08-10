@@ -13,23 +13,27 @@ import androidx.activity.result.contract.ActivityResultContracts
 import androidx.annotation.StringRes
 import androidx.appcompat.app.AlertDialog
 import androidx.fragment.app.Fragment
+import androidx.lifecycle.ViewModelStoreOwner
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.MediasPanel
 import com.gmail.shellljx.pixelate.panel.SaveResultPanel
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.utils.FileUtils.syncImageToGallery
 import com.gmail.shellljx.pixelate.utils.PermissionUtils
+import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
+import com.gmail.shellljx.wrapper.ActivityViewModelStoreProvider
 import com.gmail.shellljx.wrapper.Config
 import com.gmail.shellljx.wrapper.IContainer
-import com.gmail.shellljx.wrapper.service.AbsDelegate
+import com.gmail.shellljx.wrapper.extension.activityViewModels
+import com.gmail.shellljx.wrapper.extension.safeAppCompatActivity
 
-class PixelatorFragment : Fragment(), IImageDelegate {
+class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
     companion object {
         const val OPEN_GALLERY_REQUEST_CODE = 0
-        const val KEY_IMAGE_DELEGATE = "image_delegate"
     }
 
     private lateinit var mContainer: IContainer
+    private val mainViewModel: MainViewModel by activityViewModels()
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
 
@@ -83,12 +87,24 @@ class PixelatorFragment : Fragment(), IImageDelegate {
 
     override fun onViewCreated(view: View, savedInstanceState: Bundle?) {
         super.onViewCreated(view, savedInstanceState)
-        mContainer.getDelegateService()?.putDelegate(KEY_IMAGE_DELEGATE, this)
         mContainer.onViewCreated(view, savedInstanceState)
         mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
         mEffectService = mContainer.getServiceManager().getService(EffectService::class.java)
         mEffectService?.showPanel()
         mCoreService?.setBrushResource(R.mipmap.ic_brush_blur)
+        mainViewModel.openAlbumLiveData.observe(viewLifecycleOwner) {
+            openAlbum()
+        }
+        mainViewModel.saveImageLiveData.observe(viewLifecycleOwner) {
+            saveImage()
+        }
+        mainViewModel.savedImageLiveData.observe(viewLifecycleOwner) {
+            saveSuccess(it)
+        }
+    }
+
+    override fun getActivityViewModelStoreOwner(): ViewModelStoreOwner {
+        return checkNotNull(safeAppCompatActivity(requireContext()))
     }
 
     override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
@@ -139,7 +155,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         mContainer.onDestroy()
     }
 
-    override fun openAlbum() {
+    private fun openAlbum() {
         val permission = if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.TIRAMISU) {
             Manifest.permission.READ_MEDIA_IMAGES
         } else {
@@ -154,7 +170,7 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         }
     }
 
-    override fun saveImage() {
+    private fun saveImage() {
         if (Build.VERSION.SDK_INT <= Build.VERSION_CODES.P) {
             val permission = Manifest.permission.WRITE_EXTERNAL_STORAGE
             if (PermissionUtils.permissionGranted(requireContext(), permission)) {
@@ -183,16 +199,9 @@ class PixelatorFragment : Fragment(), IImageDelegate {
         alertDialog.show()
     }
 
-    override fun saveSuccess(path: String) {
+    private fun saveSuccess(path: String) {
         syncImageToGallery(requireContext(), path)
         mContainer.getPanelService()?.showPanel(SaveResultPanel::class.java, path)
         Toast.makeText(requireContext(), getString(R.string.save_image_success), Toast.LENGTH_SHORT).show()
     }
-}
-
-interface IImageDelegate : AbsDelegate {
-    fun openAlbum()
-
-    fun saveImage()
-    fun saveSuccess(path: String)
 }

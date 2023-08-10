@@ -7,10 +7,12 @@ import android.view.ViewGroup
 import androidx.annotation.Keep
 import androidx.annotation.LayoutRes
 import androidx.lifecycle.*
+import com.gmail.shellljx.wrapper.ActivityViewModelStoreProvider
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.extension.safeAppCompatActivity
 
 @Keep
-abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner, ViewModelStoreOwner {
+abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner, ViewModelStoreOwner, ActivityViewModelStoreProvider {
     private val mLifecycleRegistry by lazy { LifecycleRegistry(this) }
     protected lateinit var mContainer: IContainer
     lateinit var mToken: PanelToken
@@ -91,6 +93,10 @@ abstract class AbsPanel(val context: Context) : IPanel, LifecycleOwner, ViewMode
 
     override fun getViewModelStore(): ViewModelStore {
         return mContainer.getServiceManager().viewModelStore
+    }
+
+    override fun getActivityViewModelStoreOwner(): ViewModelStoreOwner {
+        return checkNotNull(safeAppCompatActivity(context))
     }
 
     open fun onPayloadUpdate(any: Any) {}

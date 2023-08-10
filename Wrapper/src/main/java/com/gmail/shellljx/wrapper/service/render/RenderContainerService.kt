@@ -5,9 +5,10 @@ import android.view.*
 import androidx.annotation.Keep
 import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.*
+import com.gmail.shellljx.wrapper.service.AbsService
+
 @Keep
-class RenderContainerService : IRenderContainerService, LifecycleObserver {
-    private lateinit var mContainer: IContainer
+class RenderContainerService(container: IContainer) : AbsService(container), IRenderContainerService, LifecycleObserver {
     private var mRenderContext: IRenderContext? = null
     private var mRenderContainer: RenderContainer? = null
     private var mVideoRenderLayer: IVideoRenderLayer? = null
@@ -15,7 +16,7 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     private var marginBottom = 0
 
     override fun onStart() {
-        mContainer.getLifeCycleService()?.addObserver(this)
+        lifecycle.addObserver(this)
     }
 
     override fun createView(context: Context): ViewGroup {
@@ -27,7 +28,6 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     }
 
     override fun bindVEContainer(container: IContainer) {
-        mContainer = container
     }
 
     override fun bindRenderContext(renderContext: IRenderContext) {
@@ -48,7 +48,7 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     }
 
     private fun initRenderLayer(): IRenderLayer {
-        val renderLayer = mVideoRenderLayer ?: SurfaceVideoRenderLayer(mContainer.getContext())
+        val renderLayer = mVideoRenderLayer ?: SurfaceVideoRenderLayer(container.getContext())
         if (mVideoRenderLayer == null) {
             mVideoRenderLayer = renderLayer
         }
@@ -71,7 +71,7 @@ class RenderContainerService : IRenderContainerService, LifecycleObserver {
     }
 
     override fun onStop() {
-        mContainer.getLifeCycleService()?.removeObserver(this)
+        lifecycle.removeObserver(this)
     }
 }
 

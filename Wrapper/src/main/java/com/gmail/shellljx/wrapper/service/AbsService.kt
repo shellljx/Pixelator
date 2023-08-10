@@ -1,10 +1,11 @@
 package com.gmail.shellljx.wrapper.service
 
-import android.content.Context
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModelStoreOwner
+import com.gmail.shellljx.wrapper.ActivityViewModelStoreProvider
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.extension.safeAppCompatActivity
 
 /**
  * @Author: shell
@@ -12,18 +13,13 @@ import com.gmail.shellljx.wrapper.IService
  * @Date: 2023/8/7
  * @Description:
  */
-abstract class AbsService : IService, LifecycleOwner, ViewModelStoreOwner {
-    private lateinit var mVEContainer: IContainer
+abstract class AbsService(protected val container: IContainer) : IService, LifecycleOwner, ViewModelStoreOwner, ActivityViewModelStoreProvider {
 
-    override fun bindVEContainer(container: IContainer) {
-        mVEContainer = container
-    }
+    override fun getLifecycle() = container.getServiceManager().lifecycle
 
-    override fun getLifecycle() = mVEContainer.getServiceManager().lifecycle
+    override fun getViewModelStore() = container.getServiceManager().viewModelStore
 
-    override fun getViewModelStore() = mVEContainer.getServiceManager().viewModelStore
-
-    fun getContext(): Context {
-        return mVEContainer.getContext()
+    override fun getActivityViewModelStoreOwner(): ViewModelStoreOwner {
+        return checkNotNull(safeAppCompatActivity(container.getContext()))
     }
 }

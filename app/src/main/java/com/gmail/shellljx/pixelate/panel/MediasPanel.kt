@@ -20,6 +20,9 @@ import com.gmail.shellljx.pixelate.service.PixelatorCoreService
 import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.pixelate.viewmodel.MediaViewModel
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.wrapper.extension.activityViewModels
+import com.gmail.shellljx.wrapper.extension.viewModels
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
 import com.google.android.gms.ads.AdListener

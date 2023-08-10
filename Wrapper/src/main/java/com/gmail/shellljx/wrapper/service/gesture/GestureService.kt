@@ -7,11 +7,11 @@ import android.view.View
 import androidx.annotation.Keep
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.GesturePriorityProcessor.Companion.GESTURE_PRIORITY_NORMAL
 
 @Keep
-class GestureService : IGestureService, GestureContaienr.GestureListener {
-    private lateinit var mContainer: IContainer
+class GestureService(container: IContainer) : AbsService(container), IGestureService, GestureContaienr.GestureListener {
     private var mGestureContaienr: GestureContaienr? = null
     private val mSingleMoveProcessor = GesturePriorityProcessor<OnSingleMoveObserver>()
     private val mTransformProcessor = GesturePriorityProcessor<OnTransformObserver>()
@@ -33,7 +33,6 @@ class GestureService : IGestureService, GestureContaienr.GestureListener {
     }
 
     override fun bindVEContainer(container: IContainer) {
-        mContainer = container
     }
 
     override fun onStop() {

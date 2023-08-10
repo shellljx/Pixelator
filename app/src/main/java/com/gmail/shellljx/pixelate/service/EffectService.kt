@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.Keep
+import androidx.lifecycle.lifecycleScope
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
@@ -13,13 +14,21 @@ import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.EffectType
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnTapObserver
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
+import kotlinx.coroutines.Dispatchers
+import kotlinx.coroutines.launch
+import kotlinx.coroutines.withContext
+import okhttp3.OkHttpClient
+import okhttp3.Request
+import java.io.FileOutputStream
+import java.lang.Exception
+
 @Keep
-class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
-    private lateinit var mContainer: IContainer
+class EffectService(container: IContainer) : AbsService(container), IEffectService, OnTapObserver, OnSingleMoveObserver {
     private val effectList = arrayListOf<EffectItem>()
     private val effectChangedObservers = arrayListOf<EffectChangedObserver>()
     private var mCoreService: IPixelatorCoreService? = null
@@ -32,7 +41,7 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
         override fun view(): View {
             var view = mDrawBoxView
             if (view == null) {
-                view = PaintBoxView(mContainer.getContext())
+                view = PaintBoxView(container.getContext())
                 mDrawBoxView = view
             }
             return view
@@ -44,8 +53,11 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
     }
 
     override fun onStart() {
-        effectList.add(EffectItem(0, EffectType.TypeMosaic, "/sdcard/PixelatorResources/0.jpg", ""))
-        effectList.add(EffectItem(1, EffectType.TypeImage, "/sdcard/PixelatorResources/1.jpg", "/sdcard/PixelatorResources/1.jpg"))
+        lifecycleScope.launch {
+            downloadFile("https://storage.googleapis.com/app_assetss/assets.json", container.getContext().cacheDir.absolutePath + "/cache/assets.json")
+        }
+        effectList.add(EffectItem(0, EffectType.TypeMosaic, "/sdcard/Pictures/Pixelator/IMG_20230809_213805.jpg", ""))
+        effectList.add(EffectItem(1, EffectType.TypeImage, "/sdcard/PixelatorResources/1-fotor-2023080921446.jpg", "/sdcard/PixelatorResources/1.jpg"))
         effectList.add(EffectItem(2, EffectType.TypeImage, "/sdcard/PixelatorResources/2.png", "/sdcard/PixelatorResources/2.png"))
         effectList.add(EffectItem(3, EffectType.TypeImage, "/sdcard/PixelatorResources/3.png", "/sdcard/PixelatorResources/3.png"))
         effectList.add(EffectItem(4, EffectType.TypeImage, "/sdcard/PixelatorResources/4.png", "/sdcard/PixelatorResources/4.png"))
@@ -58,7 +70,8 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
         effectList.add(EffectItem(11, EffectType.TypeImage, "/sdcard/PixelatorResources/11.jpg", "/sdcard/PixelatorResources/11.jpg"))
         effectList.add(EffectItem(12, EffectType.TypeImage, "/sdcard/PixelatorResources/12.png", "/sdcard/PixelatorResources/12.png"))
         effectList.add(EffectItem(12, EffectType.TypeImage, "/sdcard/PixelatorResources/13.png", "/sdcard/PixelatorResources/13.png"))
-        mContainer.getGestureService()?.addTapObserver(this)
+        effectList.add(EffectItem(13, EffectType.TypeImage, "/sdcard/PixelatorResources/20.jpeg", "/sdcard/PixelatorResources/20.jpeg"))
+        container.getGestureService()?.addTapObserver(this)
         mCoreService?.updateViewPort(200.dp())
         mViewPortAnimator.duration = 400
         mViewPortAnimator.addUpdateListener(mAnimatorUpdateListener)
@@ -66,18 +79,17 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
     }
 
     override fun bindVEContainer(container: IContainer) {
-        mContainer = container
-        mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
-        mTransformService = mContainer.getServiceManager().getService(TransformService::class.java)
-        mContainer.getRenderService()?.getRenderHeight()
-        mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mCoreService = container.getServiceManager().getService(PixelatorCoreService::class.java)
+        mTransformService = container.getServiceManager().getService(TransformService::class.java)
+        container.getRenderService()?.getRenderHeight()
+        container.getGestureService()?.addSingleMoveObserver(this)
     }
 
     private val mAnimatorUpdateListener = ValueAnimator.AnimatorUpdateListener {
         val viewport = it.animatedValue as Int
         mCoreService?.updateViewPort(viewport)
         val progress = 1 - (viewport.toFloat() / 200.dp())
-        mContainer.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_TRANSLATE_PROGRESS, progress)
+        container.getControlService()?.sendWidgetMessage(WidgetEvents.MSG_TRANSLATE_PROGRESS, progress)
     }
 
     private val mAnimatorListener = object : AnimatorListenerAdapter() {
@@ -96,10 +108,10 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
         if (mViewPortAnimator.isRunning) return false
         mPanelToken?.let {
             if (it.isAttach == true) {
-                mContainer.getPanelService()?.hidePanel(it)
+                container.getPanelService()?.hidePanel(it)
                 tryUpdateViewPort(false)
             } else {
-                mContainer.getPanelService()?.showPanel(it)
+                container.getPanelService()?.showPanel(it)
                 tryUpdateViewPort(true)
             }
         }
@@ -135,16 +147,46 @@ class EffectService : IEffectService, OnTapObserver, OnSingleMoveObserver {
         }
     }
 
+    private suspend fun downloadFile(url: String, destination: String): String {
+        return withContext(Dispatchers.IO) {
+            try {
+                val client = OkHttpClient()
+                val request = Request.Builder()
+                        .url(url)
+                        .build()
+
+                val response = client.newCall(request).execute()
+                val inputStream = response.body?.byteStream()
+
+                val fileOutputStream = FileOutputStream(destination)
+                val buffer = ByteArray(4096)
+                var bytesRead: Int
+
+                inputStream?.use { input ->
+                    while (input.read(buffer).also { bytesRead = it } != -1) {
+                        fileOutputStream.write(buffer, 0, bytesRead)
+                    }
+                }
+
+                fileOutputStream.close()
+            } catch (e: Exception) {
+                e.printStackTrace()
+            }
+            destination
+        }
+
+    }
+
     override fun showPanel() {
-        mPanelToken = mContainer.getPanelService()?.showPanel(EffectsPanel::class.java)
+        mPanelToken = container.getPanelService()?.showPanel(EffectsPanel::class.java)
     }
 
     override fun addDrawBox() {
-        mContainer.getRenderService()?.addRenderLayer(mDrawBoxLayer)
+        container.getRenderService()?.addRenderLayer(mDrawBoxLayer)
     }
 
     override fun removDrawBox() {
-        mContainer.getRenderService()?.removeRenderLayer(mDrawBoxLayer)
+        container.getRenderService()?.removeRenderLayer(mDrawBoxLayer)
     }
 
     override fun getEffects(): List<EffectItem> {

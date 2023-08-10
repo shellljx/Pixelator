@@ -21,10 +21,6 @@ fun Float.dp(): Int {
     return DensityUtils.dip2px(this)
 }
 
-fun launch(container: IContainer, block: suspend CoroutineScope.() -> Unit) {
-    container.getLifeCycleService()?.launchSafely(block = block)
-}
-
 suspend fun Bitmap.writeToPngFile(targetPath: String, quality: Int): Boolean {
     return withContext(Dispatchers.IO) {
         val targetFile = File(targetPath)
@@ -42,39 +38,3 @@ suspend fun Bitmap.writeToPngFile(targetPath: String, quality: Int): Boolean {
         }
     }
 }
-
-@MainThread
-inline fun <T, reified VM : ViewModel> T.activityViewModels(
-    noinline ownerProducer: () -> ViewModelStoreOwner = { this },
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
-) where T : AbsService = createViewModelLazy(VM::class, { ownerProducer().viewModelStore }, factoryProducer)
-
-@MainThread
-inline fun <reified T, reified VM : ViewModel> T.activityViewModels(
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
-) where T : AbsPanel = createViewModelLazy(VM::class, { (context as ViewModelStoreOwner).viewModelStore }, factoryProducer)
-
-@MainThread
-inline fun <reified T, reified VM : ViewModel> T.activityViewModels(
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
-) where T : AbsService = createViewModelLazy(VM::class, { (getContext() as ViewModelStoreOwner).viewModelStore }, factoryProducer)
-
-@MainThread
-inline fun <T, reified VM : ViewModel> T.viewModels(
-    noinline ownerProducer: () -> ViewModelStoreOwner = { this },
-    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
-) where T : ViewModelStoreOwner, T : LifecycleOwner = createViewModelLazy(VM::class, { ownerProducer().viewModelStore }, factoryProducer)
-
-@MainThread
-fun <VM : ViewModel> createViewModelLazy(
-    viewModelClass: KClass<VM>,
-    owner: ViewModelStoreOwner,
-    factoryProducer: (() -> ViewModelProvider.Factory)? = null
-): Lazy<VM> {
-    val factoryPromise = factoryProducer ?: { getDefaultViewModelProviderFactory(owner) }
-    return ViewModelLazy(viewModelClass, { owner.viewModelStore }, factoryPromise)
-}
-
-@MainThread
-fun getDefaultViewModelProviderFactory(owner: ViewModelStoreOwner): ViewModelProvider.Factory =
-    if (owner is HasDefaultViewModelProviderFactory) owner.defaultViewModelProviderFactory else ViewModelProvider.NewInstanceFactory()

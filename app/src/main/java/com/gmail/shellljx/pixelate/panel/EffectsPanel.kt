@@ -16,19 +16,21 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.*
-import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.service.*
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
 import com.gmail.shellljx.pixelate.view.PickItem
+import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.extension.activityViewModels
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
+
 @Keep
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
     override val tag: String
@@ -42,10 +44,13 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             return config
         }
 
+    private val mainViewModel: MainViewModel by activityViewModels()
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
     private var mMaskService: IMaskLockService? = null
-    @PaintType private var restorePaintType: Int = PaintType.Graffiti
+
+    @PaintType
+    private var restorePaintType: Int = PaintType.Graffiti
     private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
@@ -60,13 +65,13 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val effectItems = arrayListOf<EffectItem>()
     private var mPickPanelToken: PanelToken? = null
     private val mLockItems = arrayListOf(
-        PickItem(-1, context.getString(R.string.lock_portrait)),
-        PickItem(-1, context.getString(R.string.lock_background)),
-        PickItem(-1, context.getString(R.string.lock_off))
+            PickItem(-1, context.getString(R.string.lock_portrait)),
+            PickItem(-1, context.getString(R.string.lock_background)),
+            PickItem(-1, context.getString(R.string.lock_off))
     )
     private val mPaintItems = arrayListOf(
-        PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
-        PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect))
+            PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
+            PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -89,7 +94,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
         val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
-            ?: 0f
+                ?: 0f
         mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addTapObserver(this)
         mContainer.getGestureService()?.addSingleMoveObserver(this)
@@ -153,7 +158,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             mCoreService?.redo()
         }
         mAlbumView?.setOnClickListener {
-            mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)?.openAlbum()
+            mainViewModel.openAlbumLiveData.postValue(0)
         }
     }
 

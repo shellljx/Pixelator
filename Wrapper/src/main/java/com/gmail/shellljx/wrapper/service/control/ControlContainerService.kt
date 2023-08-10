@@ -7,26 +7,25 @@ import androidx.lifecycle.LifecycleObserver
 import androidx.lifecycle.OnLifecycleEvent
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.widget.IWidget
 
 @Keep
-class ControlContainerService : IControlContainerService, LifecycleObserver {
-    private lateinit var mContainer: IContainer
+class ControlContainerService(container: IContainer) : AbsService(container), IControlContainerService, LifecycleObserver {
     private var mControlContainer: ControlContainer? = null
     private var mWidgetMessageMap = hashMapOf<String, ArrayList<IWidget>>()
     private var isActive = false
     override fun onStart() {
-        mContainer.getLifeCycleService()?.addObserver(this)
+        lifecycle.addObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
-        mContainer = container
     }
 
     override fun createView(context: Context): IControlContainer {
         val controlContainer = ControlContainer(context)
         mControlContainer = controlContainer
-        controlContainer.bindVEContainer(mContainer)
+        controlContainer.bindVEContainer(container)
         return controlContainer
     }
 
@@ -79,7 +78,7 @@ class ControlContainerService : IControlContainerService, LifecycleObserver {
 
     override fun onStop() {
         mWidgetMessageMap.clear()
-        mContainer.getLifeCycleService()?.removeObserver(this)
+        lifecycle.removeObserver(this)
     }
 }
 

@@ -9,13 +9,13 @@ import androidx.core.graphics.toRect
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
 import com.gmail.shellljx.pixelate.BasicAuthInterceptor
-import com.gmail.shellljx.pixelate.extension.launch
 import com.gmail.shellljx.pixelate.extension.writeToPngFile
 import com.gmail.shellljx.pixelate.panel.ProgressPanel
 import com.gmail.shellljx.pixelate.utils.BitmapUtils
 import com.gmail.shellljx.pixelate.view.MaskRenderView
 import com.gmail.shellljx.pixelator.MaskMode
 import com.gmail.shellljx.wrapper.*
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
@@ -39,7 +39,7 @@ import java.util.concurrent.TimeUnit
  * @Description:
  */
 @Keep
-class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, OnContentBoundsObserver, OnTapObserver {
+class MaskLockService(container: IContainer) : AbsService(container), IMaskLockService, LifecycleObserver, OnImageObserver, OnContentBoundsObserver, OnTapObserver {
     companion object {
         private const val PATH_SMALL_SRC = "/assets/small/"
         private const val PATH_REMOVED_BG = "/assets/removed/"
@@ -49,20 +49,21 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, On
     private var mCoreService: IPixelatorCoreService? = null
     private var mMaskRenderView: MaskRenderView? = null
     private var mProgressToken: PanelToken? = null
+
     @MaskMode
     private var mMaskMode = MaskMode.NONE
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
-            .addInterceptor(BasicAuthInterceptor())
-            .callTimeout(30, TimeUnit.SECONDS)
-            .connectTimeout(30, TimeUnit.SECONDS)
-            .readTimeout(30, TimeUnit.SECONDS)
-            .writeTimeout(30, TimeUnit.SECONDS)
-            .build()
+                .addInterceptor(BasicAuthInterceptor())
+                .callTimeout(30, TimeUnit.SECONDS)
+                .connectTimeout(30, TimeUnit.SECONDS)
+                .readTimeout(30, TimeUnit.SECONDS)
+                .writeTimeout(30, TimeUnit.SECONDS)
+                .build()
     }
 
     override fun onStart() {
-        mContainer.getLifeCycleService()?.addObserver(this)
+        lifecycle.addObserver(this)
         mCoreService?.addContentBoundsObserver(this)
         mContainer.getGestureService()?.addTapObserver(this)
         mCoreService?.addImageObserver(this)
@@ -74,7 +75,7 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, On
     }
 
     override fun onStop() {
-        mContainer.getLifeCycleService()?.removeObserver(this)
+        lifecycle.removeObserver(this)
     }
 
     @OnLifecycleEvent(Lifecycle.Event.ON_RESUME)
@@ -110,7 +111,7 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, On
 
     private fun makeRemoveBackgroundMask() {
         val path = mCoreService?.getImagePath() ?: return
-        launch(mContainer) {
+        lifecycleScope.launch {
             mProgressToken = mContainer.getPanelService()?.showPanel(ProgressPanel::class.java)
             val fileName = getFileName(path)
             val removedBgPath = mContainer.getContext().cacheDir.absolutePath + PATH_REMOVED_BG + fileName + ".png"
@@ -132,12 +133,12 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, On
     private suspend fun requestRemoveBackground(srcPath: String, dstPath: String): Boolean {
         return withContext(Dispatchers.IO) {
             val requestBody = MultipartBody.Builder().setType(MultipartBody.FORM)
-                .addFormDataPart("image", "origin_image.png", RequestBody.create("image/png".toMediaTypeOrNull(), File(srcPath)))
-                .build()
+                    .addFormDataPart("image", "origin_image.png", RequestBody.create("image/png".toMediaTypeOrNull(), File(srcPath)))
+                    .build()
             val request: Request = Request.Builder()
-                .url("https://api.pixian.ai/api/v2/remove-background")
-                .post(requestBody)
-                .build()
+                    .url("https://api.pixian.ai/api/v2/remove-background")
+                    .post(requestBody)
+                    .build()
             val targetFile = File(dstPath)
             if (targetFile.parentFile?.exists() != true) {
                 targetFile.parentFile?.mkdirs()
@@ -209,6 +210,7 @@ class MaskLockService : IMaskLockService, LifecycleObserver, OnImageObserver, On
 
 interface IMaskLockService : IService {
     fun setMaskMode(@MaskMode mode: Int)
+
     @MaskMode
     fun getMaskMode(): Int
 }

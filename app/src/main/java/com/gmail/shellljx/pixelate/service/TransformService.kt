@@ -9,43 +9,42 @@ import com.gmail.shellljx.pixelate.RectfEvaluator
 import com.gmail.shellljx.pixelate.panel.MiniScreenPanel
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.IService
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import kotlin.math.sqrt
 
 @Keep
-class TransformService : ITransformService, OnTapObserver, OnTransformObserver, OnSingleMoveObserver {
-    private lateinit var mContainer: IContainer
+class TransformService(container: IContainer) : AbsService(container), ITransformService, OnTapObserver, OnTransformObserver, OnSingleMoveObserver {
     private var mCoreService: IPixelatorCoreService? = null
     private var mMiniToken: PanelToken? = null
     private val innerBounds = RectF()
     private var scaleAndTranslate = true
 
     override fun onStart() {
-        mContainer.getGestureService()?.addTapObserver(this)
-        mContainer.getGestureService()?.addTransformObserver(this)
-        mContainer.getGestureService()?.addSingleMoveObserver(this)
+        container.getGestureService()?.addTapObserver(this)
+        container.getGestureService()?.addTransformObserver(this)
+        container.getGestureService()?.addSingleMoveObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
-        mContainer = container
-        mCoreService = mContainer.getServiceManager().getService(PixelatorCoreService::class.java)
+        mCoreService = container.getServiceManager().getService(PixelatorCoreService::class.java)
     }
 
     override fun onStop() {
     }
 
     override fun onStartSingleMove(): Boolean {
-        mContainer.getControlService()?.hide()
-        mMiniToken?.let { mContainer.getPanelService()?.showPanel(it) } ?: run {
-            mMiniToken = mContainer.getPanelService()?.showPanel(MiniScreenPanel::class.java)
+        container.getControlService()?.hide()
+        mMiniToken?.let { container.getPanelService()?.showPanel(it) } ?: run {
+            mMiniToken = container.getPanelService()?.showPanel(MiniScreenPanel::class.java)
         }
         return false
     }
 
     override fun onSingleUp(event: MotionEvent): Boolean {
-        mContainer.getControlService()?.show()
-        mMiniToken?.let { mContainer.getPanelService()?.hidePanel(it) }
+        container.getControlService()?.show()
+        mMiniToken?.let { container.getPanelService()?.hidePanel(it) }
         return false
     }
 
@@ -68,17 +67,17 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver, 
         animator.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationStart(animation: Animator) {
                 super.onAnimationStart(animation)
-                mContainer.getGestureService()?.gestureEnable(false)
+                container.getGestureService()?.gestureEnable(false)
             }
 
             override fun onAnimationCancel(animation: Animator) {
                 super.onAnimationCancel(animation)
-                mContainer.getGestureService()?.gestureEnable(true)
+                container.getGestureService()?.gestureEnable(true)
             }
 
             override fun onAnimationEnd(animation: Animator) {
                 super.onAnimationEnd(animation)
-                mContainer.getGestureService()?.gestureEnable(true)
+                container.getGestureService()?.gestureEnable(true)
             }
         })
         animator.start()
@@ -147,7 +146,7 @@ class TransformService : ITransformService, OnTapObserver, OnTransformObserver, 
         val y2 = point2.y
 
         val scale = sqrt(((x2 - x1) * (x2 - x1) + (y2 - y1) * (y2 - y1)).toDouble()).toFloat() / sqrt(
-            ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
+                ((lastPoint2.x - lastPoint.x) * (lastPoint2.x - lastPoint.x) + (lastPoint2.y - lastPoint.y) * (lastPoint2.y - lastPoint.y)).toDouble()
         ).toFloat()
 
         val transformMatrix = mCoreService?.getTransformMatrix() ?: return false

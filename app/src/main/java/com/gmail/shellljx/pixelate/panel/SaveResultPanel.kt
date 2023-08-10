@@ -8,10 +8,10 @@ import com.facebook.drawee.view.SimpleDraweeView
 import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.R
-import com.gmail.shellljx.pixelate.extension.activityViewModels
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.wrapper.IContainer
+import com.gmail.shellljx.wrapper.extension.activityViewModels
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
 import com.google.android.gms.ads.*

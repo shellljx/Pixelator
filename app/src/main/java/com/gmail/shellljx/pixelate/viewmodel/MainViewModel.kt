@@ -10,4 +10,7 @@ import androidx.lifecycle.MutableLiveData
  */
 class MainViewModel : BaseViewModel() {
     val adStateLiveData = MutableLiveData<Boolean>()
+    val saveImageLiveData = MutableLiveData<Int>()
+    val savedImageLiveData = MutableLiveData<String>()
+    val openAlbumLiveData = MutableLiveData<Int>()
 }

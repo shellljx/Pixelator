@@ -6,11 +6,12 @@ import android.view.MotionEvent
 import android.view.Surface
 import androidx.annotation.Keep
 import androidx.core.graphics.toRect
-import com.gmail.shellljx.pixelate.IImageDelegate
-import com.gmail.shellljx.pixelate.PixelatorFragment.Companion.KEY_IMAGE_DELEGATE
+import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.pixelator.PaintType.Companion.Graffiti
 import com.gmail.shellljx.wrapper.*
+import com.gmail.shellljx.wrapper.extension.activityViewModels
+import com.gmail.shellljx.wrapper.service.AbsService
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.render.IRenderContainerService
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
@@ -19,10 +20,10 @@ import java.io.File
 import java.util.LinkedList
 
 @Keep
-class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTapObserver {
+class PixelatorCoreService(container: IContainer) : AbsService(container), IPixelatorCoreService, IRenderContext, OnSingleMoveObserver, OnTapObserver {
     private lateinit var mContainer: IContainer
     private var mRenderService: IRenderContainerService? = null
-
+    private val mainViewModel: MainViewModel by activityViewModels()
     private lateinit var mImageSdk: IPixelator
     private val mPenddingTasks = LinkedList<Runnable>()
     private val mInitBounds = RectF() //图片插入成功初始 bounds
@@ -33,6 +34,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
 
     @PaintMode
     private var mPaintMode = PAINT
+
     @PaintType
     private var mPaintType = Graffiti
     private var mEglWindowCreated = false
@@ -71,8 +73,7 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         }
 
         override fun onSaveSuccess(path: String) {
-            val delegate = mContainer.getDelegateService()?.getDelegate<IImageDelegate>(KEY_IMAGE_DELEGATE)
-            delegate?.saveSuccess(path)
+            mainViewModel.savedImageLiveData.postValue(path)
             mImageObservers.forEach {
                 it.onImageSaved(path)
             }
@@ -194,10 +195,10 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-            v[0], v[3], 0f, 0f,
-            v[1], v[4], 0f, 0f,
-            0f, 0f, 1f, 0f,
-            v[2], v[5], 0f, 1f
+                v[0], v[3], 0f, 0f,
+                v[1], v[4], 0f, 0f,
+                0f, 0f, 1f, 0f,
+                v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -270,8 +271,8 @@ class PixelatorCoreService : IPixelatorCoreService, IRenderContext, OnSingleMove
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                ExifInterface.TAG_ORIENTATION,
-                ExifInterface.ORIENTATION_NORMAL
+                    ExifInterface.TAG_ORIENTATION,
+                    ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -334,8 +335,10 @@ interface IPixelatorCoreService : IService {
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
+
     @PaintType
     fun getPaintType(): Int
+
     @PaintMode
     fun getPaintMode(): Int
     fun getImagePath(): String?

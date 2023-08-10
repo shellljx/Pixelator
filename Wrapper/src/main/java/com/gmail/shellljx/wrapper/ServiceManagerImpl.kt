@@ -4,13 +4,11 @@ import androidx.lifecycle.*
 import com.gmail.shellljx.wrapper.service.render.RenderContainerService
 import com.gmail.shellljx.wrapper.service.control.ControlContainerService
 import com.gmail.shellljx.wrapper.service.gesture.GestureService
-import com.gmail.shellljx.wrapper.service.LifecycleService
 import com.gmail.shellljx.wrapper.service.panel.PanelService
-import com.gmail.shellljx.wrapper.service.DelegateService
 import java.lang.Exception
 import java.util.logging.Logger
 
-class ServiceManagerImpl(private val veContainer: IContainer) : IServiceManager {
+class ServiceManagerImpl(private val container: IContainer) : IServiceManager {
     companion object {
         private const val TAG = "ServiceManagerImpl"
     }
@@ -50,18 +48,18 @@ class ServiceManagerImpl(private val veContainer: IContainer) : IServiceManager 
         if (!CoreServicesConfig.CoreServices.contains(clazz) && !mBusinessServices.contains(clazz)) {
             return
         }
-        val service = createService(clazz)
+        val service = createService(clazz, container)
         record = VEServiceRecord(clazz)
         record.instance = service
         mServiceRecords[descriptor] = record
         record.instance?.onStart()
     }
 
-    private fun <T : IService> createService(clazz: Class<T>): T? {
+    private fun <T : IService> createService(clazz: Class<T>, container: IContainer): T? {
         return try {
-            val constructor = clazz.getConstructor()
-            val instance = constructor.newInstance()
-            instance.bindVEContainer(veContainer)
+            val constructor = clazz.getConstructor(IContainer::class.java)
+            val instance = constructor.newInstance(container)
+            instance.bindVEContainer(this.container)
             instance
         } catch (e: Exception) {
             null
@@ -120,18 +118,14 @@ class ServiceManagerImpl(private val veContainer: IContainer) : IServiceManager 
 }
 
 internal object CoreServicesConfig {
-    internal val LifeCycleService = LifecycleService::class.java
     internal val RenderContainerService = RenderContainerService::class.java
     internal val ControlContainerService = ControlContainerService::class.java
     internal val PanelService = PanelService::class.java
     internal val GestureService = GestureService::class.java
-    internal val DelegateService = DelegateService::class.java
-    internal val CoreServices = mutableListOf(
-        LifeCycleService,
-        GestureService,
-        RenderContainerService,
-        ControlContainerService,
-        PanelService,
-        DelegateService
+    internal val CoreServices = arrayListOf<Class<out IService>>(
+            GestureService,
+            RenderContainerService,
+            ControlContainerService,
+            PanelService
     )
 }

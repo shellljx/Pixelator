@@ -5,10 +5,6 @@ import android.graphics.Rect
 import android.os.Bundle
 import android.view.View
 import android.view.ViewGroup
-import com.gmail.shellljx.wrapper.layer.BuildInLayer
-import com.gmail.shellljx.wrapper.layer.ILayer
-import com.gmail.shellljx.wrapper.service.IDelegateService
-import com.gmail.shellljx.wrapper.service.ILifecycleService
 import com.gmail.shellljx.wrapper.service.control.IControlContainerService
 import com.gmail.shellljx.wrapper.service.gesture.IGestureService
 import com.gmail.shellljx.wrapper.service.panel.IPanelService
@@ -29,12 +25,10 @@ interface IContainer {
     fun dispatchWindowInsets(insets: Rect)
     fun updateViewPort(offset: Int)
     fun getServiceManager(): IServiceManager
-    fun getLifeCycleService(): ILifecycleService?
     fun getRenderService(): IRenderContainerService?
     fun getControlService(): IControlContainerService?
     fun getPanelService(): IPanelService?
     fun getGestureService(): IGestureService?
-    fun getDelegateService(): IDelegateService?
     fun getConfig(): Config
     fun getContext(): Context
     class Builder {

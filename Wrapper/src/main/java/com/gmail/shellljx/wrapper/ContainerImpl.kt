@@ -7,8 +7,6 @@ import android.view.View
 import android.view.ViewGroup
 import androidx.lifecycle.Lifecycle
 import com.gmail.shellljx.wrapper.layer.*
-import com.gmail.shellljx.wrapper.service.IDelegateService
-import com.gmail.shellljx.wrapper.service.ILifecycleService
 import com.gmail.shellljx.wrapper.service.control.IControlContainerService
 import com.gmail.shellljx.wrapper.service.gesture.IGestureService
 import com.gmail.shellljx.wrapper.service.panel.IPanelService
@@ -19,17 +17,14 @@ class ContainerImpl internal constructor(
     private val config: Config
 ) : IContainer {
     private lateinit var mVEServiceManager: ServiceManagerImpl
-    private var mLifecycleService: ILifecycleService? = null
     private var mRenderContainerService: IRenderContainerService? = null
     private var mControlContainerService: IControlContainerService? = null
     private var mPanelService: IPanelService? = null
     private var mGestureService: IGestureService? = null
-    private var mDelegateService: IDelegateService? = null
     private var mLayerContainer: ILayerContainer? = null
     override fun onCreate() {
         //加载必需的核心service
         initCoreServices()
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_CREATE)
     }
 
@@ -45,22 +40,18 @@ class ContainerImpl internal constructor(
     }
 
     override fun onStart() {
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_START)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_START)
     }
 
     override fun onResume() {
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_RESUME)
     }
 
     override fun onPause() {
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_PAUSE)
     }
 
     override fun onStop() {
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_STOP)
     }
 
@@ -69,23 +60,14 @@ class ContainerImpl internal constructor(
         CoreServicesConfig.CoreServices.forEach {
             mVEServiceManager.startService(it)
         }
-        getLifeCycleService()
         getRenderService()
         getControlService()
         getPanelService()
         getGestureService()
-        getDelegateService()
     }
 
     override fun getServiceManager(): IServiceManager {
         return mVEServiceManager
-    }
-
-    override fun getLifeCycleService(): ILifecycleService? {
-        if (mLifecycleService == null) {
-            mLifecycleService = mVEServiceManager.getService(CoreServicesConfig.LifeCycleService)
-        }
-        return mLifecycleService
     }
 
     override fun getRenderService(): IRenderContainerService? {
@@ -116,13 +98,6 @@ class ContainerImpl internal constructor(
         return mGestureService
     }
 
-    override fun getDelegateService(): IDelegateService? {
-        if (mDelegateService == null) {
-            mDelegateService = mVEServiceManager.getService(CoreServicesConfig.DelegateService)
-        }
-        return mDelegateService
-    }
-
     override fun getConfig(): Config {
         return config
     }
@@ -139,7 +114,6 @@ class ContainerImpl internal constructor(
     }
 
     override fun onDestroy() {
-        mLifecycleService?.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         mVEServiceManager.handleLifecycleEvent(Lifecycle.Event.ON_DESTROY)
         mVEServiceManager.destroy()
     }
