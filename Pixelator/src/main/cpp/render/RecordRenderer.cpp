@@ -41,7 +41,9 @@ void RecordRenderer::push(std::shared_ptr<DrawRecord> record) {
   notifyUndoRedoState();
 }
 
-bool RecordRenderer::persistentRecord(UndoRedoContext *context, DrawRecord *record, FrameBuffer *targetFb) {
+bool RecordRenderer::persistentRecord(UndoRedoContext *context,
+                                      DrawRecord *record,
+                                      FrameBuffer *targetFb) {
   //首次绘制要把原图绘制上
   int width = sourceFrameBuffer->getTextureWidth();
   int height = sourceFrameBuffer->getTextureHeight();
@@ -54,6 +56,7 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context, DrawRecord *reco
     //用已经绘制的内容和原图合并成新的特效原素材生成马赛克特效
     makeNewScene(targetFb);
     mosaicFilter->initialize();
+    mosaicFilter->setMosaicSize(record->mosaicSize);
     //要用最新的纹理来生成马赛克
     FilterSource source = {blendFrameBuffer->getTexture(), nullptr};
     FilterTarget target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, width, height};
@@ -69,7 +72,8 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context, DrawRecord *reco
     textureCenterCrop(image->getWidth(), image->getHeight(), width, height, textureCoordinate);
     defaultFilter->initialize();
     FilterSource source = {image->getTexture(), textureCoordinate};
-    FilterTarget target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, width, height};
+    FilterTarget
+        target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, width, height};
     defaultFilter->draw(&source, &target);
   }
   if (record->paintType == Graffiti) {
@@ -94,7 +98,8 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context, DrawRecord *reco
     rectFilter->updateMaskMode(record->maskMode);
     rectFilter->updatePoint(data[0], data[1], data[2], data[3]);
     FilterSource source = {effectFrameBuffer->getTexture()};
-    FilterTarget target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, false};
+    FilterTarget
+        target = {targetFb, record->matrix, DEFAULT_VERTEX_COORDINATE, width, height, false};
     rectFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     rectFilter->draw(&source, &target);
     rectFilter->disableBlend();
@@ -166,7 +171,8 @@ void RecordRenderer::blendTexture(GLuint texture, bool revert) {
   defaultFilter->initialize();
   defaultFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   FilterSource source = {texture, textureCoordinate};
-  FilterTarget target = {blendFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, false};
+  FilterTarget
+      target = {blendFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, false};
   defaultFilter->draw(&source, &target);
   defaultFilter->disableBlend();
 }

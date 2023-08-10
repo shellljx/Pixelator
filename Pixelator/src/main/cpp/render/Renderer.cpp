@@ -25,7 +25,9 @@ Renderer::Renderer(RenderCallback *callback) : renderCallback(callback) {
   viewMatrix = glm::lookAt(position, direction, up);
   renderContext = std::shared_ptr<RenderContext>(new RenderContext);
   imageCache = std::shared_ptr<ImageCache>(new ImageCache);
-  recordRender = std::shared_ptr<RecordRenderer>(new RecordRenderer(renderContext, imageCache, renderCallback));
+  recordRender = std::shared_ptr<RecordRenderer>(new RecordRenderer(renderContext,
+                                                                    imageCache,
+                                                                    renderCallback));
   recordRender->setSourceFrameBuffer(sourceFrameBuffer);
 }
 
@@ -60,7 +62,8 @@ void Renderer::setMiniSurfaceChanged(int width, int height) {
 void Renderer::setBottomOffset(int offset) {
   LOGI("enter func %s", __func__);
   bottomOffset = offset;
-  modelMatrix = getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
+  modelMatrix =
+      getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
   notifyInitBoundChanged();
   notifyTransformChanged();
   drawScreen();
@@ -73,7 +76,8 @@ void Renderer::setInputImage(GLuint texture, int width, int height) {
   sourceWidth = sourceFrameBuffer->getTextureWidth();
   sourceHeight = sourceFrameBuffer->getTextureHeight();
   paintProjection = glm::ortho(0.f, width * 1.f, height * 1.f, 0.f, 1.f, 100.f);
-  modelMatrix = getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
+  modelMatrix =
+      getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
   clearPaintCache();
   notifyTransformChanged(true);
   drawBlend();
@@ -233,6 +237,7 @@ void Renderer::stopTouch() {
   record.get()->effectType = renderContext->effectType;
   record.get()->paintType = renderContext->paintType;
   record.get()->paintSize = renderContext->paintSize * 1.7f / model[0][0];
+  record.get()->mosaicSize = renderContext->mosaicSize / model[0][0];
   record.get()->paintMode = renderContext->paintMode;
   record.get()->maskMode = renderContext->maskMode;
   record.get()->srcPath = srcPath;
@@ -318,7 +323,8 @@ void Renderer::drawRectPaint() {
   rectFilter->updateMaskTexture(renderContext->maskTexture);
   rectFilter->updateMaskMode(renderContext->maskMode);
   FilterSource source = {effectFrameBuffer->getTexture()};
-  FilterTarget target = {tempPaintFrameBuffer, matrix, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, true};
+  FilterTarget target =
+      {tempPaintFrameBuffer, matrix, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, true};
   rectFilter->draw(&source, &target);
 }
 
@@ -328,11 +334,14 @@ void Renderer::drawMosaicEffect() {
     LOGE("%s source width or height is 0", __func__);
     return;
   }
+  auto model = transformMatrix * modelMatrix;
   effectFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   mosaicFilter->initialize();
+  mosaicFilter->setMosaicSize(renderContext->mosaicSize / model[0][0]);
   //要用最新的纹理来生成马赛克
   FilterSource source = {blendFrameBuffer->getTexture(), nullptr};
-  FilterTarget target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight};
+  FilterTarget
+      target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight};
   mosaicFilter->draw(&source, &target);
 }
 
@@ -347,7 +356,8 @@ void Renderer::drawImageEffect(GLuint texture, int width, int height) {
   effectFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   defaultFilter->initialize();
   FilterSource source = {texture, textureCoordinate};
-  FilterTarget target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, sourceWidth, sourceHeight};
+  FilterTarget target =
+      {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, sourceWidth, sourceHeight};
   defaultFilter->draw(&source, &target);
 }
 
@@ -374,7 +384,8 @@ void Renderer::blendTexture(GLuint texture, bool revert) {
   defaultFilter->initialize();
   defaultFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
   FilterSource source = {texture, textureCoordinate, sourceWidth, sourceHeight};
-  FilterTarget target = {blendFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, false};
+  FilterTarget
+      target = {blendFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE, sourceWidth, sourceHeight, false};
   defaultFilter->draw(&source, &target);
   defaultFilter->disableBlend();
 }
@@ -414,7 +425,9 @@ void Renderer::drawScreen() {
     getVertexCoordinate(sourceWidth, sourceHeight, vertexCoordinate);
     auto matrix = screenProjection * viewMatrix * transformMatrix * modelMatrix;
     matrixFilter->initialize();
-    FilterSource source = {blendFrameBuffer->getTexture(), DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP, sourceWidth, sourceHeight};
+    FilterSource source =
+        {blendFrameBuffer->getTexture(), DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP, sourceWidth,
+         sourceHeight};
     FilterTarget target = {nullptr, matrix, vertexCoordinate, screenWidth, screenHeight};
     matrixFilter->draw(&source, &target);
     renderCallback->flushScreen();

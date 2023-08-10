@@ -38,6 +38,10 @@ std::string MosaicFilter::onBuildFragmentShader() {
   return FRAGMENT_SHADER;
 }
 
+void MosaicFilter::setMosaicSize(float size) {
+  mosaicSize = size;
+}
+
 void MosaicFilter::onPrepareProgram(GLuint program) {
   textureSizeHandler = glGetUniformLocation(program, "textureSize");
   rectSizeHandler = glGetUniformLocation(program, "rectSize");
@@ -46,6 +50,6 @@ void MosaicFilter::onPrepareProgram(GLuint program) {
 void MosaicFilter::onUpdateParams(const FilterSource *source, const FilterTarget *target) {
   float textureSize[] = {(float) target->width, (float) target->height};
   glUniform2fv(textureSizeHandler, 1, textureSize);
-  float rectSize[] = {50.f, 50.f};
+  float rectSize[] = {mosaicSize, mosaicSize};
   glUniform2fv(rectSizeHandler, 1, rectSize);
 }

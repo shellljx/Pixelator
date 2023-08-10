@@ -34,6 +34,7 @@ struct RenderContext {
   int effectType = 0;
   int maskMode = 0;
   int paintSize = 0;
+  int mosaicSize = 120;
   int paintMode = Paint;
   int paintType = Graffiti;
   ~RenderContext() {
@@ -95,6 +96,7 @@ struct DrawRecord {
   int effectType = 0;
   int paintType = 0;
   int paintSize = 0;
+  float mosaicSize = 0.f;
   int paintMode = 1;
   int maskMode = 0;
   std::string srcPath;

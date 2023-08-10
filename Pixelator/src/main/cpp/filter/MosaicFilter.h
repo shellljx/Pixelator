@@ -9,6 +9,9 @@
 
 class MosaicFilter : public BaseFilter {
 
+ public:
+  void setMosaicSize(float size);
+
  private:
   std::string onBuildVertexShader() override;
   std::string onBuildFragmentShader() override;
@@ -16,6 +19,7 @@ class MosaicFilter : public BaseFilter {
   void onUpdateParams(const FilterSource *source, const FilterTarget *target) override;
 
  private:
+  float mosaicSize = 0.f;
   GLint textureSizeHandler = -1;
   GLint rectSizeHandler = -1;
 };
