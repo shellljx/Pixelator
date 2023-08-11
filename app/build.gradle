@@ -47,6 +47,7 @@ android {
 
 dependencies {
 
+    implementation 'com.liulishuo.okdownload:okdownload:1.0.7'
     implementation 'com.google.android.gms:play-services-ads:22.2.0'
     implementation platform('com.google.firebase:firebase-bom:32.2.0')
     implementation 'com.google.firebase:firebase-crashlytics-ndk'

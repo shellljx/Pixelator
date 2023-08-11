@@ -1,14 +1,37 @@
 <?xml version="1.0" encoding="utf-8"?>
 <androidx.constraintlayout.widget.ConstraintLayout xmlns:android="http://schemas.android.com/apk/res/android"
     xmlns:fresco="http://schemas.android.com/apk/res-auto"
+    xmlns:tools="http://schemas.android.com/tools"
+    android:id="@+id/effect_root"
     android:layout_width="match_parent"
-    android:layout_height="60dp">
+    android:layout_height="60dp"
+    android:background="@drawable/bg_effect_border_selector"
+    android:padding="2dp">
 
     <com.facebook.drawee.view.SimpleDraweeView
         android:id="@+id/iv_cover"
         android:layout_width="match_parent"
-        fresco:roundedCornerRadius="4dp"
         android:layout_height="match_parent"
         fresco:failureImageScaleType="centerCrop"
-        fresco:placeholderImage="@drawable/ic_lock" />
+        fresco:roundedCornerRadius="2dp" />
+
+    <ImageView
+        android:id="@+id/iv_download"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_margin="4dp"
+        android:background="@color/black_20"
+        android:src="@drawable/ic_download"
+        fresco:layout_constraintBottom_toBottomOf="@id/iv_cover"
+        fresco:layout_constraintRight_toRightOf="@id/iv_cover" />
+
+    <ProgressBar
+        android:id="@+id/progress"
+        android:layout_width="12dp"
+        android:layout_height="12dp"
+        android:layout_margin="4dp"
+        android:visibility="gone"
+        fresco:layout_constraintBottom_toBottomOf="@id/iv_cover"
+        fresco:layout_constraintRight_toRightOf="@id/iv_cover"
+        tools:visibility="visible" />
 </androidx.constraintlayout.widget.ConstraintLayout>

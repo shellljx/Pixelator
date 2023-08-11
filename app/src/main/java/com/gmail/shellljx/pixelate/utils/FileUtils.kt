@@ -3,7 +3,9 @@ package com.gmail.shellljx.pixelate.utils
 import android.content.ContentValues
 import android.content.Context
 import android.provider.MediaStore
+import com.gmail.shellljx.pixelate.MyApplication
 import java.io.*
+import java.security.MessageDigest
 
 /**
  * @Author: shell
@@ -40,5 +42,17 @@ object FileUtils {
             }
         } catch (e: IOException) {
         }
+    }
+
+    fun getEffectDir(): String {
+        return "${MyApplication.instance.cacheDir.absolutePath}/assets/effects"
+    }
+
+    fun getEffectName(url: String): String {
+        return "${HashUtil.generateUniqueId(url)}.${File(url).extension}"
+    }
+
+    fun getEffectPath(url: String): String {
+        return "${getEffectDir()}/${getEffectName(url)}"
     }
 }

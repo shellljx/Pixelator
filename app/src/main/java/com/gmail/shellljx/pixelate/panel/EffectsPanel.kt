@@ -1,5 +1,6 @@
 package com.gmail.shellljx.pixelate.panel
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.graphics.Rect
 import android.net.Uri
@@ -7,32 +8,37 @@ import android.view.*
 import android.widget.ImageView
 import android.widget.Toast
 import androidx.annotation.Keep
+import androidx.core.view.isVisible
 import androidx.recyclerview.widget.GridLayoutManager
 import androidx.recyclerview.widget.RecyclerView
 import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.view.SimpleDraweeView
-import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.*
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
+import com.gmail.shellljx.pixelate.extension.fill
 import com.gmail.shellljx.pixelate.service.*
+import com.gmail.shellljx.pixelate.utils.FileUtils
 import com.gmail.shellljx.pixelate.view.CircleSeekbarView
 import com.gmail.shellljx.pixelate.view.PickItem
+import com.gmail.shellljx.pixelate.viewmodel.EffectViewModel
 import com.gmail.shellljx.pixelate.viewmodel.MainViewModel
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
 import com.gmail.shellljx.pixelator.*
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.extension.activityViewModels
+import com.gmail.shellljx.wrapper.extension.viewModels
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 import org.json.JSONObject
 
 @Keep
-class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener, OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
+class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
+    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
@@ -45,13 +51,14 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
 
     private val mainViewModel: MainViewModel by activityViewModels()
+    private val effectViewModel: EffectViewModel by viewModels()
     private var mCoreService: IPixelatorCoreService? = null
     private var mEffectService: IEffectService? = null
     private var mMaskService: IMaskLockService? = null
 
     @PaintType
     private var restorePaintType: Int = PaintType.Graffiti
-    private val mEffectsRecyclerView by lazy { getView()?.findViewById<RecyclerView>(R.id.rv_effects) }
+    private lateinit var mEffectsRecyclerView: RecyclerView
     private val mOperationArea by lazy { getView()?.findViewById<ViewGroup>(R.id.operation_area) }
     private val mPointSeekbar by lazy { getView()?.findViewById<CircleSeekbarView>(R.id.point_seekbar) }
     private val mPaintView by lazy { getView()?.findViewById<ImageView>(R.id.iv_paint) }
@@ -63,15 +70,16 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     private val mBottomSheetView by lazy { getView()?.findViewById<View>(R.id.container) }
     private val mEffectsAdapter by lazy { EffectAdapter() }
     private val effectItems = arrayListOf<EffectItem>()
+    private var selectedPosition: Int? = null
     private var mPickPanelToken: PanelToken? = null
     private val mLockItems = arrayListOf(
-            PickItem(-1, context.getString(R.string.lock_portrait)),
-            PickItem(-1, context.getString(R.string.lock_background)),
-            PickItem(-1, context.getString(R.string.lock_off))
+        PickItem(-1, context.getString(R.string.lock_portrait)),
+        PickItem(-1, context.getString(R.string.lock_background)),
+        PickItem(-1, context.getString(R.string.lock_off))
     )
     private val mPaintItems = arrayListOf(
-            PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
-            PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect))
+        PickItem(R.drawable.ic_graffiti, context.getString(R.string.paint_type_graffiti)),
+        PickItem(R.drawable.ic_rect, context.getString(R.string.paint_type_rect))
     )
 
     override fun onBindVEContainer(container: IContainer) {
@@ -87,13 +95,15 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
 
     override fun onViewCreated(view: View?) {
         view ?: return
-        mEffectsRecyclerView?.layoutManager = GridLayoutManager(context, 5)
-        mEffectsRecyclerView?.adapter = mEffectsAdapter
-        mEffectsRecyclerView?.addItemDecoration(GridSpacingItemDecoration(5, 10.dp(), true))
+        mEffectsRecyclerView = view.findViewById(R.id.rv_effects)
+        mEffectsRecyclerView.layoutManager = GridLayoutManager(context, 5)
+        mEffectsRecyclerView.adapter = mEffectsAdapter
+        mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 5.dp(), true))
         mPointSeekbar?.setSeekPercentListener(this)
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
-        val percent = mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
+        val percent =
+            mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
                 ?: 0f
         mPointSeekbar?.setPercent(percent)
         mContainer.getGestureService()?.addTapObserver(this)
@@ -104,38 +114,51 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mPaintView?.setOnClickListener {
             if (mPaintView?.isSelected != true) return@setOnClickListener
             val paintType = mCoreService?.getPaintType() ?: return@setOnClickListener
-            mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
-                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mPaintItems, getPaintTypePosition(paintType)) {
-                    val type = when (it) {
-                        0 -> PaintType.Graffiti
-                        1 -> PaintType.Rect
-                        else -> PaintType.Circle
-                    }
-                    if (type == PaintType.Graffiti) {
-                        mEffectService?.removDrawBox()
-                    } else {
-                        mEffectService?.addDrawBox()
-                    }
-                    mCoreService?.setPaintType(type)
-                    mPaintView?.setImageResource(mPaintItems[it].icon)
-                    Toast.makeText(mContainer.getContext(), mPaintItems[it].text, Toast.LENGTH_SHORT).show()
-                })
-            }
+            mPickPanelToken =
+                mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
+                    mContainer.getPanelService()?.updatePayload(
+                        this,
+                        PickerPanel.PickPayload(mPaintItems, getPaintTypePosition(paintType)) {
+                            val type = when (it) {
+                                0 -> PaintType.Graffiti
+                                1 -> PaintType.Rect
+                                else -> PaintType.Circle
+                            }
+                            if (type == PaintType.Graffiti) {
+                                mEffectService?.removDrawBox()
+                            } else {
+                                mEffectService?.addDrawBox()
+                            }
+                            mCoreService?.setPaintType(type)
+                            mPaintView?.setImageResource(mPaintItems[it].icon)
+                            Toast.makeText(
+                                mContainer.getContext(),
+                                mPaintItems[it].text,
+                                Toast.LENGTH_SHORT
+                            ).show()
+                        })
+                }
         }
         mLockView?.setOnClickListener {
             val maskMode = mMaskService?.getMaskMode() ?: return@setOnClickListener
-            mPickPanelToken = mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
-                mContainer.getPanelService()?.updatePayload(this, PickerPanel.PickPayload(mLockItems, getMaskModePosition(maskMode)) { position ->
-                    val isOn = position != 2
-                    mLockView?.isSelected = isOn
-                    val mode = when (position) {
-                        0 -> MaskMode.PERSON
-                        1 -> MaskMode.BACKGROUND
-                        else -> MaskMode.NONE
-                    }
-                    mMaskService?.setMaskMode(mode)
-                })
-            }
+            mPickPanelToken =
+                mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
+                    mContainer.getPanelService()?.updatePayload(
+                        this,
+                        PickerPanel.PickPayload(
+                            mLockItems,
+                            getMaskModePosition(maskMode)
+                        ) { position ->
+                            val isOn = position != 2
+                            mLockView?.isSelected = isOn
+                            val mode = when (position) {
+                                0 -> MaskMode.PERSON
+                                1 -> MaskMode.BACKGROUND
+                                else -> MaskMode.NONE
+                            }
+                            mMaskService?.setMaskMode(mode)
+                        })
+                }
         }
         mEraserView?.setOnClickListener {
             it.isSelected = !it.isSelected
@@ -160,11 +183,18 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mAlbumView?.setOnClickListener {
             mainViewModel.openAlbumLiveData.postValue(0)
         }
-    }
-
-    override fun onAttach() {
-        mEffectService?.let {
-            setEffectItems(it.getEffects())
+        effectViewModel.effectsLiveData.observe(this) {
+            setEffectItems(it)
+        }
+        effectViewModel.downloadLiveData.observe(this) {
+            if (it.position !in effectItems.indices) return@observe
+            val effect = effectItems[it.position]
+            if (it.status == STATUS.Downloaded) {
+                effect.fill()
+            } else if (effect.status != STATUS.NotDownload) {
+                effect.status = STATUS.NotDownload
+            }
+            mEffectsAdapter.notifyItemChanged(it.position, 0)
         }
     }
 
@@ -180,10 +210,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
     }
 
-    fun setEffectItems(effectList: List<EffectItem>) {
-        val startPosition = effectItems.size
+    @SuppressLint("NotifyDataSetChanged")
+    private fun setEffectItems(effectList: List<EffectItem>) {
+        effectItems.clear()
         effectItems.addAll(effectList)
-        mEffectsAdapter.notifyItemRangeInserted(startPosition, effectList.size)
+        mEffectsAdapter.notifyDataSetChanged()
     }
 
     private fun getMaskModePosition(@MaskMode maskMode: Int): Int {
@@ -202,19 +233,40 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
     }
 
+    private fun applyEffect(effect: EffectItem) {
+        val effectObj = JSONObject()
+        effectObj.put("type", effect.type)
+        val configObj = JSONObject()
+        configObj.put("url", effect.url)
+        effectObj.put("config", configObj)
+        val effectStr = effectObj.toString()
+        mCoreService?.setEffect(effectStr)
+        Toast.makeText(
+            mContainer.getContext(),
+            "apply effect ${effect.id}",
+            Toast.LENGTH_SHORT
+        ).show()
+    }
+
     inner class EffectAdapter : Adapter<ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
-            val holder = EffectHolder(LayoutInflater.from(context).inflate(R.layout.layout_effect_item, parent, false) as ViewGroup)
+            val holder = EffectHolder(
+                LayoutInflater.from(context)
+                    .inflate(R.layout.layout_effect_item, parent, false) as ViewGroup
+            )
             holder.itemView.setOnClickListener {
-                val effect = effectItems[holder.adapterPosition]
-                val effectObj = JSONObject()
-                effectObj.put("type", effect.type)
-                val configObj = JSONObject()
-                configObj.put("url", effect.url)
-                effectObj.put("config", configObj)
-                val effectStr = effectObj.toString()
-                mCoreService?.setEffect(effectStr)
-                Toast.makeText(mContainer.getContext(), "apply effect ${effect.id}", Toast.LENGTH_SHORT).show()
+                val position = holder.adapterPosition
+                val effect = effectItems[position]
+                selectedPosition?.let { notifyItemChanged(it, 1) }
+                selectedPosition = position
+                notifyItemChanged(position, 1)
+                if (effect.path == null) {
+                    effect.status = STATUS.Downloading
+                    notifyItemChanged(position, 0)
+                    effectViewModel.downloadEffect(position, effect.url, FileUtils.getEffectDir())
+                } else {
+                    applyEffect(effect)
+                }
             }
             return holder
         }
@@ -223,27 +275,61 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             return effectItems.size
         }
 
+        override fun onBindViewHolder(holder: ViewHolder, position: Int, payloads: MutableList<Any>) {
+            if (payloads.isEmpty()) {
+                onBindViewHolder(holder, position)
+            } else {
+                val effect = effectItems[position]
+                if (holder is EffectHolder) {
+                    holder.downloadView.isVisible = effect.status == STATUS.NotDownload && effect.type == EffectType.TypeImage
+                    holder.progressView.isVisible = effect.status == STATUS.Downloading && effect.type == EffectType.TypeImage
+                    holder.itemView.isSelected = position == selectedPosition
+                }
+            }
+        }
+
         override fun onBindViewHolder(holder: ViewHolder, position: Int) {
             val effect = effectItems[position]
             if (holder is EffectHolder) {
-                val requestBuilder = ImageRequestBuilder.newBuilderWithSource(Uri.parse("file://" + effect.cover))
-                requestBuilder.resizeOptions = ResizeOptions(200, 200)
+                val requestBuilder =
+                    ImageRequestBuilder.newBuilderWithSource(Uri.parse(effect.cover))
+                //requestBuilder.resizeOptions = ResizeOptions(200, 200)
                 val controlBuilder = Fresco.newDraweeControllerBuilder()
                 controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
                 controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载
                 controlBuilder.oldController = holder.coverView.controller
                 holder.coverView.controller = controlBuilder.build()
+                holder.downloadView.isVisible = effect.status == STATUS.NotDownload && effect.type == EffectType.TypeImage
+                holder.progressView.isVisible = effect.status == STATUS.Downloading && effect.type == EffectType.TypeImage
             }
         }
     }
 
     inner class EffectHolder(root: ViewGroup) : ViewHolder(root) {
+        init {
+            val size = (mEffectsRecyclerView.width - 25.dp()) / 5
+            val lp = itemView.layoutParams
+            lp?.height = size
+            itemView.layoutParams = lp
+        }
+
         val coverView = itemView.findViewById<SimpleDraweeView>(R.id.iv_cover)
+        val downloadView = itemView.findViewById<View>(R.id.iv_download)
+        val progressView = itemView.findViewById<View>(R.id.progress)
     }
 
-    class GridSpacingItemDecoration(private val spanCount: Int, private val spacing: Int, private val includeEdge: Boolean) : RecyclerView.ItemDecoration() {
+    class GridSpacingItemDecoration(
+        private val spanCount: Int,
+        private val spacing: Int,
+        private val includeEdge: Boolean
+    ) : RecyclerView.ItemDecoration() {
 
-        override fun getItemOffsets(outRect: Rect, view: View, parent: RecyclerView, state: RecyclerView.State) {
+        override fun getItemOffsets(
+            outRect: Rect,
+            view: View,
+            parent: RecyclerView,
+            state: RecyclerView.State
+        ) {
             val position = parent.getChildAdapterPosition(view)
             val column = position % spanCount
 
@@ -290,7 +376,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     }
 
     override fun onSeekPercent(percent: Float) {
-        val size = mContainer.getConfig().run { minPaintSize + (maxPaintSize - minPaintSize) * percent }.toInt()
+        val size =
+            mContainer.getConfig().run { minPaintSize + (maxPaintSize - minPaintSize) * percent }
+                .toInt()
         mCoreService?.setPaintSize(size)
     }
 
