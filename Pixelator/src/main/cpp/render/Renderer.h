@@ -59,6 +59,7 @@ class Renderer {
   glm::mat4 viewMatrix = glm::mat4(1);
   glm::mat4 modelMatrix = glm::mat4(1);
   glm::mat4 transformMatrix = glm::mat4(1);
+  glm::vec4 bounds = glm::vec4(1);
   std::shared_ptr<FrameBuffer> sourceFrameBuffer = nullptr;
   FrameBuffer *effectFrameBuffer;
   FrameBuffer *paintFrameBuffer;

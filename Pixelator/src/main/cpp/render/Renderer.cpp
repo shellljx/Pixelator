@@ -405,6 +405,7 @@ void Renderer::notifyTransformChanged(bool reset) {
   glm::vec4 rb = glm::vec4(sourceWidth, sourceHeight, 0.f, 1.f);
   lt = matrix * lt;
   rb = matrix * rb;
+  bounds = glm::vec4(lt.x, lt.y, rb.x, rb.y);
   renderCallback->onTransformChanged(lt.x, lt.y, rb.x, rb.y, reset);
 }
 
@@ -418,6 +419,7 @@ void Renderer::notifyInitBoundChanged() {
   glm::vec4 rb = glm::vec4(sourceWidth, sourceHeight, 0.f, 1.f);
   lt = modelMatrix * lt;
   rb = modelMatrix * rb;
+  bounds = glm::vec4(lt.x, lt.y, rb.x, rb.y);
   renderCallback->onInitBoundChanged(lt.x, lt.y, rb.x, rb.y);
 }
 
@@ -460,7 +462,21 @@ void Renderer::drawMiniScreen() {
     float vertexCoordinate_[8] = {0.f, 0.f, sourceWidth * 1.f, 0.f, 0.f, sourceHeight * 1.f,
                                   sourceWidth * 1.f, sourceHeight * 1.f};
     auto model = glm::mat4(1);
-    model = glm::translate(model, glm::vec3(-touchX, -touchY, 0.f));
+    auto space = miniScreenWidth / 2.f;
+    auto miniBounds = glm::vec4(bounds.x + space, bounds.y + space, bounds.z - space, bounds.w - space);
+    auto moveX = touchX;
+    auto moveY = touchY;
+    if (moveX < miniBounds.x) {
+      moveX = miniBounds.x;
+    } else if (moveX > miniBounds.z) {
+      moveX = miniBounds.z;
+    }
+    if (moveY < miniBounds.y) {
+      moveY = miniBounds.y;
+    } else if (moveY > miniBounds.w) {
+      moveY = miniBounds.w;
+    }
+    model = glm::translate(model, glm::vec3(-moveX, -moveY, 0.f));
     model = glm::translate(model, glm::vec3(miniScreenWidth / 2.f, miniScreenHeight / 2.f, 0.f));
     auto matrix = miniScreenProjection * viewMatrix * model * transformMatrix * modelMatrix;
     matrixFilter->initialize();

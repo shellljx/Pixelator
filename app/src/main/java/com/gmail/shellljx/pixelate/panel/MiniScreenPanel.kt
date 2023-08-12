@@ -1,8 +1,9 @@
 package com.gmail.shellljx.pixelate.panel
 
 import android.content.Context
-import android.graphics.PointF
+import android.graphics.*
 import android.view.*
+import android.widget.FrameLayout
 import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.R
 import com.gmail.shellljx.pixelate.extension.dp
@@ -11,6 +12,7 @@ import com.gmail.shellljx.pixelate.view.CircleView
 import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
+
 @Keep
 class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callback, OnSingleMoveObserver, PaintSizeObserver {
     override val tag: String
@@ -50,8 +52,25 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
     }
 
     override fun onSingleMove(from: PointF, to: PointF, control: PointF, current: PointF): Boolean {
+        updateWindowLocation(current.x, current.y)
         updatePointViewLocation(current.x, current.y)
         return false
+    }
+
+    private fun updateWindowLocation(x: Float, y: Float) {
+        getView()?.let {
+            val parent = (it.parent as? ViewGroup) ?: return
+            val leftRect = Rect(0, 0, 140.dp(), 140.dp())
+            val rightRect = Rect(parent.width - 140.dp(), 0, parent.width, 140.dp())
+            val lp = (it.layoutParams as? FrameLayout.LayoutParams) ?: return
+            if (leftRect.contains(x.toInt(), y.toInt())) {
+                lp.gravity = Gravity.TOP or Gravity.END
+                it.layoutParams = lp
+            } else if (rightRect.contains(x.toInt(), y.toInt())) {
+                lp.gravity = Gravity.TOP or Gravity.START
+                it.layoutParams = lp
+            }
+        }
     }
 
     private fun updatePointViewLocation(x: Float, y: Float) {

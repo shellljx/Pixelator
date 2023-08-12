@@ -53,6 +53,7 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context,
   context->effectType = record->effectType;
   context->srcPath = record->srcPath;
   if (lastEffectType != record->effectType && record->effectType == TypeMosaic) {
+    LOGE("lijinxiang make new scene");
     //用已经绘制的内容和原图合并成新的特效原素材生成马赛克特效
     makeNewScene(targetFb);
     mosaicFilter->initialize();
@@ -103,6 +104,7 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context,
     rectFilter->enableBlend(GL_ONE, GL_ONE_MINUS_SRC_ALPHA);
     rectFilter->draw(&source, &target);
     rectFilter->disableBlend();
+    renderCallback->saveFrameBuffer(targetFb, effectFrameBuffer->getTextureWidth(), effectFrameBuffer->getTextureHeight());
   }
   return true;
 }

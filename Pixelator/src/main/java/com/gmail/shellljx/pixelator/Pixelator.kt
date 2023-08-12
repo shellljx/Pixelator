@@ -200,7 +200,6 @@ class Pixelator private constructor() : IPixelator {
     }
 
     private fun onSaveSuccess(path: String) {
-        System.out.println("lijinxiang $path")
         mainHandler.post {
             mRenderListener?.onSaveSuccess(path)
         }
