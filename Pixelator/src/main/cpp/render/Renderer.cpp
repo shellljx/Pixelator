@@ -71,11 +71,13 @@ void Renderer::setBottomOffset(int offset) {
 
 void Renderer::setInputImage(GLuint texture, int width, int height) {
   LOGI("enter func %s, width: %d, height: %d", __func__, width, height);
-  //todo 长宽要根据原图缩放一个合适的比例
-  drawSourceTexture(texture, width, height);
+  int scaleWidth = width;
+  int scaleHeight = height;
+  calculateSourceSize(scaleWidth, scaleHeight, scaleWidth, scaleHeight);
+  drawSourceTexture(texture, scaleWidth, scaleHeight);
   sourceWidth = sourceFrameBuffer->getTextureWidth();
   sourceHeight = sourceFrameBuffer->getTextureHeight();
-  paintProjection = glm::ortho(0.f, width * 1.f, height * 1.f, 0.f, 1.f, 100.f);
+  paintProjection = glm::ortho(0.f, scaleWidth * 1.f, scaleHeight * 1.f, 0.f, 1.f, 100.f);
   modelMatrix =
       getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
   clearPaintCache();
@@ -278,6 +280,7 @@ void Renderer::redo() {
 
 void Renderer::drawSourceTexture(GLuint texture, int width, int height) {
   LOGI("enter func %s", __func__);
+
   sourceFrameBuffer->createFrameBuffer(width, height);
   defaultFilter->initialize();
   FilterSource source = {texture, DEFAULT_TEXTURE_COORDINATE};

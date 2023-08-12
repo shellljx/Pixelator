@@ -3,6 +3,8 @@
 //
 
 #include "GLUtils.h"
+#define MIN_SOURCE_SIZE 1024
+#define MAX_SOURCE_SIZE 2000
 
 void activeGLTexture(int unitIndex, GLenum target, GLuint texture) {
   glActiveTexture(GL_TEXTURE0 + unitIndex);
@@ -69,6 +71,9 @@ void textureCenterCrop(int width, int height, int targetWidth, int targetHeight,
       finalWidth = height * 1.f / targetHeight * targetWidth / width;
     } else if (ratio < targetRatio) {
       finalHeight = width * 1.f / targetWidth * targetHeight / height;
+    } else {
+      finalWidth = ((width < targetWidth) ? width : targetWidth) * 1.f / width;
+      finalHeight = ((height < targetHeight) ? height : targetHeight) * 1.f / height;
     }
     array[0] = (1 - finalWidth) / 2;
     array[1] = (1 - finalHeight) / 2;
@@ -78,6 +83,22 @@ void textureCenterCrop(int width, int height, int targetWidth, int targetHeight,
     array[5] = (1 - finalHeight) / 2 + finalHeight;
     array[6] = (1 - finalWidth) / 2 + finalWidth;
     array[7] = (1 - finalHeight) / 2 + finalHeight;
+  }
+}
+
+void calculateSourceSize(int width, int height, int &outWidth, int &outHeight) {
+  if (width < MIN_SOURCE_SIZE && height < MIN_SOURCE_SIZE) {
+    auto scaleW = MIN_SOURCE_SIZE * 1.f / width;
+    auto scaleH = MIN_SOURCE_SIZE * 1.f / height;
+    auto fileScale = scaleW < scaleH ? scaleW : scaleH;
+    outWidth = width * fileScale;
+    outHeight = height * fileScale;
+  } else {
+    auto scaleW = width * 1.f / MAX_SOURCE_SIZE;
+    auto scaleH = height * 1.f / MAX_SOURCE_SIZE;
+    auto finalScale = scaleW > scaleH ? scaleW : scaleH;
+    outWidth = width * 1.f / finalScale;
+    outHeight = height * 1.f / finalScale;
   }
 }
 

@@ -21,6 +21,7 @@ bool CheckGLError();
 glm::mat4 getCenterInsideMatrix(int screenWidth, int screenHeight, int width, int height, int bottomOffset);
 
 void textureCenterCrop(int width, int height, int targetWidth, int targetHeight, float *array);
+void calculateSourceSize(int width, int height, int &outWidth, int &outHeight);
 void getVertexCoordinate(int width, int height, float *array);
 void createImageTexture(GLuint &texture, ImageInfo *image);
 #endif //PIXELATE_PIXELATOR_SRC_MAIN_CPP_UTILS_GLUTILS_H_
