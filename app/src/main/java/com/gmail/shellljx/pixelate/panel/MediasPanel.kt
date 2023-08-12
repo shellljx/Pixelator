@@ -116,8 +116,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
             mMedias.addAll(it)
             mMediaAdapter.notifyItemRangeInserted(start, it.size)
         }
-        mainViewModel.adStateLiveData.observe(this){
-            if (it){
+        mainViewModel.adStateLiveData.observe(this) {
+            if (it) {
                 val adRequest: AdRequest = AdRequest.Builder().build()
                 mAdView.loadAd(adRequest)
             }
@@ -141,17 +141,14 @@ class MediasPanel(context: Context) : AbsPanel(context) {
 
     @SuppressLint("NotifyDataSetChanged")
     override fun onAttach() {
+        val behavior = BottomSheetBehavior.from(mMediaContainer)
+        behavior.state = STATE_COLLAPSED
         isMediaFadeIn = true
         mAlbumView.text = viewModel.bucket?.name ?: context.getString(R.string.album_all)
         mMedias.clear()
         mMediaAdapter.notifyDataSetChanged()
         viewModel.fetchMedias(context, true)
         viewModel.fetchBuckets(context)
-    }
-
-    override fun onDetach() {
-        val behavior = BottomSheetBehavior.from(mMediaContainer)
-        behavior.state = STATE_COLLAPSED
     }
 
     override fun onResume() {
@@ -166,7 +163,8 @@ class MediasPanel(context: Context) : AbsPanel(context) {
                 val position = holder.adapterPosition
                 val media = mMedias[position]
                 mCoreService?.loadImage(media.path)
-                mContainer.getPanelService()?.hidePanel(mToken)
+                val behavior = BottomSheetBehavior.from(mMediaContainer)
+                behavior.state = STATE_HIDDEN
             }
             return holder
         }

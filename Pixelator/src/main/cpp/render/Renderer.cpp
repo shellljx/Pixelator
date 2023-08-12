@@ -79,9 +79,10 @@ void Renderer::setInputImage(GLuint texture, int width, int height) {
   modelMatrix =
       getCenterInsideMatrix(screenWidth, screenHeight, sourceWidth, sourceHeight, bottomOffset);
   clearPaintCache();
-  notifyTransformChanged(true);
   drawBlend();
   drawScreen();
+  drawEffect();
+  notifyTransformChanged(true);
 }
 
 void Renderer::setBrushImage(ImageInfo *image) {
@@ -137,20 +138,18 @@ void Renderer::setEffect(Json::Value &root) {
   auto config = root["config"];
   if (type == TypeMosaic) {
     int rectSize = config["rectSize"].asInt();
-    renderContext->effectType = TypeMosaic;
-    currentEffect = std::make_shared<MosaicEffect>(TypeMosaic, rectSize);
-    drawMosaicEffect();
+    auto effect = std::make_shared<MosaicEffect>(TypeMosaic, rectSize);
+    drawMosaicEffect(effect.get());
+    currentEffect = effect;
   } else if (type == TypeImage) {
     if (config["url"].isNull()) {
       LOGE("json % is not image effect", config.asCString());
       return;
     }
     auto path = config["url"].asCString();
-    auto imageEffect = imageCache->get(path);
-    if (imageEffect != nullptr) {
-      currentEffect = imageEffect;
-      renderContext->effectType = TypeImage;
-      drawImageEffect(imageEffect->getTexture(), imageEffect->getWidth(), imageEffect->getHeight());
+    auto cacheTexture = imageCache->get(path);
+    if (cacheTexture != nullptr) {
+      drawImageEffect(cacheTexture.get());
       return;
     }
     ImageDecoder decoder;
@@ -159,9 +158,9 @@ void Renderer::setEffect(Json::Value &root) {
     int height = 0;
     auto ret = decoder.decodeImage(imageTexture, path, &width, &height);
     if (ret == 0 && width > 0 && height > 0) {
-      renderContext->effectType = TypeImage;
-      drawImageEffect(imageTexture, width, height);
-      currentEffect = std::make_shared<ImageEffect>(TypeImage, path, imageTexture, width, height);
+      auto texture = imageCache->add(path, imageTexture, width, height);
+      drawImageEffect(texture.get());
+      currentEffect = std::make_shared<ImageEffect>(TypeImage, path);
     }
   }
 }
@@ -211,8 +210,6 @@ void Renderer::stopTouch() {
     LOGI("%s touch sequences is empty", __func__);
     return;
   }
-  //处理 imageEffect 缓存
-  imageCache->add(currentEffect);
   //处理 undo redo
   float *touchData = nullptr;
   int length = 0;
@@ -228,19 +225,23 @@ void Renderer::stopTouch() {
   if (currentEffect->type() == TypeImage) {
     srcPath = std::dynamic_pointer_cast<ImageEffect>(currentEffect)->getSrcPath();
   }
+  int mosaicSize = 0;
+  if (currentEffect->type() == TypeMosaic) {
+    mosaicSize = std::dynamic_pointer_cast<MosaicEffect>(currentEffect)->getRectSize();
+  }
   //uniqueptr
   auto record = std::make_shared<DrawRecord>(DrawRecord{});
   auto model = transformMatrix * modelMatrix;
-  record.get()->data = touchData;
-  record.get()->length = length;
-  record.get()->matrix = paintProjection * viewMatrix * glm::inverse(model);
-  record.get()->effectType = renderContext->effectType;
-  record.get()->paintType = renderContext->paintType;
-  record.get()->paintSize = renderContext->paintSize * 1.7f / model[0][0];
-  record.get()->mosaicSize = renderContext->mosaicSize / model[0][0];
-  record.get()->paintMode = renderContext->paintMode;
-  record.get()->maskMode = renderContext->maskMode;
-  record.get()->srcPath = srcPath;
+  record->data = touchData;
+  record->length = length;
+  record->matrix = paintProjection * viewMatrix * glm::inverse(model);
+  record->mosaicSize = mosaicSize / model[0][0];
+  record->effectType = currentEffect->type();
+  record->paintType = renderContext->paintType;
+  record->paintSize = renderContext->paintSize * 1.7f / model[0][0];
+  record->paintMode = renderContext->paintMode;
+  record->maskMode = renderContext->maskMode;
+  record->srcPath = srcPath;
   recordRender->push(record);
   touchSequences.clear();
 
@@ -328,7 +329,7 @@ void Renderer::drawRectPaint() {
   rectFilter->draw(&source, &target);
 }
 
-void Renderer::drawMosaicEffect() {
+void Renderer::drawMosaicEffect(const MosaicEffect *effect) {
   LOGI("enter func %s", __func__);
   if (sourceWidth <= 0 || sourceHeight <= 0) {
     LOGE("%s source width or height is 0", __func__);
@@ -337,7 +338,7 @@ void Renderer::drawMosaicEffect() {
   auto model = transformMatrix * modelMatrix;
   effectFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   mosaicFilter->initialize();
-  mosaicFilter->setMosaicSize(renderContext->mosaicSize / model[0][0]);
+  mosaicFilter->setMosaicSize(effect->getRectSize() / model[0][0]);
   //要用最新的纹理来生成马赛克
   FilterSource source = {blendFrameBuffer->getTexture(), nullptr};
   FilterTarget
@@ -345,17 +346,17 @@ void Renderer::drawMosaicEffect() {
   mosaicFilter->draw(&source, &target);
 }
 
-void Renderer::drawImageEffect(GLuint texture, int width, int height) {
+void Renderer::drawImageEffect(const ImageTexture *texture) {
   LOGI("enter func %s", __func__);
   if (sourceWidth <= 0 || sourceHeight <= 0) {
     LOGE("%s source width or height is 0", __func__);
     return;
   }
   float textureCoordinate[9];
-  textureCenterCrop(width, height, sourceWidth, sourceHeight, textureCoordinate);
+  textureCenterCrop(texture->width, texture->height, sourceWidth, sourceHeight, textureCoordinate);
   effectFrameBuffer->createFrameBuffer(sourceWidth, sourceHeight);
   defaultFilter->initialize();
-  FilterSource source = {texture, textureCoordinate};
+  FilterSource source = {texture->texture, textureCoordinate};
   FilterTarget target =
       {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, sourceWidth, sourceHeight};
   defaultFilter->draw(&source, &target);
@@ -417,6 +418,22 @@ void Renderer::notifyInitBoundChanged() {
   renderCallback->onInitBoundChanged(lt.x, lt.y, rb.x, rb.y);
 }
 
+void Renderer::drawEffect() {
+  if (currentEffect == nullptr) {
+    return;
+  }
+  if (currentEffect->type() == TypeImage) {
+    auto path = std::dynamic_pointer_cast<ImageEffect>(currentEffect)->getSrcPath();
+    auto textureCache = imageCache->get(path);
+    if (textureCache != nullptr) {
+      drawImageEffect(textureCache.get());
+    }
+  } else if (currentEffect->type() == TypeMosaic) {
+    auto mosaicEffect = std::dynamic_pointer_cast<MosaicEffect>(currentEffect);
+    drawMosaicEffect(mosaicEffect.get());
+  }
+}
+
 void Renderer::drawScreen() {
   LOGI("enter func %s", __func__);
   if (sourceWidth > 0 && sourceHeight > 0) {
@@ -456,8 +473,10 @@ FrameBuffer *Renderer::getBlendFrameBuffer() const {
 }
 
 void Renderer::clearPaintCache() {
+  recordRender->clear();
   transformMatrix = glm::mat4(1);
   paintFrameBuffer->deleteFrameBuffer();
   tempPaintFrameBuffer->deleteFrameBuffer();
   blendFrameBuffer->deleteFrameBuffer();
+  effectFrameBuffer->deleteFrameBuffer();
 }

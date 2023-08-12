@@ -4,6 +4,6 @@
 #include "file.h"
 MosaicEffect::MosaicEffect(EffectType type, int rectSize) : Effect(type), rectSize(rectSize) {}
 
-int MosaicEffect::getRectSize() {
+int MosaicEffect::getRectSize() const {
   return rectSize;
 }

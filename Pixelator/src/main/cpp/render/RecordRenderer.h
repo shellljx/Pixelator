@@ -19,10 +19,11 @@ class RecordRenderer {
   explicit RecordRenderer(std::shared_ptr<RenderContext> context, std::shared_ptr<ImageCache> cache, RenderCallback *callback);
   ~RecordRenderer();
   void push(std::shared_ptr<DrawRecord> record);
-  bool persistentRecord(UndoRedoContext* context, DrawRecord *record, FrameBuffer *targetFb);
+  bool persistentRecord(UndoRedoContext *context, DrawRecord *record, FrameBuffer *targetFb);
   void setSourceFrameBuffer(std::shared_ptr<FrameBuffer> fb);
   bool undo(FrameBuffer *paintFb);
   bool redo(FrameBuffer *paintFb);
+  void clear();
   FrameBuffer *getFrameBuffer();
  private:
   void makeNewScene(FrameBuffer *targetFb);

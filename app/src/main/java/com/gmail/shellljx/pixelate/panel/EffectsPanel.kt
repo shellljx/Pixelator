@@ -98,7 +98,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mEffectsRecyclerView = view.findViewById(R.id.rv_effects)
         mEffectsRecyclerView.layoutManager = GridLayoutManager(context, 5)
         mEffectsRecyclerView.adapter = mEffectsAdapter
-        mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 5.dp(), true))
+        mEffectsRecyclerView.addItemDecoration(GridSpacingItemDecoration(5, 5.dp()))
         mPointSeekbar?.setSeekPercentListener(this)
         val minSize = mContainer.getConfig().minPaintSize
         val maxSize = mContainer.getConfig().maxPaintSize
@@ -191,6 +191,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             val effect = effectItems[it.position]
             if (it.status == STATUS.Downloaded) {
                 effect.fill()
+                applyEffect(effect)
             } else if (effect.status != STATUS.NotDownload) {
                 effect.status = STATUS.NotDownload
             }
@@ -237,7 +238,8 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         val effectObj = JSONObject()
         effectObj.put("type", effect.type)
         val configObj = JSONObject()
-        configObj.put("url", effect.url)
+        configObj.put("rectSize", 50)
+        configObj.put("url", effect.path)
         effectObj.put("config", configObj)
         val effectStr = effectObj.toString()
         mCoreService?.setEffect(effectStr)
@@ -260,7 +262,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                 selectedPosition?.let { notifyItemChanged(it, 1) }
                 selectedPosition = position
                 notifyItemChanged(position, 1)
-                if (effect.path == null) {
+                if (effect.path == null && effect.type == EffectType.TypeImage) {
                     effect.status = STATUS.Downloading
                     notifyItemChanged(position, 0)
                     effectViewModel.downloadEffect(position, effect.url, FileUtils.getEffectDir())
@@ -320,8 +322,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
 
     class GridSpacingItemDecoration(
         private val spanCount: Int,
-        private val spacing: Int,
-        private val includeEdge: Boolean
+        private val spacing: Int
     ) : RecyclerView.ItemDecoration() {
 
         override fun getItemOffsets(
@@ -333,21 +334,10 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             val position = parent.getChildAdapterPosition(view)
             val column = position % spanCount
 
-            if (includeEdge) {
-                outRect.left = spacing - column * spacing / spanCount
-                outRect.right = (column + 1) * spacing / spanCount
+            outRect.left = spacing - column * spacing / spanCount
+            outRect.right = (column + 1) * spacing / spanCount
+            outRect.bottom = spacing
 
-                if (position < spanCount) {
-                    outRect.top = spacing
-                }
-                outRect.bottom = spacing
-            } else {
-                outRect.left = column * spacing / spanCount
-                outRect.right = spacing - (column + 1) * spacing / spanCount
-                if (position >= spanCount) {
-                    outRect.top = spacing
-                }
-            }
         }
     }
 

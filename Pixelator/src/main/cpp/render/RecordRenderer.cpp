@@ -69,9 +69,9 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context,
       return false;
     }
     float textureCoordinate[9];
-    textureCenterCrop(image->getWidth(), image->getHeight(), width, height, textureCoordinate);
+    textureCenterCrop(image->width, image->height, width, height, textureCoordinate);
     defaultFilter->initialize();
-    FilterSource source = {image->getTexture(), textureCoordinate};
+    FilterSource source = {image->texture, textureCoordinate};
     FilterTarget
         target = {effectFrameBuffer, {}, DEFAULT_VERTEX_COORDINATE_FLIP_DOWN_UP, width, height};
     defaultFilter->draw(&source, &target);
@@ -149,6 +149,11 @@ bool RecordRenderer::redo(FrameBuffer *paintFb) {
     return true;
   }
   return false;
+}
+
+void RecordRenderer::clear() {
+  undoStack.clear();
+  redoStack.clear();
 }
 
 void RecordRenderer::makeNewScene(FrameBuffer *targetFb) {

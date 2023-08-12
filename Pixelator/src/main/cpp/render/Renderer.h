@@ -35,6 +35,7 @@ class Renderer {
   void stopTouch();
   void undo();
   void redo();
+  void drawEffect();
   void drawScreen();
   void drawMiniScreen();
   FrameBuffer *getBlendFrameBuffer() const;
@@ -43,8 +44,8 @@ class Renderer {
   void drawPaint();
   void drawGraffitiPaint();
   void drawRectPaint();
-  void drawMosaicEffect();
-  void drawImageEffect(GLuint texture, int width, int height);
+  void drawMosaicEffect(const MosaicEffect *effect);
+  void drawImageEffect(const ImageTexture *texture);
   void drawBlend();
   void blendTexture(GLuint texture, bool revert);
   void clearPaintCache();

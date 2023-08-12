@@ -31,10 +31,8 @@ typedef enum {
 struct RenderContext {
   GLuint maskTexture = 0;
   GLuint brushTexture = 0;
-  int effectType = 0;
   int maskMode = 0;
   int paintSize = 0;
-  int mosaicSize = 120;
   int paintMode = Paint;
   int paintType = Graffiti;
   ~RenderContext() {
@@ -67,24 +65,18 @@ class Effect {
 
 class ImageEffect : public Effect {
  public:
-  ImageEffect(EffectType type, const char *path, GLuint texture, int width, int height);
+  ImageEffect(EffectType type, const char *path);
   ~ImageEffect();
   std::string getSrcPath();
-  GLuint getTexture() const;
-  int getWidth() const;
-  int getHeight() const;
  private:
   std::string srcPath;
-  GLuint srcTexture;
-  int width = 0;
-  int height = 0;
 };
 
 class MosaicEffect : public Effect {
  public:
   MosaicEffect(EffectType type, int rectSize);
   ~MosaicEffect() = default;
-  int getRectSize();
+  int getRectSize() const;
  private:
   int rectSize;
 };
@@ -108,14 +100,28 @@ struct DrawRecord {
   }
 };
 
+struct ImageTexture {
+  std::string path;
+  GLuint texture = 0;
+  int width = 0;
+  int height = 0;
+
+  ~ImageTexture() {
+    if (texture > 0) {
+      glDeleteTextures(1, &texture);
+      texture = 0;
+    }
+  }
+};
+
 class ImageCache {
  public:
   explicit ImageCache() = default;
   ~ImageCache() = default;
-  void add(std::shared_ptr<Effect> effect);
-  std::shared_ptr<ImageEffect> get(const std::string &path);
+  std::shared_ptr<ImageTexture> add(const char *path, GLuint texture, int width, int height);
+  std::shared_ptr<ImageTexture> get(const std::string &path);
  private:
-  std::vector<std::shared_ptr<Effect>> cache;
+  std::vector<std::shared_ptr<ImageTexture>> cache;
 };
 class DrawOp {
  public:

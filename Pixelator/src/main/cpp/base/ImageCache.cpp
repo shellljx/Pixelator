@@ -4,25 +4,25 @@
 
 #include "file.h"
 
-void ImageCache::add(std::shared_ptr<Effect> effect) {
-  //只添加 image effect
-  if (effect->type() == TypeImage) {
-    if (std::find(cache.begin(), cache.end(), effect) == cache.end()) {
-      if (cache.size() >= 10) {
-        cache.erase(cache.begin());
-      }
-      cache.push_back(std::move(effect));
-    }
+std::shared_ptr<ImageTexture> ImageCache::add(const char *path, GLuint texture, int width, int height) {
+
+  if (cache.size() >= 10) {
+    cache.erase(cache.begin());
   }
+  auto imageTexture = new ImageTexture();
+  imageTexture->path = path;
+  imageTexture->texture = texture;
+  imageTexture->width = width;
+  imageTexture->height = height;
+  auto shared = std::shared_ptr<ImageTexture>(imageTexture);
+  cache.push_back(shared);
+  return shared;
 }
 
-std::shared_ptr<ImageEffect> ImageCache::get(const std::string &path) {
+std::shared_ptr<ImageTexture> ImageCache::get(const std::string &path) {
   for (auto it = cache.begin(); it != cache.end();) {
-    if ((*it)->type() == TypeImage) {
-      auto imageEffect = std::dynamic_pointer_cast<ImageEffect>(*it);
-      if (imageEffect != nullptr && imageEffect->getSrcPath() == path) {
-        return imageEffect;
-      }
+    if ((*it)->path == path) {
+      return *it;
     }
     it++;
   }

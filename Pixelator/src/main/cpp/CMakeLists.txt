@@ -31,7 +31,6 @@ add_library( # Sets the name of the library.
 
         # Sets the library as a shared library.
         SHARED
-        base/DrawOp.cpp
         base/Effect.cpp
         base/ImageCache.cpp
         base/ImageEffect.cpp
