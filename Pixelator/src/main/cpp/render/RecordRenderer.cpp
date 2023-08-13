@@ -88,7 +88,7 @@ bool RecordRenderer::persistentRecord(UndoRedoContext *context,
     FilterSource source = {effectFrameBuffer->getTexture(), nullptr};
     FilterTarget target = {targetFb, record->matrix, nullptr, width, height, false};
     graffitiFilter->draw(&source, &target);
-  } else if (record->effectType == Rect) {
+  } else if (record->paintType == Rect) {
     if (record->length < 4) {
       LOGE("%s record data length < 4, not rect effect");
       return false;
