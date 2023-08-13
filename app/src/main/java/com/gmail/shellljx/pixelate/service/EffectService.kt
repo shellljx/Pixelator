@@ -5,6 +5,7 @@ import android.graphics.PointF
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.Keep
+import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
 import com.gmail.shellljx.pixelate.panel.EffectsPanel
 import com.gmail.shellljx.pixelate.view.PaintBoxView
@@ -18,6 +19,7 @@ import com.gmail.shellljx.wrapper.service.gesture.OnSingleMoveObserver
 import com.gmail.shellljx.wrapper.service.gesture.OnTapObserver
 import com.gmail.shellljx.wrapper.service.panel.PanelToken
 import com.gmail.shellljx.wrapper.service.render.IRenderLayer
+import org.json.JSONObject
 
 @Keep
 class EffectService(container: IContainer) : AbsService(container), IEffectService, OnTapObserver,
@@ -81,6 +83,17 @@ class EffectService(container: IContainer) : AbsService(container), IEffectServi
         mViewPortAnimator.removeAllListeners()
     }
 
+    override fun applyEffect(item: EffectItem) {
+        val effectObj = JSONObject()
+        effectObj.put("type", item.type)
+        val configObj = JSONObject()
+        configObj.put("rectSize", 50)
+        configObj.put("url", item.path)
+        effectObj.put("config", configObj)
+        val effectStr = effectObj.toString()
+        mCoreService?.setEffect(effectStr)
+    }
+
     override fun onDoubleTap(): Boolean {
         if (mViewPortAnimator.isRunning) return false
         mPanelToken?.let {
@@ -141,4 +154,5 @@ interface IEffectService : IService {
     fun showPanel()
     fun addDrawBox()
     fun removDrawBox()
+    fun applyEffect(item: EffectItem)
 }

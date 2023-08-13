@@ -39,6 +39,10 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
         mCoreService?.addPaintSizeObserver(this)
     }
 
+    override fun onAttach() {
+        updatePointSize(mCoreService?.getPaintSize() ?: mContainer.getConfig().minPaintSize)
+    }
+
     override fun surfaceCreated(holder: SurfaceHolder) {
         mCoreService?.getMiniScreen()?.onSurfaceCreated(holder.surface)
     }
@@ -119,6 +123,10 @@ class MiniScreenPanel(context: Context) : AbsPanel(context), SurfaceHolder.Callb
     }
 
     override fun onPaintSizeChanged(size: Int) {
+        updatePointSize(size)
+    }
+
+    private fun updatePointSize(size: Int) {
         val lp = pointView?.layoutParams?.apply {
             height = size
             width = size

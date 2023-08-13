@@ -34,11 +34,10 @@ import com.gmail.shellljx.wrapper.extension.viewModels
 import com.gmail.shellljx.wrapper.service.gesture.*
 import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
-import org.json.JSONObject
 
 @Keep
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
-    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver {
+    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
@@ -106,9 +105,6 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             mCoreService?.getPaintSize()?.let { (it - minSize) * 1f / (maxSize - minSize) }
                 ?: 0f
         mPointSeekbar?.setPercent(percent)
-        mContainer.getGestureService()?.addTapObserver(this)
-        mContainer.getGestureService()?.addSingleMoveObserver(this)
-        mCoreService?.addUndoRedoStateObserver(this)
 
         mPaintView?.isSelected = true
         mPaintView?.setOnClickListener {
@@ -191,12 +187,23 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             val effect = effectItems[it.position]
             if (it.status == STATUS.Downloaded) {
                 effect.fill()
-                applyEffect(effect)
+                mEffectService?.applyEffect(effect)
             } else if (effect.status != STATUS.NotDownload) {
                 effect.status = STATUS.NotDownload
             }
             mEffectsAdapter.notifyItemChanged(it.position, 0)
         }
+    }
+
+    override fun onAttach() {
+        mContainer.getGestureService()?.addTapObserver(this)
+        mContainer.getGestureService()?.addSingleMoveObserver(this)
+        mCoreService?.addUndoRedoStateObserver(this)
+        mCoreService?.addPaintTypeObserver(this)
+    }
+
+    override fun onPaintTypeChanged(type: Int) {
+        mPointSeekbar?.isVisible = type == PaintType.Graffiti
     }
 
     private fun savePaintType() {
@@ -234,22 +241,6 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         }
     }
 
-    private fun applyEffect(effect: EffectItem) {
-        val effectObj = JSONObject()
-        effectObj.put("type", effect.type)
-        val configObj = JSONObject()
-        configObj.put("rectSize", 50)
-        configObj.put("url", effect.path)
-        effectObj.put("config", configObj)
-        val effectStr = effectObj.toString()
-        mCoreService?.setEffect(effectStr)
-        Toast.makeText(
-            mContainer.getContext(),
-            "apply effect ${effect.id}",
-            Toast.LENGTH_SHORT
-        ).show()
-    }
-
     inner class EffectAdapter : Adapter<ViewHolder>() {
         override fun onCreateViewHolder(parent: ViewGroup, viewType: Int): ViewHolder {
             val holder = EffectHolder(
@@ -267,7 +258,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                     notifyItemChanged(position, 0)
                     effectViewModel.downloadEffect(position, effect.url, FileUtils.getEffectDir())
                 } else {
-                    applyEffect(effect)
+                    mEffectService?.applyEffect(effect)
                 }
             }
             return holder
@@ -356,7 +347,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     }
 
     override fun onSingleUp(event: MotionEvent): Boolean {
-        mPointSeekbar?.visibility = View.VISIBLE
+        if (mCoreService?.getPaintType() == PaintType.Graffiti) {
+            mPointSeekbar?.visibility = View.VISIBLE
+        }
         mOperationArea?.visibility = View.VISIBLE
         return false
     }

@@ -39,6 +39,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
     private var mPaintType = Graffiti
     private var mEglWindowCreated = false
     private val mPaintSizeObservers = arrayListOf<PaintSizeObserver>()
+    private val mPaintTypeObservers = arrayListOf<PaintTypeObserver>()
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
     private val mImageObservers = arrayListOf<OnImageObserver>()
     private val mUndoRedoStateObservers = arrayListOf<UndoRedoStateObserver>()
@@ -142,6 +143,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
     override fun setPaintType(paintType: Int) {
         mPaintType = paintType
         mImageSdk.setPaintType(paintType)
+        mPaintTypeObservers.forEach { it.onPaintTypeChanged(paintType) }
     }
 
     override fun setDeeplabMask(bitmap: Bitmap) {
@@ -195,10 +197,10 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
         val v = FloatArray(9)
         mTransformMatrix.getValues(v)
         val glmArray = floatArrayOf(
-                v[0], v[3], 0f, 0f,
-                v[1], v[4], 0f, 0f,
-                0f, 0f, 1f, 0f,
-                v[2], v[5], 0f, 1f
+            v[0], v[3], 0f, 0f,
+            v[1], v[4], 0f, 0f,
+            0f, 0f, 1f, 0f,
+            v[2], v[5], 0f, 1f
         )
         mImageSdk.setMatrix(glmArray)
     }
@@ -249,6 +251,12 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
         }
     }
 
+    override fun addPaintTypeObserver(observer: PaintTypeObserver) {
+        if (!mPaintTypeObservers.contains(observer)) {
+            mPaintTypeObservers.add(observer)
+        }
+    }
+
     override fun addContentBoundsObserver(observer: OnContentBoundsObserver) {
         if (!mContentBoundsObservers.contains(observer)) {
             mContentBoundsObservers.add(observer)
@@ -271,8 +279,8 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
         return try {
             val exifInterface = ExifInterface(path)
             when (exifInterface.getAttributeInt(
-                    ExifInterface.TAG_ORIENTATION,
-                    ExifInterface.ORIENTATION_NORMAL
+                ExifInterface.TAG_ORIENTATION,
+                ExifInterface.ORIENTATION_NORMAL
             )) {
                 ExifInterface.ORIENTATION_ROTATE_90 -> 90
                 ExifInterface.ORIENTATION_ROTATE_180 -> 180
@@ -344,6 +352,7 @@ interface IPixelatorCoreService : IService {
     fun getImagePath(): String?
     fun save()
     fun addPaintSizeObserver(observer: PaintSizeObserver)
+    fun addPaintTypeObserver(observer: PaintTypeObserver)
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)
     fun addImageObserver(observer: OnImageObserver)
     fun addUndoRedoStateObserver(observer: UndoRedoStateObserver)
@@ -351,6 +360,10 @@ interface IPixelatorCoreService : IService {
 
 interface PaintSizeObserver {
     fun onPaintSizeChanged(size: Int)
+}
+
+interface PaintTypeObserver {
+    fun onPaintTypeChanged(@PaintType type: Int)
 }
 
 interface OnContentBoundsObserver {
