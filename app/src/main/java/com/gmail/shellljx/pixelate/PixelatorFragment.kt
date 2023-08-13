@@ -1,12 +1,8 @@
 package com.gmail.shellljx.pixelate
 
 import android.Manifest
-import android.app.Activity.RESULT_OK
-import android.content.*
-import android.net.Uri
 import android.os.Build
 import android.os.Bundle
-import android.provider.MediaStore
 import android.view.*
 import android.widget.Toast
 import androidx.activity.result.contract.ActivityResultContracts
@@ -28,9 +24,6 @@ import com.gmail.shellljx.wrapper.extension.activityViewModels
 import com.gmail.shellljx.wrapper.extension.safeAppCompatActivity
 
 class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
-    companion object {
-        const val OPEN_GALLERY_REQUEST_CODE = 0
-    }
 
     private lateinit var mContainer: IContainer
     private val mainViewModel: MainViewModel by activityViewModels()
@@ -38,19 +31,17 @@ class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
     private var mEffectService: IEffectService? = null
 
     private val readFilePermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
-            val intent = Intent(Intent.ACTION_PICK, null)
-            intent.setDataAndType(MediaStore.Images.Media.EXTERNAL_CONTENT_URI, "image/*")
-            activity?.startActivityForResult(intent, OPEN_GALLERY_REQUEST_CODE)
+            mContainer.getPanelService()?.showPanel(MediasPanel::class.java)
         } else {
             Toast.makeText(requireContext(), getString(R.string.request_permission_failed), Toast.LENGTH_SHORT).show()
         }
     }
 
     private val writeFilePermissionLauncher = registerForActivityResult(
-            ActivityResultContracts.RequestPermission()
+        ActivityResultContracts.RequestPermission()
     ) { isGranted: Boolean ->
         if (isGranted) {
             mCoreService?.save()
@@ -72,12 +63,12 @@ class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
         }
         mContainer.onCreate()
         mContainer.getServiceManager().registerBusinessService(
-                listOf(
-                        PixelatorCoreService::class.java,
-                        TransformService::class.java,
-                        MaskLockService::class.java,
-                        EffectService::class.java
-                )
+            listOf(
+                PixelatorCoreService::class.java,
+                TransformService::class.java,
+                MaskLockService::class.java,
+                EffectService::class.java
+            )
         )
     }
 
@@ -105,34 +96,6 @@ class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
 
     override fun getActivityViewModelStoreOwner(): ViewModelStoreOwner {
         return checkNotNull(safeAppCompatActivity(requireContext()))
-    }
-
-    override fun onActivityResult(requestCode: Int, resultCode: Int, data: Intent?) {
-        super.onActivityResult(requestCode, resultCode, data)
-        if (resultCode == RESULT_OK) {
-            when (requestCode) {
-                OPEN_GALLERY_REQUEST_CODE -> {
-                    val path = getRealPathFromURI(context, data?.data) ?: return
-                    mCoreService?.loadImage(path)
-                }
-            }
-        }
-    }
-
-    fun getRealPathFromURI(context: Context?, uri: Uri?): String? {
-        context ?: return null
-        uri ?: return null
-        var filePath = ""
-        val projection = arrayOf(MediaStore.Images.Media.DATA)
-        val cursor = context.contentResolver.query(uri, projection, null, null, null)
-        if (cursor != null) {
-            val columnIndex = cursor.getColumnIndexOrThrow(MediaStore.Images.Media.DATA)
-            if (cursor.moveToFirst()) {
-                filePath = cursor.getString(columnIndex)
-            }
-            cursor.close()
-        }
-        return filePath
     }
 
     override fun onResume() {
@@ -188,13 +151,13 @@ class PixelatorFragment : Fragment(), ActivityViewModelStoreProvider {
     private fun showGotoSettings(@StringRes message: Int) {
         val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(requireContext())
         alertDialogBuilder.setTitle(getString(R.string.title_request_permission))
-                .setMessage(getString(message))
-                .setPositiveButton(getString(R.string.setting)) { _, _ ->
-                    PermissionUtils.goToApplicationDetail(requireContext())
-                }
-                .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
-                    dialog.dismiss()
-                }
+            .setMessage(getString(message))
+            .setPositiveButton(getString(R.string.setting)) { _, _ ->
+                PermissionUtils.goToApplicationDetail(requireContext())
+            }
+            .setNegativeButton(getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
         val alertDialog: AlertDialog = alertDialogBuilder.create()
         alertDialog.show()
     }
