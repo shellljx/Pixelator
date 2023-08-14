@@ -15,6 +15,7 @@ import androidx.recyclerview.widget.RecyclerView.Adapter
 import androidx.recyclerview.widget.RecyclerView.ViewHolder
 import com.facebook.drawee.backends.pipeline.Fresco
 import com.facebook.drawee.view.SimpleDraweeView
+import com.facebook.imagepipeline.common.ResizeOptions
 import com.facebook.imagepipeline.request.ImageRequestBuilder
 import com.gmail.shellljx.pixelate.*
 import com.gmail.shellljx.pixelate.R
@@ -37,7 +38,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 @Keep
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
-    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver {
+    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver, OnImageObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
@@ -200,6 +201,14 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mContainer.getGestureService()?.addSingleMoveObserver(this)
         mCoreService?.addUndoRedoStateObserver(this)
         mCoreService?.addPaintTypeObserver(this)
+        mCoreService?.addImageObserver(this)
+    }
+
+    override fun onImageLoaded(path: String) {
+        mBottomSheetView?.let {
+            val behavior = BottomSheetBehavior.from(it)
+            behavior.state = BottomSheetBehavior.STATE_COLLAPSED
+        }
     }
 
     override fun onPaintTypeChanged(type: Int) {
@@ -286,7 +295,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             if (holder is EffectHolder) {
                 val requestBuilder =
                     ImageRequestBuilder.newBuilderWithSource(Uri.parse(effect.cover))
-                //requestBuilder.resizeOptions = ResizeOptions(200, 200)
+                requestBuilder.resizeOptions = ResizeOptions(200, 200)
                 val controlBuilder = Fresco.newDraweeControllerBuilder()
                 controlBuilder.imageRequest = requestBuilder.build()//设置图片请求
                 controlBuilder.tapToRetryEnabled = true//设置是否允许加载失败时点击再次加载

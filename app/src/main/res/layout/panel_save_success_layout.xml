@@ -61,7 +61,7 @@
             android:layout_marginBottom="12dp"
             android:background="@color/white"
             ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-3940256099942544/6300978111"
+            ads:adUnitId="ca-app-pub-7830712138262547/9972671555"
             ads:layout_constraintBottom_toBottomOf="parent"
             ads:layout_constraintLeft_toLeftOf="parent"
             ads:layout_constraintRight_toRightOf="parent" />
