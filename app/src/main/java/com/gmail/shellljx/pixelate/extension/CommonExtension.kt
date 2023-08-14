@@ -26,7 +26,7 @@ suspend fun Bitmap.writeToPngFile(targetPath: String, quality: Int): Boolean {
         }
         val stream = FileOutputStream(targetFile)
         try {
-            compress(Bitmap.CompressFormat.PNG, quality, stream)
+            compress(Bitmap.CompressFormat.JPEG, quality, stream)
         } catch (e: Exception) {
             false
         } finally {

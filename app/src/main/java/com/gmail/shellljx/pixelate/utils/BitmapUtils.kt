@@ -29,7 +29,7 @@ object BitmapUtils {
                 targetHeight /= inSampleSize
             }
             options.inJustDecodeBounds = false
-            options.inSampleSize = 1
+            options.inSampleSize = inSampleSize
             BitmapFactory.decodeFile(path, options)
         }
     }
