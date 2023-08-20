@@ -13,8 +13,8 @@ android {
         applicationId "com.gmail.shellljx.pixelate"
         minSdk 19
         targetSdk 33
-        versionCode 3
-        versionName "1.0.3"
+        versionCode 4
+        versionName "1.0.4"
         multiDexEnabled true
         testInstrumentationRunner "androidx.test.runner.AndroidJUnitRunner"
     }
