@@ -1,27 +1,27 @@
 <resources>
-    <string name="app_name">PixelateMe</string>
+    <string name="app_name">MagicBrush</string>
 
-    <string name="setting">设置</string>
-    <string name="cancel">取消</string>
-    <string name="lock_off">关闭</string>
-    <string name="lock_background">背景保护</string>
-    <string name="lock_portrait">人像保护</string>
+    <string name="setting">Settings</string>
+    <string name="cancel">Cancel</string>
+    <string name="lock_off">Off</string>
+    <string name="lock_background">Background Lock</string>
+    <string name="lock_portrait">Portrait Lock</string>
 
-    <string name="paint_mode_eraser">橡皮擦模式</string>
-    <string name="paint_mode_paint">画笔模式</string>
+    <string name="paint_mode_eraser">Eraser Mode</string>
+    <string name="paint_mode_paint">Paint Mode</string>
 
-    <string name="mask_uploading">AI识别中…</string>
+    <string name="mask_uploading">AI processing…</string>
 
-    <string name="paint_type_graffiti">涂鸦</string>
-    <string name="paint_type_rect">矩形</string>
-    <string name="paint_type_circle">圆形</string>
+    <string name="paint_type_graffiti">Graffiti</string>
+    <string name="paint_type_rect">Rectangle</string>
+    <string name="paint_type_circle">Circle</string>
 
-    <string name="album_all">全部</string>
-    <string name="choose_album">选择相册</string>
-    <string name="save_image_success">已经保存到相册</string>
-    <string name="open_new_image">再编辑一张</string>
-    <string name="title_request_permission">请求权限</string>
-    <string name="request_permission_failed">请求权限失败</string>
-    <string name="request_read_file_permission_desc">为了选择图片用来编辑，需要访问存储权限。请点击“设置”来授予权限。</string>
+    <string name="album_all">All</string>
+    <string name="choose_album">Choose Album</string>
+    <string name="save_image_success">Saved to Album</string>
+    <string name="open_new_image">Edit Another Image</string>
+    <string name="title_request_permission">Request Permission</string>
+    <string name="request_permission_failed">Permission Request Failed</string>
+    <string name="request_read_file_permission_desc">To select images for editing, storage permission is required. Please click "Settings" to grant permission.</string>
 
 </resources>

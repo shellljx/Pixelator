@@ -1,0 +1,27 @@
+<resources>
+    <string name="app_name">MagicBrush</string>
+
+    <string name="setting">設定</string>
+    <string name="cancel">取消</string>
+    <string name="lock_off">關閉</string>
+    <string name="lock_background">背景保護</string>
+    <string name="lock_portrait">人像保護</string>
+
+    <string name="paint_mode_eraser">橡皮擦模式</string>
+    <string name="paint_mode_paint">畫筆模式</string>
+
+    <string name="mask_uploading">AI識別中…</string>
+
+    <string name="paint_type_graffiti">塗鴉</string>
+    <string name="paint_type_rect">矩形</string>
+    <string name="paint_type_circle">圓形</string>
+
+    <string name="album_all">全部</string>
+    <string name="choose_album">選擇相冊</string>
+    <string name="save_image_success">已儲存至相冊</string>
+    <string name="open_new_image">再編輯一張</string>
+    <string name="title_request_permission">請求權限</string>
+    <string name="request_permission_failed">請求權限失敗</string>
+    <string name="request_read_file_permission_desc">為了選擇圖片用來編輯，需要存儲權限。請點擊“設定”來授予權限。</string>
+
+</resources>
