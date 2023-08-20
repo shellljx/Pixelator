@@ -23,7 +23,8 @@ android {
         release {
             minifyEnabled true
             shrinkResources true
-            consumerProguardFiles "consumer-rules.pro"
+            consumerProguardFiles "proguard-rules.pro"
+            proguardFiles getDefaultProguardFile('proguard-android-optimize.txt'), 'proguard-rules.pro'
             // Add this extension
             firebaseCrashlytics {
                 // Enable processing and uploading of native symbols to Firebase servers.

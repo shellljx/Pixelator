@@ -19,3 +19,9 @@
 # If you keep the line number information, uncomment this to
 # hide the original source file name.
 #-renamesourcefileattribute SourceFile
+
+-dontwarn com.liulishuo.okdownload.**
+-keep class com.liulishuo.okdownload.**{*;}
+-dontwarn edu.umd.cs.**
+-keep class edu.umd.cs.**{*;}
+-dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
