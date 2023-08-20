@@ -5,7 +5,6 @@ import android.os.*
 import android.view.MotionEvent
 import android.view.View
 import androidx.annotation.Keep
-import androidx.annotation.StringRes
 import androidx.core.graphics.toRect
 import androidx.core.view.isVisible
 import androidx.lifecycle.*
@@ -42,7 +41,7 @@ import java.util.concurrent.TimeUnit
  * @Description:
  */
 @Keep
-class MaskLockService(container: IContainer) : AbsService(container), IMaskLockService, LifecycleObserver, OnImageObserver, OnContentBoundsObserver, OnTapObserver {
+class MaskLockService(container: IContainer) : AbsService(container), IMaskLockService, LifecycleObserver, OnContentBoundsObserver, OnTapObserver, MaskModeObserver {
     companion object {
         private const val PATH_SMALL_SRC = "/assets/small/"
         private const val PATH_REMOVED_BG = "/assets/removed/"
@@ -52,9 +51,8 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
     private var mCoreService: IPixelatorCoreService? = null
     private var mMaskRenderView: MaskRenderView? = null
     private var mProgressToken: PanelToken? = null
+    private var mMaskSourceImage: String? = null
 
-    @MaskMode
-    private var mMaskMode = MaskMode.NONE
     private val client: OkHttpClient by lazy {
         OkHttpClient.Builder()
             .addInterceptor(BasicAuthInterceptor())
@@ -68,8 +66,7 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
     override fun onStart() {
         lifecycle.addObserver(this)
         mCoreService?.addContentBoundsObserver(this)
-        mContainer.getGestureService()?.addTapObserver(this)
-        mCoreService?.addImageObserver(this)
+        mCoreService?.addMaskModeObserver(this)
     }
 
     override fun bindVEContainer(container: IContainer) {
@@ -99,20 +96,15 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
     }
 
     override fun setMaskMode(mode: Int) {
-        if (mMaskRenderView?.getMaskBitmap() == null && mode != MaskMode.NONE) {
-            makeRemoveBackgroundMask()
+        if (mMaskSourceImage != mCoreService?.getImagePath() && mode != MaskMode.NONE) {
+            makeRemoveBackgroundMask(mode)
         } else {
             mMaskRenderView?.setMaskMode(mode)
             mCoreService?.setDeeplabMode(mode)
         }
-        mMaskMode = mode
     }
 
-    override fun getMaskMode(): Int {
-        return mMaskMode
-    }
-
-    private fun makeRemoveBackgroundMask() {
+    private fun makeRemoveBackgroundMask(@MaskMode mode: Int) {
         val path = mCoreService?.getImagePath() ?: return
         lifecycleScope.launch {
             val message = mContainer.getContext().getString(R.string.mask_uploading)
@@ -127,7 +119,8 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
                 requestRemoveBackground(scalePath, removedBgPath)
             }
             val maskBitmap = BitmapUtils.decodeBitmap(removedBgPath, 1024)
-            setMaskBitmap(maskBitmap)
+            setMaskBitmap(maskBitmap, mode)
+            mMaskSourceImage = path
             mProgressToken?.let {
                 mContainer.getPanelService()?.hidePanel(it)
             }
@@ -178,12 +171,12 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
         return hashText
     }
 
-    private fun setMaskBitmap(bitmap: Bitmap) {
+    private fun setMaskBitmap(bitmap: Bitmap, @MaskMode mode: Int) {
         mCoreService?.setDeeplabMask(bitmap)
-        mCoreService?.setDeeplabMode(mMaskMode)
+        mCoreService?.setDeeplabMode(mode)
         val bounds = mCoreService?.getContentBounds() ?: return
         mMaskRenderView?.setMask(bounds.toRect(), bitmap)
-        mMaskRenderView?.setMaskMode(mMaskMode)
+        mMaskRenderView?.setMaskMode(mode)
     }
 
     override fun onContentBoundsChanged(bound: Rect) {
@@ -207,14 +200,15 @@ class MaskLockService(container: IContainer) : AbsService(container), IMaskLockS
         return false
     }
 
-    override fun onImageLoaded(path: String) {
-
+    override fun onMaskModeChanged(mode: Int) {
+        if (mode == MaskMode.NONE) {
+            mContainer.getGestureService()?.removeTapObserver(this)
+        } else {
+            mContainer.getGestureService()?.addTapObserver(this)
+        }
     }
 }
 
 interface IMaskLockService : IService {
     fun setMaskMode(@MaskMode mode: Int)
-
-    @MaskMode
-    fun getMaskMode(): Int
 }

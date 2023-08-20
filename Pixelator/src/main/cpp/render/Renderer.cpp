@@ -117,6 +117,10 @@ void Renderer::setPaintSize(int size) {
 
 void Renderer::setMaskMode(int mode) {
   LOGI("enter func %s", __func__);
+  if (mode == 0) {
+    glDeleteTextures(1, &renderContext->maskTexture);
+    renderContext->maskTexture = 0;
+  }
   renderContext->maskMode = mode;
 }
 

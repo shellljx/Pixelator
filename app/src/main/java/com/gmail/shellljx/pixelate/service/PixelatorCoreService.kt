@@ -31,6 +31,8 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
     private val mTransformMatrix = Matrix() //变换矩阵
     private var mPaintSize = 0
     private var mImagePath: String? = null
+    @MaskMode
+    private var mMaskMode: Int = MaskMode.NONE
 
     @PaintMode
     private var mPaintMode = PAINT
@@ -43,6 +45,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
     private val mContentBoundsObservers = arrayListOf<OnContentBoundsObserver>()
     private val mImageObservers = arrayListOf<OnImageObserver>()
     private val mUndoRedoStateObservers = arrayListOf<UndoRedoStateObserver>()
+    private val mMaskModeObservers = arrayListOf<MaskModeObserver>()
 
     private val mRenderListener = object : IRenderListener {
         override fun onEGLContextCreate() {
@@ -152,6 +155,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
 
     override fun setDeeplabMode(mode: Int) {
         mImageSdk.setDeeplabMaskMode(mode)
+        mMaskModeObservers.forEach { it.onMaskModeChanged(mode) }
     }
 
     override fun setCanvasHide(hide: Boolean) {
@@ -163,6 +167,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
             mImageSdk.addImagePath(path, getRotate(path))
             mImagePath = path
             mImageObservers.forEach { it.onImageLoaded(path) }
+            setDeeplabMode(MaskMode.NONE)
         }
     }
 
@@ -237,6 +242,10 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
         return mImagePath
     }
 
+    override fun getMaskMode(): Int {
+        return mMaskMode
+    }
+
     override fun save() {
         val dir = File("${mContainer.getContext().cacheDir.absolutePath}/save/")
         if (!dir.exists()) {
@@ -272,6 +281,12 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
     override fun addUndoRedoStateObserver(observer: UndoRedoStateObserver) {
         if (!mUndoRedoStateObservers.contains(observer)) {
             mUndoRedoStateObservers.add(observer)
+        }
+    }
+
+    override fun addMaskModeObserver(observer: MaskModeObserver) {
+        if (!mMaskModeObservers.contains(observer)) {
+            mMaskModeObservers.add(observer)
         }
     }
 
@@ -343,6 +358,8 @@ interface IPixelatorCoreService : IService {
     fun getContentBounds(): RectF
     fun getInitBounds(): RectF
     fun getPaintSize(): Int
+    @MaskMode
+    fun getMaskMode(): Int
 
     @PaintType
     fun getPaintType(): Int
@@ -356,6 +373,7 @@ interface IPixelatorCoreService : IService {
     fun addContentBoundsObserver(observer: OnContentBoundsObserver)
     fun addImageObserver(observer: OnImageObserver)
     fun addUndoRedoStateObserver(observer: UndoRedoStateObserver)
+    fun addMaskModeObserver(observer: MaskModeObserver)
 }
 
 interface PaintSizeObserver {
@@ -377,4 +395,8 @@ interface OnImageObserver {
 
 interface UndoRedoStateObserver {
     fun onUndoRedoStateChange(canUndo: Boolean, canRedo: Boolean)
+}
+
+interface MaskModeObserver {
+    fun onMaskModeChanged(@MaskMode mode: Int)
 }

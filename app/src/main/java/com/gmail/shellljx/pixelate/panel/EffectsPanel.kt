@@ -38,7 +38,7 @@ import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 @Keep
 class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
-    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver, OnImageObserver {
+    OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver, OnImageObserver, MaskModeObserver {
     override val tag: String
         get() = EffectsPanel::class.java.simpleName
 
@@ -137,7 +137,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                 }
         }
         mLockView?.setOnClickListener {
-            val maskMode = mMaskService?.getMaskMode() ?: return@setOnClickListener
+            val maskMode = mCoreService?.getMaskMode() ?: return@setOnClickListener
             mPickPanelToken =
                 mContainer.getPanelService()?.showPanel(PickerPanel::class.java)?.apply {
                     mContainer.getPanelService()?.updatePayload(
@@ -146,8 +146,6 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                             mLockItems,
                             getMaskModePosition(maskMode)
                         ) { position ->
-                            val isOn = position != 2
-                            mLockView?.isSelected = isOn
                             val mode = when (position) {
                                 0 -> MaskMode.PERSON
                                 1 -> MaskMode.BACKGROUND
@@ -202,6 +200,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
         mCoreService?.addUndoRedoStateObserver(this)
         mCoreService?.addPaintTypeObserver(this)
         mCoreService?.addImageObserver(this)
+        mCoreService?.addMaskModeObserver(this)
     }
 
     override fun onImageLoaded(path: String) {
@@ -381,5 +380,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     override fun onUndoRedoStateChange(canUndo: Boolean, canRedo: Boolean) {
         mUndoView?.isSelected = canUndo
         mRedoView?.isSelected = canRedo
+    }
+
+    override fun onMaskModeChanged(mode: Int) {
+        mLockView?.isSelected = mode != MaskMode.NONE
     }
 }

@@ -136,6 +136,7 @@ class MaskRenderView @JvmOverloads constructor(
         mHideAnimator?.addListener(object : AnimatorListenerAdapter() {
             override fun onAnimationEnd(animation: Animator) {
                 isVisible = false
+                alpha = 1f
             }
         })
         mHideAnimator?.start()

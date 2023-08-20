@@ -105,6 +105,10 @@ class GestureService(container: IContainer) : AbsService(container), IGestureSer
     override fun addTransformObserver(observer: OnTransformObserver, priority: Int) {
         mTransformProcessor.add(observer, priority)
     }
+
+    override fun removeTapObserver(observer: OnTapObserver) {
+        mTapProcessor.remove(observer)
+    }
 }
 
 interface IGestureService : IService {
@@ -113,6 +117,7 @@ interface IGestureService : IService {
     fun addSingleMoveObserver(observer: OnSingleMoveObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
     fun addTapObserver(observer: OnTapObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
     fun addTransformObserver(observer: OnTransformObserver, priority: Int = GESTURE_PRIORITY_NORMAL)
+    fun removeTapObserver(observer: OnTapObserver)
 }
 
 interface OnTapObserver {
