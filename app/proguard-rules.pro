@@ -25,3 +25,5 @@
 -dontwarn edu.umd.cs.**
 -keep class edu.umd.cs.**{*;}
 -dontwarn edu.umd.cs.findbugs.annotations.SuppressFBWarnings
+-keep class com.gmail.shellljx.wrapper.service.panel.AbsPanel{*;}
+-keep class * extends com.gmail.shellljx.wrapper.service.panel.AbsPanel{*;}

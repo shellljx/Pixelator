@@ -1,6 +1,7 @@
 <resources>
     <string name="app_name">MagicBrush</string>
 
+    <string name="save">Save</string>
     <string name="setting">Settings</string>
     <string name="cancel">Cancel</string>
     <string name="lock_off">Off</string>
