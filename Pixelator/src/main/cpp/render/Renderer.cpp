@@ -153,6 +153,12 @@ void Renderer::setEffect(Json::Value &root) {
       return;
     }
     auto path = config["url"].asCString();
+    if (currentEffect != nullptr && currentEffect->type() == TypeImage) {
+      auto imageEffect = std::dynamic_pointer_cast<ImageEffect>(currentEffect);
+      if (imageEffect->getSrcPath() == path) {
+        return;
+      }
+    }
     auto cacheTexture = imageCache->get(path);
     if (cacheTexture != nullptr) {
       drawImageEffect(cacheTexture.get());

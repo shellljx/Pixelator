@@ -179,6 +179,7 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
 
     override fun setEffect(config: String) {
         runTaskOrPendding {
+            System.out.println("lijinxiang $config")
             mImageSdk.setEffect(config)
         }
     }

@@ -186,7 +186,9 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
             val effect = effectItems[it.position]
             if (it.status == STATUS.Downloaded) {
                 effect.fill()
-                mEffectService?.applyEffect(effect)
+                if (effect.status == STATUS.Downloaded) {
+                    mEffectService?.applyEffect(effect)
+                }
             } else if (effect.status != STATUS.NotDownload) {
                 effect.status = STATUS.NotDownload
             }
@@ -262,9 +264,11 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
                 selectedPosition = position
                 notifyItemChanged(position, 1)
                 if (effect.path == null && effect.type == EffectType.TypeImage) {
-                    effect.status = STATUS.Downloading
-                    notifyItemChanged(position, 0)
-                    effectViewModel.downloadEffect(position, effect.url, FileUtils.getEffectDir())
+                    if (effect.status != STATUS.Downloading) {
+                        effect.status = STATUS.Downloading
+                        notifyItemChanged(position, 0)
+                        effectViewModel.downloadEffect(position, effect.url, FileUtils.getEffectDir())
+                    }
                 } else {
                     mEffectService?.applyEffect(effect)
                 }

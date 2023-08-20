@@ -28,7 +28,7 @@
             android:value="ca-app-pub-7830712138262547~1268466861" />
 
         <activity
-            android:name=".LaunchActivity"
+            android:name=".MainActivity"
             android:exported="true">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
@@ -40,7 +40,7 @@
                 android:name="android.app.lib_name"
                 android:value="" />
         </activity>
-        <activity android:name=".MainActivity" />
+        <activity android:name=".LaunchActivity" />
     </application>
 
 </manifest>
