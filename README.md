@@ -1,5 +1,5 @@
 <p align="center">
-  <img width="200" src="https://raw.githubusercontent.com/shellljx/Pixelator/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" />
+  <img width="100" src="https://raw.githubusercontent.com/shellljx/Pixelator/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" />
 </p>
 
 <h1 align="center">涂鸦笔 APP (Magic Brush)</h1>
