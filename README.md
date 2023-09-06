@@ -1,10 +1,21 @@
-# Pixelator
+<p align="center">
+  <img width="200" src="https://raw.githubusercontent.com/shellljx/Pixelator/main/app/src/main/res/mipmap-xxxhdpi/ic_launcher.webp" />
+</p>
 
-### 设置图片特效，创建了纹理再删除无法马上释放显存，内存爆涨
+<h1 align="center">涂鸦笔 APP (Magic Brush)</h1>
+<div align="center">
 
-1. 需要确保每次opengl相关操作时都要正确的makecurrent到对应到eglsurface
-2. 删除纹理只是标记了该纹理可以删除，调用了swapbuffers之后，所有绘制操作结束，交换了缓存，才会真正清理
+自定义涂鸦笔，马赛克涂鸦，图片涂鸦，智能抠图
 
+[![app version](https://img.shields.io/badge/app%20version-1.0.4-blue)](https://play.google.com/store/apps/details?id=com.gmail.shellljx.pixelate)
 
-1. 先打 release
-2. 执行 ./gradlew app:uploadCrashlyticsSymbolFileRelease 上传符号表
+<table>
+  <tr>
+    <td><img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot1.webp" alt="图片1"></td>
+    <td><img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot2.webp" alt="图片2"></td>
+    <td><img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot3.webp" alt="图片3"></td>
+    <td><img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot4.webp" alt="图片4"></td>
+  </tr>
+</table>
+
+</div>
