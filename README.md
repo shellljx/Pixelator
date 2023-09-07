@@ -7,6 +7,8 @@
 
 自定义涂鸦笔，马赛克涂鸦，图片涂鸦，智能抠图
 
+Image editing, doodling on the picture, customized brushes, image pixelation
+
 <a href='https://play.google.com/store/apps/details?id=com.gmail.shellljx.pixelate'><img width="100" src='https://simplemobiletools.com/images/button-google-play.svg' alt='Get it on Google Play'/></a>
 </div>
 
