@@ -7,6 +7,8 @@
 
 自定义涂鸦笔，马赛克涂鸦，图片涂鸦，智能抠图
 
+<a href='https://play.google.com/store/apps/details?id=com.gmail.shellljx.pixelate'><img width="100" src='https://simplemobiletools.com/images/button-google-play.svg' alt='Get it on Google Play'/></a>
+
 [![app version](https://img.shields.io/badge/app%20version-1.0.4-blue)](https://play.google.com/store/apps/details?id=com.gmail.shellljx.pixelate)
 
 <table>
