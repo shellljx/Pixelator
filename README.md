@@ -12,7 +12,7 @@
 
 录屏 | 截图 | 截图 |
 :-: | :-: | :-: 
-<video src='https://github.com/shellljx/Pixelator/assets/7572018/727583de-e9ec-4413-92b9-1af16f918039' width=100/> | <img height="500" src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot2.webp" alt="图片2"> | <img height="500" src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot1.webp" alt="图片1">
+<video src='https://github.com/shellljx/Pixelator/assets/7572018/727583de-e9ec-4413-92b9-1af16f918039' width=100/> | <img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot2.webp" alt="图片2"> | <img src="https://raw.githubusercontent.com/shellljx/Pixelator/main/img/screenshot1.webp" alt="图片1">
 
 ## 运行
 
