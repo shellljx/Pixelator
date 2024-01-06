@@ -86,6 +86,14 @@ void textureCenterCrop(int width, int height, int targetWidth, int targetHeight,
   }
 }
 
+
+static float DEFAULT_TEXTURE_COORDINATE[] = {
+        0, 1080,
+        1920, 0,
+        0.0f, 1920,
+        1080, 1920
+};
+
 void calculateSourceSize(int width, int height, int &outWidth, int &outHeight) {
   if (width < MIN_SOURCE_SIZE && height < MIN_SOURCE_SIZE) {
     auto scaleW = MIN_SOURCE_SIZE * 1.f / width;

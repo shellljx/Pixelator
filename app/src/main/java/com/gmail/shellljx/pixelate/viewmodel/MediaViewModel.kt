@@ -32,6 +32,7 @@ class MediaViewModel : BaseViewModel() {
         }
     val mediasLiveData = MutableLiveData<List<MediaResource>>()
     val bucketLiveData = MutableLiveData<List<MediaBucket>>()
+    val selectedLiveData = MutableLiveData<String>()
     @Volatile
     var loading = false
         private set

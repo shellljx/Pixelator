@@ -53,19 +53,5 @@
             fresco:layout_constraintEnd_toEndOf="parent"
             fresco:layout_constraintStart_toEndOf="@id/iv_img"
             fresco:layout_constraintTop_toTopOf="@id/iv_img" />
-
-        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_marginBottom="12dp"
-            android:background="@color/white"
-            ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-7830712138262547/9972671555"
-            ads:layout_constraintBottom_toBottomOf="parent"
-            ads:layout_constraintLeft_toLeftOf="parent"
-            ads:layout_constraintRight_toRightOf="parent" />
-
-
     </androidx.constraintlayout.widget.ConstraintLayout>
 </FrameLayout>

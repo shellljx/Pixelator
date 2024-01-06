@@ -105,6 +105,7 @@ void BaseFilter::draw(const FilterSource *source, const FilterTarget *target) {
     glClear(GL_COLOR_BUFFER_BIT | GL_DEPTH_BUFFER_BIT);
   }
   glUseProgram(program);
+  glClearColor(0.2f, 0.2f, 0.2f, 1.f);
   glViewport(0, 0, target->width, target->height);
   activeGLTexture(0, GL_TEXTURE_2D, source->texture);
   if (mvpMatrixHandler >= 0) {

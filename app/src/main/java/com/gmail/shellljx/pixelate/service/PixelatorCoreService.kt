@@ -49,19 +49,22 @@ class PixelatorCoreService(container: IContainer) : AbsService(container), IPixe
 
     private val mRenderListener = object : IRenderListener {
         override fun onEGLContextCreate() {
-
+            System.out.println("lijinxiang egl create")
         }
 
         override fun onEGLWindowCreate() {
+            System.out.println("lijinxiang surface create")
             mEglWindowCreated = true
             mPenddingTasks.forEach {
                 it.run()
             }
             mPenddingTasks.clear()
+            mImageSdk.refreshFrame()
         }
 
         override fun onFrameBoundsChanged(left: Float, top: Float, right: Float, bottom: Float, reset: Boolean) {
             if (reset) {
+                System.out.println("lijinxiang bound changed")
                 mInitBounds.set(left, top, right, bottom)
                 mTransformMatrix.reset()
             }

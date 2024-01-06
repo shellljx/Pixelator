@@ -110,7 +110,7 @@ class PanelService(container: IContainer) : AbsService(container), IPanelService
             record.panel.updatePayload(it)
         }
         mPanelContainer?.let { it ->
-            getStackTopPanel()?.panel?.onPause()
+            getStackTopPanel()?.panel?.pause()
             mPanelStack.push(record)
             it.showPanel(record.panel)
             mPanelStackChangedObservers.forEach { observer ->

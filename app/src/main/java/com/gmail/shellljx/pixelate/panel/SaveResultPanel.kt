@@ -14,7 +14,6 @@ import com.gmail.shellljx.wrapper.IContainer
 import com.gmail.shellljx.wrapper.extension.activityViewModels
 import com.gmail.shellljx.wrapper.service.panel.AbsPanel
 import com.gmail.shellljx.wrapper.service.panel.PanelConfig
-import com.google.android.gms.ads.*
 import com.google.errorprone.annotations.Keep
 
 /**
@@ -27,7 +26,6 @@ import com.google.errorprone.annotations.Keep
 class SaveResultPanel(context: Context) : AbsPanel(context) {
     private lateinit var mBlurBgView: SimpleDraweeView
     private lateinit var mNewImage: View
-    private lateinit var mAdView: AdView
     private val mainViewModel: MainViewModel by activityViewModels()
 
     private var mPath: String? = null
@@ -45,14 +43,8 @@ class SaveResultPanel(context: Context) : AbsPanel(context) {
     override fun onViewCreated(view: View?) {
         view ?: return
         mBlurBgView = view.findViewById(R.id.iv_img)
-        mAdView = view.findViewById(R.id.adView)
         mNewImage = view.findViewById(R.id.tv_newone)
-        mAdView.adListener = mAdLoadListener
         mainViewModel.adStateLiveData.observe(this) {
-            if (it) {
-                val adRequest: AdRequest = AdRequest.Builder().build()
-                mAdView.loadAd(adRequest)
-            }
         }
         view.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
@@ -60,11 +52,6 @@ class SaveResultPanel(context: Context) : AbsPanel(context) {
         mNewImage.setOnClickListener {
             mContainer.getPanelService()?.hidePanel(mToken)
             mContainer.getPanelService()?.showPanel(MediasPanel::class.java)
-        }
-    }
-
-    private val mAdLoadListener = object : AdListener() {
-        override fun onAdImpression() {
         }
     }
 

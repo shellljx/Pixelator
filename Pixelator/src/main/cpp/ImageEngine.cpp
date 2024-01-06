@@ -334,6 +334,7 @@ void ImageEngine::handleMessage(thread::Message *msg) {
       break;
     }
     case PixelateMessage::kRefreshFrame: {
+      renderer->drawScreen();
       break;
     }
     case PixelateMessage::kSave: {

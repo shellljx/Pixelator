@@ -7,7 +7,7 @@ import android.view.View
 import androidx.annotation.Keep
 import com.gmail.shellljx.pixelate.EffectItem
 import com.gmail.shellljx.pixelate.extension.dp
-import com.gmail.shellljx.pixelate.panel.EffectsPanel
+import com.gmail.shellljx.pixelate.panel.MosaicPanel
 import com.gmail.shellljx.pixelate.view.PaintBoxView
 import com.gmail.shellljx.pixelate.viewmodel.EffectViewModel
 import com.gmail.shellljx.pixelate.widget.WidgetEvents
@@ -50,7 +50,7 @@ class EffectService(container: IContainer) : AbsService(container), IEffectServi
     override fun onStart() {
         effectViewModel.fetch(mAssetPath)
         container.getGestureService()?.addTapObserver(this)
-        mCoreService?.updateViewPort(200.dp())
+        mCoreService?.updateViewPort(80.dp())
         mViewPortAnimator.duration = 400
         mViewPortAnimator.addUpdateListener(mAnimatorUpdateListener)
         mViewPortAnimator.addListener(mAnimatorListener)
@@ -138,7 +138,7 @@ class EffectService(container: IContainer) : AbsService(container), IEffectServi
     }
 
     override fun showPanel() {
-        mPanelToken = container.getPanelService()?.showPanel(EffectsPanel::class.java)
+        mPanelToken = container.getPanelService()?.showPanel(MosaicPanel::class.java)
     }
 
     override fun addDrawBox() {

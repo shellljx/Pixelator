@@ -37,10 +37,10 @@ import com.gmail.shellljx.wrapper.service.panel.*
 import com.google.android.material.bottomsheet.BottomSheetBehavior
 
 @Keep
-class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
+class MosaicPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSeekPercentListener,
     OnTapObserver, OnSingleMoveObserver, UndoRedoStateObserver, PaintTypeObserver, OnImageObserver, MaskModeObserver {
     override val tag: String
-        get() = EffectsPanel::class.java.simpleName
+        get() = MosaicPanel::class.java.simpleName
 
     override val panelConfig: PanelConfig
         get() {
@@ -90,7 +90,7 @@ class EffectsPanel(context: Context) : AbsPanel(context), CircleSeekbarView.OnSe
     }
 
     override fun getLayoutId(): Int {
-        return R.layout.panel_effects_layout
+        return R.layout.panel_mosaic_layout
     }
 
     override fun onViewCreated(view: View?) {

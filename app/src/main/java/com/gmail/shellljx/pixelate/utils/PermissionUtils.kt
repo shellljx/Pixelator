@@ -5,7 +5,10 @@ import android.content.Intent
 import android.content.pm.PackageManager
 import android.net.Uri
 import android.provider.Settings
+import androidx.annotation.StringRes
+import androidx.appcompat.app.AlertDialog
 import androidx.core.app.ActivityCompat
+import com.gmail.shellljx.pixelate.R
 
 /**
  * @Author: shell
@@ -33,5 +36,19 @@ object PermissionUtils {
             context,
             permission
         ) == PackageManager.PERMISSION_GRANTED
+    }
+
+    fun showGotoSettings(context: Context, @StringRes message: Int) {
+        val alertDialogBuilder: AlertDialog.Builder = AlertDialog.Builder(context)
+        alertDialogBuilder.setTitle(context.getString(R.string.title_request_permission))
+            .setMessage(context.getString(message))
+            .setPositiveButton(context.getString(R.string.setting)) { _, _ ->
+                goToApplicationDetail(context)
+            }
+            .setNegativeButton(context.getString(R.string.cancel)) { dialog, _ ->
+                dialog.dismiss()
+            }
+        val alertDialog: AlertDialog = alertDialogBuilder.create()
+        alertDialog.show()
     }
 }

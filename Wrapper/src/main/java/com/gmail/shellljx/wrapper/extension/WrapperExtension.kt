@@ -5,6 +5,7 @@ import android.content.ContextWrapper
 import android.view.View
 import androidx.annotation.MainThread
 import androidx.appcompat.app.AppCompatActivity
+import androidx.fragment.app.Fragment
 import androidx.lifecycle.HasDefaultViewModelProviderFactory
 import androidx.lifecycle.LifecycleOwner
 import androidx.lifecycle.ViewModel
@@ -25,6 +26,12 @@ import kotlin.reflect.KClass
 inline fun <reified T, reified VM : ViewModel> T.activityViewModels(
         noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
 ) where T : ActivityViewModelStoreProvider = createViewModelLazy(VM::class, { getActivityViewModelStoreOwner().viewModelStore }, factoryProducer)
+
+@MainThread
+inline fun <reified VM : ViewModel> Fragment.activityViewModels(
+    noinline factoryProducer: (() -> ViewModelProvider.Factory)? = null
+) = createViewModelLazy(VM::class, { requireActivity().viewModelStore }, factoryProducer)
+
 
 @MainThread
 inline fun <reified VM : ViewModel> View.activityViewModels(

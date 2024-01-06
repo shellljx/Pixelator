@@ -451,19 +451,17 @@ void Renderer::drawEffect() {
 
 void Renderer::drawScreen() {
   LOGI("enter func %s", __func__);
-  if (sourceWidth > 0 && sourceHeight > 0) {
-    renderCallback->bindScreen();
-    float vertexCoordinate[9];
-    getVertexCoordinate(sourceWidth, sourceHeight, vertexCoordinate);
-    auto matrix = screenProjection * viewMatrix * transformMatrix * modelMatrix;
-    matrixFilter->initialize();
-    FilterSource source =
-        {blendFrameBuffer->getTexture(), DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP, sourceWidth,
-         sourceHeight};
-    FilterTarget target = {nullptr, matrix, vertexCoordinate, screenWidth, screenHeight};
-    matrixFilter->draw(&source, &target);
-    renderCallback->flushScreen();
-  }
+  renderCallback->bindScreen();
+  float vertexCoordinate[9];
+  getVertexCoordinate(sourceWidth, sourceHeight, vertexCoordinate);
+  auto matrix = screenProjection * viewMatrix * transformMatrix * modelMatrix;
+  matrixFilter->initialize();
+  FilterSource source =
+      {blendFrameBuffer->getTexture(), DEFAULT_TEXTURE_COORDINATE_FLIP_DOWN_UP, sourceWidth,
+       sourceHeight};
+  FilterTarget target = {nullptr, matrix, vertexCoordinate, screenWidth, screenHeight};
+  matrixFilter->draw(&source, &target);
+  renderCallback->flushScreen();
 }
 
 void Renderer::drawMiniScreen() {
@@ -473,7 +471,8 @@ void Renderer::drawMiniScreen() {
                                   sourceWidth * 1.f, sourceHeight * 1.f};
     auto model = glm::mat4(1);
     auto space = miniScreenWidth / 2.f;
-    auto miniBounds = glm::vec4(bounds.x + space, bounds.y + space, bounds.z - space, bounds.w - space);
+    auto miniBounds =
+        glm::vec4(bounds.x + space, bounds.y + space, bounds.z - space, bounds.w - space);
     auto moveX = touchX;
     auto moveY = touchY;
     if (moveX < miniBounds.x) {

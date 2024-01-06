@@ -4,4 +4,38 @@
     android:id="@+id/content"
     android:layout_width="match_parent"
     android:layout_height="match_parent"
-    tools:context=".MainActivity" />
+    android:background="#2c2c2c"
+    tools:context=".MainActivity">
+
+    <FrameLayout
+        android:id="@+id/permission_layout"
+        android:layout_width="match_parent"
+        android:layout_height="match_parent"
+        android:visibility="gone"
+        tools:visibility="visible">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_marginBottom="80dp"
+            android:gravity="center"
+            android:padding="18dp"
+            android:text="@string/request_photo_read_permission"
+            android:textColor="@color/white"
+            android:textSize="14sp" />
+
+        <TextView
+            android:id="@+id/tv_open_permission"
+            android:layout_width="match_parent"
+            android:layout_height="wrap_content"
+            android:layout_gravity="center"
+            android:layout_margin="20dp"
+            android:background="@drawable/bg_teal_round_rect"
+            android:gravity="center"
+            android:padding="15dp"
+            android:text="@string/open_media_read_permission"
+            android:textColor="@color/white"
+            android:textSize="16sp" />
+    </FrameLayout>
+</FrameLayout>

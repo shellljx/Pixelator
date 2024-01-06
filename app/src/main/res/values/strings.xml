@@ -21,8 +21,10 @@
     <string name="choose_album">Choose Album</string>
     <string name="save_image_success">Saved to Album</string>
     <string name="open_new_image">Edit Another Image</string>
+    <string name="open_media_read_permission">Enable photo gallery access</string>
     <string name="title_request_permission">Request Permission</string>
     <string name="request_permission_failed">Permission Request Failed</string>
     <string name="request_read_file_permission_desc">To select images for editing, storage permission is required. Please click "Settings" to grant permission.</string>
+    <string name="request_photo_read_permission">To enhance your photo editing experience, please grant us access to your photo gallery.</string>
 
 </resources>

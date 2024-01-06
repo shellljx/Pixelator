@@ -85,16 +85,5 @@
             android:layout_marginTop="50dp"
             android:background="@color/color_e6e6e6" />
 
-        <com.google.android.gms.ads.AdView xmlns:ads="http://schemas.android.com/apk/res-auto"
-            android:id="@+id/adView"
-            android:layout_width="wrap_content"
-            android:layout_height="wrap_content"
-            android:layout_gravity="bottom|center_horizontal"
-            android:layout_marginBottom="12dp"
-            ads:adSize="BANNER"
-            ads:adUnitId="ca-app-pub-7830712138262547/6384780330"
-            ads:layout_constraintLeft_toLeftOf="parent"
-            ads:layout_constraintTop_toTopOf="parent" />
-
     </FrameLayout>
 </androidx.coordinatorlayout.widget.CoordinatorLayout>
